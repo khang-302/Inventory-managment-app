@@ -95,9 +95,18 @@ export function AdvancedThemeProvider({ children }: { children: React.ReactNode 
 
     const root = document.documentElement;
     
-    // Apply light/dark class based on theme category
-    root.classList.remove('light', 'dark');
-    root.classList.add(isDarkTheme ? 'dark' : 'light');
+    // Remove all theme classes
+    root.classList.remove('light', 'dark', 'theme-colorful-light', 'theme-colorful-dark');
+    
+    // Apply appropriate class based on selected theme
+    const selectedTheme = themeState.selectedTheme;
+    if (selectedTheme === 'colorful-light') {
+      root.classList.add('theme-colorful-light');
+    } else if (selectedTheme === 'colorful-dark') {
+      root.classList.add('theme-colorful-dark');
+    } else {
+      root.classList.add(isDarkTheme ? 'dark' : 'light');
+    }
 
     // Get and apply colors
     const colors = getCurrentColors();

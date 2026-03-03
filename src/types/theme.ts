@@ -53,7 +53,7 @@ export interface ThemeColors {
   sidebarBorder: string;
 }
 
-export type ThemeId = 'industrial-dark' | 'factory-light';
+export type ThemeId = 'industrial-dark' | 'factory-light' | 'colorful-light' | 'colorful-dark';
 
 export interface ThemePreset {
   id: ThemeId;

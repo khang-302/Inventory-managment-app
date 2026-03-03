@@ -94,6 +94,96 @@ const factoryLightColors: ThemeColors = {
 };
 
 // ============================================
+// COLORFUL LIGHT THEME
+// Vibrant, gradient-backed light theme
+// ============================================
+const colorfulLightColors: ThemeColors = {
+  primary: '230 85% 55%',
+  primaryForeground: '0 0% 100%',
+  secondary: '260 70% 60%',
+  secondaryForeground: '0 0% 100%',
+  accent: '260 80% 65%',
+  accentForeground: '0 0% 100%',
+  background: '230 85% 94%',
+  foreground: '230 40% 15%',
+  card: '0 0% 100%',
+  cardForeground: '230 40% 15%',
+  popover: '230 85% 96%',
+  popoverForeground: '230 40% 15%',
+  destructive: '0 75% 55%',
+  destructiveForeground: '0 0% 100%',
+  warning: '37 92% 50%',
+  warningForeground: '0 0% 100%',
+  success: '122 39% 39%',
+  successForeground: '0 0% 100%',
+  info: '207 90% 54%',
+  infoForeground: '0 0% 100%',
+  muted: '230 60% 88%',
+  mutedForeground: '230 40% 30%',
+  border: '230 50% 85%',
+  input: '230 50% 85%',
+  ring: '230 85% 55%',
+  chartPrimary: '230 85% 55%',
+  chartSecondary: '260 70% 60%',
+  chartAccent: '260 80% 65%',
+  chartSuccess: '122 39% 39%',
+  chartWarning: '37 92% 50%',
+  chartNeutral: '230 60% 88%',
+  sidebarBackground: '0 0% 100%',
+  sidebarForeground: '230 40% 15%',
+  sidebarPrimary: '230 85% 55%',
+  sidebarPrimaryForeground: '0 0% 100%',
+  sidebarAccent: '260 80% 65%',
+  sidebarAccentForeground: '0 0% 100%',
+  sidebarBorder: '230 50% 85%',
+};
+
+// ============================================
+// COLORFUL DARK THEME
+// Deep, vibrant gradient-backed dark theme
+// ============================================
+const colorfulDarkColors: ThemeColors = {
+  primary: '260 85% 65%',
+  primaryForeground: '230 40% 10%',
+  secondary: '230 70% 55%',
+  secondaryForeground: '0 0% 100%',
+  accent: '260 85% 65%',
+  accentForeground: '230 40% 10%',
+  background: '230 40% 12%',
+  foreground: '230 80% 95%',
+  card: '230 35% 18%',
+  cardForeground: '230 80% 95%',
+  popover: '230 35% 20%',
+  popoverForeground: '230 80% 95%',
+  destructive: '0 75% 60%',
+  destructiveForeground: '0 0% 100%',
+  warning: '37 92% 50%',
+  warningForeground: '0 0% 100%',
+  success: '122 39% 39%',
+  successForeground: '0 0% 100%',
+  info: '207 90% 54%',
+  infoForeground: '0 0% 100%',
+  muted: '230 25% 25%',
+  mutedForeground: '230 80% 85%',
+  border: '230 25% 28%',
+  input: '230 25% 28%',
+  ring: '260 85% 65%',
+  chartPrimary: '260 85% 65%',
+  chartSecondary: '230 70% 55%',
+  chartAccent: '260 80% 60%',
+  chartSuccess: '122 39% 39%',
+  chartWarning: '37 92% 50%',
+  chartNeutral: '230 25% 25%',
+  sidebarBackground: '230 35% 18%',
+  sidebarForeground: '230 80% 95%',
+  sidebarPrimary: '260 85% 65%',
+  sidebarPrimaryForeground: '230 40% 10%',
+  sidebarAccent: '230 70% 55%',
+  sidebarAccentForeground: '0 0% 100%',
+  sidebarBorder: '230 25% 28%',
+};
+
+// ============================================
 // THEME PRESETS EXPORT
 // ============================================
 export const themePresets: ThemePreset[] = [
@@ -112,6 +202,22 @@ export const themePresets: ThemePreset[] = [
     icon: '🏭',
     category: 'light',
     colors: factoryLightColors,
+  },
+  {
+    id: 'colorful-light',
+    name: 'Colorful Light',
+    description: 'Vibrant blue-purple gradient light theme',
+    icon: '🎨',
+    category: 'light',
+    colors: colorfulLightColors,
+  },
+  {
+    id: 'colorful-dark',
+    name: 'Colorful Dark',
+    description: 'Deep vibrant gradient dark theme',
+    icon: '🌈',
+    category: 'dark',
+    colors: colorfulDarkColors,
   },
 ];
 
