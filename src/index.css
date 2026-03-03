@@ -391,3 +391,14 @@
 .modal-backdrop {
   @apply bg-background/80 backdrop-blur-sm;
 }
+
+/* Colorful theme gradient backgrounds */
+.theme-colorful-light body,
+.theme-colorful-light .bg-background {
+  background: linear-gradient(135deg, hsl(230 85% 94%), hsl(260 80% 92%));
+}
+
+.theme-colorful-dark body,
+.theme-colorful-dark .bg-background {
+  background: linear-gradient(135deg, hsl(230 40% 12%), hsl(260 40% 18%));
+}
