@@ -31,18 +31,17 @@ export function KPICard({
   suffix = '',
   className,
 }: KPICardProps) {
-  // Parse currency into structured parts for balanced typography
-  const parseCurrencyParts = (amount: number) => {
-    const abs = Math.abs(amount);
-    const sign = amount < 0 ? '-' : '';
-    if (abs >= 10000000) return { prefix: `Rs ${sign}`, number: (abs / 10000000).toFixed(2), unit: 'Cr' };
-    if (abs >= 100000) return { prefix: `Rs ${sign}`, number: (abs / 100000).toFixed(2), unit: 'Lac' };
-    if (abs >= 1000) return { prefix: `Rs ${sign}`, number: (abs / 1000).toFixed(1), unit: 'K' };
-    return { prefix: 'Rs', number: formatCurrencyShort(amount).replace(/^Rs\s*/, ''), unit: '' };
+  const formatValue = () => {
+    if (isCurrency && typeof value === 'number') {
+      const abs = Math.abs(value);
+      const sign = value < 0 ? '-' : '';
+      if (abs >= 10000000) return `Rs ${sign}${(abs / 10000000).toFixed(2)} Cr`;
+      if (abs >= 100000) return `Rs ${sign}${(abs / 100000).toFixed(2)} Lac`;
+      if (abs >= 1000) return `Rs ${sign}${(abs / 1000).toFixed(1)} K`;
+      return formatCurrencyShort(value);
+    }
+    return `${value}${suffix}`;
   };
-
-  const currencyParts = isCurrency && typeof value === 'number' ? parseCurrencyParts(value) : null;
-  const displayValue = currencyParts ? null : `${value}${suffix}`;
 
   const getTrendIcon = () => {
     if (!trend) return null;
