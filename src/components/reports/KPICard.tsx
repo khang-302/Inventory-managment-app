@@ -98,7 +98,7 @@ export function KPICard({
           )}
         </div>
         
-        <div className="space-y-1 pl-[calc(2rem+1rem)]">
+        <div className="space-y-1 pl-[calc(2.5rem+0.5rem)]">
           {currencyParts ? (
             <div className="flex items-baseline gap-1" style={{ fontSize: `calc(1.25rem * var(--card-value-scale, 1) * var(--text-scale, 1))` }}>
               <span className="text-muted-foreground font-medium" style={{ fontSize: '0.65em' }}>{currencyParts.prefix}</span>
