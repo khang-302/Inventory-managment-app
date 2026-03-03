@@ -148,6 +148,7 @@ export function InventoryDistributionChart({
                     />
                   </PieChart>
                 </ResponsiveContainer>
+                </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-2 justify-center mt-3 px-2"
                   style={{ fontSize: `calc(0.75rem * var(--chart-legend-scale, 1) * var(--text-scale, 1))` }}
                 >
