@@ -14,6 +14,9 @@ import RecordSale from "./pages/RecordSale";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import ActivityLog from "./pages/ActivityLog";
+import BillHistory from "./pages/BillHistory";
+import BillCreate from "./pages/BillCreate";
+import BillSettingsPage from "./pages/BillSettings";
 import NotFound from "./pages/NotFound";
 
 // Settings sub-pages
