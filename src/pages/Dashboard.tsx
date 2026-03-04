@@ -59,6 +59,7 @@ const ACTION_BAR_COLOR: Record<ActivityAction, string> = {
 };
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [quickSellOpen, setQuickSellOpen] = useState(false);
   const { 
     stats, 
     isLoadingStats, 
