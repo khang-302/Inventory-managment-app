@@ -134,9 +134,9 @@ export default function Dashboard() {
               onClick={() => navigate('/reports')}
             />
             <QuickAction
-              icon={Download}
-              label="Backup"
-              onClick={() => navigate('/settings/backup')}
+              icon={Zap}
+              label="QuickSell"
+              onClick={() => setQuickSellOpen(true)}
             />
           </div>
         </div>
