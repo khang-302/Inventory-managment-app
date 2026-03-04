@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, BarChart3, Settings, X, Menu } from 'lucide-react';
+import { LayoutDashboard, Package, BarChart3, Settings, X, Menu, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSafe } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/inventory', label: 'Inventory', icon: Package },
+  { path: '/bills', label: 'Bills', icon: FileText },
   { path: '/reports', label: 'Reports', icon: BarChart3 },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
