@@ -53,6 +53,20 @@ export class AmeerAutosDB extends Dexie {
       settings: 'id, key',
       backupRecords: 'id, type, createdAt'
     });
+
+    // Version 4: Add bill tables
+    this.version(4).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt',
+      billSettings: 'id',
+      bills: 'id, billNumber, createdAt',
+      billItems: 'id, billId'
+    });
   }
 }
 

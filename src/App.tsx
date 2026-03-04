@@ -14,6 +14,9 @@ import RecordSale from "./pages/RecordSale";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import ActivityLog from "./pages/ActivityLog";
+import BillHistory from "./pages/BillHistory";
+import BillCreate from "./pages/BillCreate";
+import BillSettingsPage from "./pages/BillSettings";
 import NotFound from "./pages/NotFound";
 
 // Settings sub-pages
@@ -58,6 +61,9 @@ const App = () => (
               <Route path="/settings/logo" element={<AppLogo />} />
               <Route path="/settings/branding" element={<Branding />} />
               <Route path="/settings/typography" element={<TypographySettings />} />
+              <Route path="/bills" element={<BillHistory />} />
+              <Route path="/bills/create" element={<BillCreate />} />
+              <Route path="/bills/settings" element={<BillSettingsPage />} />
               <Route path="/activity-log" element={<ActivityLog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
