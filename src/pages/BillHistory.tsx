@@ -111,8 +111,8 @@ export default function BillHistory() {
       try {
         const res = await fetch(dataUrl);
         const blob = await res.blob();
-        const ext = getExtension(format);
-        const mime = getMimeType(format);
+        const ext = format === 'pdf' ? 'pdf' : getExtension(format as 'png');
+        const mime = format === 'pdf' ? 'application/pdf' : getMimeType(format as 'png');
         const file = new File([blob], `${bill.billNumber}.${ext}`, { type: mime });
         await navigator.share({
           title: `Bill ${bill.billNumber}`,
