@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, MoreVertical, Eye, Share2, Trash2, FileText } from 'lucide-react';
+import { Plus, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2 } from 'lucide-react';
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
-import type { Bill } from '@/types/bill';
+import { captureBillAsImage, downloadDataUrl, getExtension, getMimeType } from '@/utils/billImageExport';
+import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
+import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +36,15 @@ export default function BillHistory() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // For image capture – we render one bill at a time offscreen
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [renderBill, setRenderBill] = useState<{
+    settings: BillSettingsType;
+    bill: Bill;
+    items: BillItem[];
+  } | null>(null);
+  const pendingAction = useRef<'image' | 'share' | null>(null);
+
   const loadBills = async () => {
     setLoading(true);
     const data = await getAllBills();
@@ -43,32 +54,66 @@ export default function BillHistory() {
 
   useEffect(() => { loadBills(); }, []);
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    await deleteBill(deleteId);
-    toast({ title: 'Bill deleted' });
-    setDeleteId(null);
-    loadBills();
+  // After the offscreen template renders, capture the image
+  useEffect(() => {
+    if (!renderBill || !previewRef.current || !pendingAction.current) return;
+
+    const action = pendingAction.current;
+    const billData = renderBill;
+
+    // Wait for the next two frames so DOM paints
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(async () => {
+        try {
+          const dataUrl = await captureBillAsImage(previewRef.current!, 'png');
+
+          if (action === 'image') {
+            downloadDataUrl(dataUrl, `${billData.bill.billNumber}.png`);
+            toast({ title: 'Image downloaded' });
+          } else if (action === 'share') {
+            await shareFile(dataUrl, billData.bill, 'png');
+          }
+        } catch {
+          toast({ title: 'Image export failed', variant: 'destructive' });
+        } finally {
+          setRenderBill(null);
+          pendingAction.current = null;
+        }
+      });
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, [renderBill]);
+
+  const prepareBillData = useCallback(async (bill: Bill) => {
+    const [settings, items] = await Promise.all([
+      getBillSettings(),
+      getBillItems(bill.id),
+    ]);
+    return { settings, bill, items };
+  }, []);
+
+  const handleExportImage = async (bill: Bill) => {
+    const data = await prepareBillData(bill);
+    pendingAction.current = 'image';
+    setRenderBill(data);
   };
 
-  const handleDownloadPdf = async (bill: Bill) => {
-    const settings = await getBillSettings();
-    const items = await getBillItems(bill.id);
-    const pdf = generateBillPdf(settings, bill, items);
-    pdf.save(`${bill.billNumber}.pdf`);
+  const handleExportPdf = async (bill: Bill) => {
+    const data = await prepareBillData(bill);
+    const pdf = generateBillPdf(data.settings, data.bill, data.items);
+    pdf.save(`${data.bill.billNumber}.pdf`);
     toast({ title: 'PDF downloaded' });
   };
 
-  const handleShare = async (bill: Bill) => {
-    const settings = await getBillSettings();
-    const items = await getBillItems(bill.id);
-
-    // Try native share first
+  const shareFile = async (dataUrl: string, bill: Bill, format: 'png' | 'pdf') => {
     if (navigator.share) {
       try {
-        const pdf = generateBillPdf(settings, bill, items);
-        const blob = pdf.output('blob');
-        const file = new File([blob], `${bill.billNumber}.pdf`, { type: 'application/pdf' });
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const ext = getExtension(format);
+        const mime = getMimeType(format);
+        const file = new File([blob], `${bill.billNumber}.${ext}`, { type: mime });
         await navigator.share({
           title: `Bill ${bill.billNumber}`,
           text: `Bill for ${bill.buyerName} – Rs ${bill.finalTotal.toLocaleString()}`,
@@ -76,13 +121,27 @@ export default function BillHistory() {
         });
         return;
       } catch {
-        // fallback below
+        // fallback
       }
     }
-
     // WhatsApp fallback
     const text = `Bill ${bill.billNumber}\nBuyer: ${bill.buyerName}\nTotal: Rs ${bill.finalTotal.toLocaleString()}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleShare = async (bill: Bill) => {
+    // Try image share first (richer), fall back to PDF
+    const data = await prepareBillData(bill);
+    pendingAction.current = 'share';
+    setRenderBill(data);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    await deleteBill(deleteId);
+    toast({ title: 'Bill deleted' });
+    setDeleteId(null);
+    loadBills();
   };
 
   return (
@@ -105,41 +164,84 @@ export default function BillHistory() {
           <div className="space-y-2">
             {bills.map(bill => (
               <Card key={bill.id} className="bg-card">
-                <CardContent className="p-3 flex items-center justify-between">
-                  <div className="min-w-0 flex-1" onClick={() => handleDownloadPdf(bill)} role="button">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-primary">{bill.billNumber}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(bill.date).toLocaleDateString('en-PK')}
-                      </span>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-primary">{bill.billNumber}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(bill.date).toLocaleDateString('en-PK')}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium mt-0.5 truncate">{bill.buyerName}</p>
+                      <p className="text-xs text-muted-foreground">{formatCurrency(bill.finalTotal)}</p>
                     </div>
-                    <p className="text-sm font-medium mt-0.5 truncate">{bill.buyerName}</p>
-                    <p className="text-xs text-muted-foreground">{formatCurrency(bill.finalTotal)}</p>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleExportImage(bill)}>
+                          <ImageIcon className="h-4 w-4 mr-2" /> Export as Image
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportPdf(bill)}>
+                          <FileText className="h-4 w-4 mr-2" /> Export as PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleShare(bill)}>
+                          <Share2 className="h-4 w-4 mr-2" /> Share
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}>
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleDownloadPdf(bill)}>
-                        <Eye className="h-4 w-4 mr-2" /> View / Download
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleShare(bill)}>
-                        <Share2 className="h-4 w-4 mr-2" /> Share
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}>
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+
+                  {/* Quick export buttons */}
+                  <div className="flex gap-2 mt-2 pt-2 border-t border-border">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-7 text-xs gap-1"
+                      onClick={() => handleExportImage(bill)}
+                    >
+                      <ImageIcon className="h-3 w-3" /> Image
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-7 text-xs gap-1"
+                      onClick={() => handleExportPdf(bill)}
+                    >
+                      <FileText className="h-3 w-3" /> PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 h-7 text-xs gap-1"
+                      onClick={() => handleShare(bill)}
+                    >
+                      <Share2 className="h-3 w-3" /> Share
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      {/* Offscreen bill template for image capture */}
+      {renderBill && (
+        <BillPreviewTemplate
+          ref={previewRef}
+          settings={renderBill.settings}
+          bill={renderBill.bill}
+          items={renderBill.items}
+        />
+      )}
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
