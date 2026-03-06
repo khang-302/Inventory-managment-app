@@ -10,10 +10,9 @@ import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, FileText, CreditCard, ScrollText } from 'lucide-react';
-import { createBill, getNextBillNumber, getBillSettings, getBillItems } from '@/services/billService';
+import { createBill, getNextBillNumber, getBillSettings } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
-import type { BillFormItem, BillSettings, PaymentInfo } from '@/types/bill';
-import { generateBillPdf } from '@/utils/billPdf';
+import type { BillFormItem, PaymentInfo } from '@/types/bill';
 
 const emptyItem = (): BillFormItem => ({
   partName: '',
@@ -106,13 +105,8 @@ export default function BillCreate() {
           termsConditions: showTerms ? termsConditions.filter(t => t.trim()) : undefined,
         }
       );
-      
-      const settings = await getBillSettings();
-      const billItemsData = await getBillItems(bill.id);
-      const pdf = generateBillPdf(settings, bill, billItemsData);
-      pdf.save(`${bill.billNumber}.pdf`);
 
-      toast({ title: `Bill ${bill.billNumber} saved & downloaded` });
+      toast({ title: `Bill ${bill.billNumber} saved successfully` });
       navigate('/bills');
     } catch (e) {
       toast({ title: 'Failed to create bill', variant: 'destructive' });
@@ -313,7 +307,7 @@ export default function BillCreate() {
           <Button variant="outline" className="flex-1" onClick={() => navigate('/bills')}>Cancel</Button>
           <Button className="flex-1 gap-1" onClick={handleSave} disabled={saving}>
             <FileText className="h-4 w-4" />
-            {saving ? 'Saving...' : 'Save & Download'}
+            {saving ? 'Saving...' : 'Generate Bill'}
           </Button>
         </div>
       </div>

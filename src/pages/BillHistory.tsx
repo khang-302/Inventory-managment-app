@@ -36,7 +36,6 @@ export default function BillHistory() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // For image capture – we render one bill at a time offscreen
   const previewRef = useRef<HTMLDivElement>(null);
   const [renderBill, setRenderBill] = useState<{
     settings: BillSettingsType;
@@ -54,35 +53,45 @@ export default function BillHistory() {
 
   useEffect(() => { loadBills(); }, []);
 
-  // After the offscreen template renders, capture the image
+  // Fixed image capture: use setTimeout to ensure full DOM paint + font loading
   useEffect(() => {
-    if (!renderBill || !previewRef.current || !pendingAction.current) return;
+    if (!renderBill || !pendingAction.current) return;
 
     const action = pendingAction.current;
     const billData = renderBill;
 
-    // Wait for the next two frames so DOM paints
-    const raf1 = requestAnimationFrame(() => {
-      const raf2 = requestAnimationFrame(async () => {
-        try {
-          const dataUrl = await captureBillAsImage(previewRef.current!, 'png');
+    // Use a 600ms delay to guarantee DOM paint, font loading, and image loading
+    const timer = setTimeout(async () => {
+      if (!previewRef.current) {
+        setRenderBill(null);
+        pendingAction.current = null;
+        return;
+      }
 
-          if (action === 'image') {
-            downloadDataUrl(dataUrl, `${billData.bill.billNumber}.png`);
-            toast({ title: 'Image downloaded' });
-          } else if (action === 'share') {
-            await shareFile(dataUrl, billData.bill, 'png');
-          }
-        } catch {
-          toast({ title: 'Image export failed', variant: 'destructive' });
-        } finally {
-          setRenderBill(null);
-          pendingAction.current = null;
+      try {
+        const dataUrl = await captureBillAsImage(previewRef.current, 'png');
+        
+        // Verify the image is not blank (check data URL length)
+        if (!dataUrl || dataUrl.length < 1000) {
+          throw new Error('Captured image appears to be blank');
         }
-      });
-      return () => cancelAnimationFrame(raf2);
-    });
-    return () => cancelAnimationFrame(raf1);
+
+        if (action === 'image') {
+          downloadDataUrl(dataUrl, `${billData.bill.billNumber}.png`);
+          toast({ title: 'Image downloaded' });
+        } else if (action === 'share') {
+          await shareFile(dataUrl, billData.bill, 'png');
+        }
+      } catch (err) {
+        console.error('Image export error:', err);
+        toast({ title: 'Image export failed', variant: 'destructive' });
+      } finally {
+        setRenderBill(null);
+        pendingAction.current = null;
+      }
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, [renderBill]);
 
   const prepareBillData = useCallback(async (bill: Bill) => {
@@ -124,13 +133,11 @@ export default function BillHistory() {
         // fallback
       }
     }
-    // WhatsApp fallback
     const text = `Bill ${bill.billNumber}\nBuyer: ${bill.buyerName}\nTotal: Rs ${bill.finalTotal.toLocaleString()}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleShare = async (bill: Bill) => {
-    // Try image share first (richer), fall back to PDF
     const data = await prepareBillData(bill);
     pendingAction.current = 'share';
     setRenderBill(data);
@@ -199,30 +206,14 @@ export default function BillHistory() {
                     </DropdownMenu>
                   </div>
 
-                  {/* Quick export buttons */}
                   <div className="flex gap-2 mt-2 pt-2 border-t border-border">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-7 text-xs gap-1"
-                      onClick={() => handleExportImage(bill)}
-                    >
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}>
                       <ImageIcon className="h-3 w-3" /> Image
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-7 text-xs gap-1"
-                      onClick={() => handleExportPdf(bill)}
-                    >
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportPdf(bill)}>
                       <FileText className="h-3 w-3" /> PDF
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 h-7 text-xs gap-1"
-                      onClick={() => handleShare(bill)}
-                    >
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleShare(bill)}>
                       <Share2 className="h-3 w-3" /> Share
                     </Button>
                   </div>
@@ -233,14 +224,16 @@ export default function BillHistory() {
         )}
       </div>
 
-      {/* Offscreen bill template for image capture */}
+      {/* Offscreen bill template for image capture — positioned fixed but clipped */}
       {renderBill && (
-        <BillPreviewTemplate
-          ref={previewRef}
-          settings={renderBill.settings}
-          bill={renderBill.bill}
-          items={renderBill.items}
-        />
+        <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0.01, pointerEvents: 'none', overflow: 'hidden' }}>
+          <BillPreviewTemplate
+            ref={previewRef}
+            settings={renderBill.settings}
+            bill={renderBill.bill}
+            items={renderBill.items}
+          />
+        </div>
       )}
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

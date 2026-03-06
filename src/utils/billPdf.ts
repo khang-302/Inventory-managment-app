@@ -8,124 +8,130 @@ export function generateBillPdf(
   items: BillItem[],
 ): jsPDF {
   const doc = new jsPDF('p', 'mm', 'a4');
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  const m = 15;
   let y = 0;
 
-  // === TOP BANNER (dark background) ===
+  // ── HEADER BANNER ──
   doc.setFillColor(26, 26, 26);
-  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.rect(0, 0, pw, 38, 'F');
 
-  // Gold diagonal accent
+  // Gold accent bars
   doc.setFillColor(218, 165, 32);
-  // Simple gold bar on right
-  doc.rect(pageWidth - 80, 0, 80, 42, 'F');
+  doc.rect(0, 0, pw, 2, 'F');
+  doc.rect(0, 36, pw, 2, 'F');
 
-  // Gold wave accent at bottom of banner
-  doc.setFillColor(218, 165, 32);
-  doc.setDrawColor(218, 165, 32);
-  doc.setLineWidth(1.5);
-  doc.line(0, 42, pageWidth, 42);
-
-  // Shop name in banner
-  const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  
   // Logo circle
+  const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   if (!settings.logoPath) {
     doc.setFillColor(218, 165, 32);
-    doc.circle(margin + 10, 21, 10, 'F');
-    doc.setFontSize(12);
+    doc.circle(m + 10, 20, 9, 'F');
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(26, 26, 26);
-    doc.text(initials, margin + 10, 24, { align: 'center' });
+    doc.text(initials, m + 10, 23, { align: 'center' });
   }
 
-  doc.setFontSize(20);
+  // Shop name
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text(settings.shopName, margin + 24, 20);
+  doc.setTextColor(244, 196, 48);
+  doc.text(settings.shopName.toUpperCase(), m + 24, 18);
 
   if (settings.tagline) {
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(200, 200, 200);
-    doc.text(settings.tagline, margin + 24, 27);
+    doc.setTextColor(180, 180, 180);
+    doc.text(settings.tagline.toUpperCase(), m + 24, 24);
   }
 
-  // INVOICE text on gold area
-  doc.setFontSize(24);
+  // INVOICE label
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(26, 26, 26);
-  doc.text('INVOICE', pageWidth - 40, 26, { align: 'center' });
+  doc.setTextColor(244, 196, 48);
+  doc.text('INVOICE', pw - m, 22, { align: 'right' });
 
-  // === SHOP DETAILS ===
-  y = 52;
-  doc.setFontSize(9);
-  doc.setTextColor(80);
+  // ── CONTACT ROW ──
+  y = 44;
+  doc.setFontSize(8);
+  doc.setTextColor(120);
   doc.setFont('helvetica', 'normal');
-  doc.text('Invoice To:', margin, y);
-  doc.text(`Invoice No: ${bill.billNumber}`, pageWidth - margin, y, { align: 'right' });
-  
-  y += 5;
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(26, 26, 26);
-  doc.text(settings.shopName, margin, y);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Date: ${new Date(bill.date).toLocaleDateString('en-PK')}`, pageWidth - margin, y, { align: 'right' });
-
-  y += 6;
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(80);
-  doc.text(settings.address, margin, y);
-  
-  y += 5;
+  doc.text(`📍 ${settings.address}`, m, y);
   const contactLine = [settings.phone1, settings.phone2].filter(Boolean).join(' | ');
-  doc.setFont('helvetica', 'bold');
-  doc.text(contactLine, margin, y);
-
-  // Divider
-  y += 6;
-  doc.setDrawColor(200);
-  doc.setLineWidth(0.3);
-  doc.line(margin, y, pageWidth - margin, y);
-
-  // === CUSTOMER BOX ===
+  doc.text(contactLine, pw - m, y, { align: 'right' });
   y += 4;
-  // Gold header bar
-  doc.setFillColor(255, 248, 225);
-  doc.rect(margin, y, pageWidth - margin * 2, 8, 'F');
-  doc.setDrawColor(218, 165, 32);
-  doc.setLineWidth(0.5);
-  doc.rect(margin, y, pageWidth - margin * 2, 8, 'S');
+  doc.setDrawColor(220);
+  doc.setLineWidth(0.3);
+  doc.line(m, y, pw - m, y);
 
-  doc.setFontSize(10);
+  // ── FROM / TO BOXES ──
+  y += 6;
+  const boxW = (pw - m * 2 - 10) / 2;
+
+  // From label
+  doc.setFontSize(7);
+  doc.setTextColor(160);
+  doc.text('INVOICE FROM', m, y);
+  doc.text('INVOICE TO', m + boxW + 10, y);
+  y += 3;
+
+  // Gold top border on boxes
+  doc.setFillColor(218, 165, 32);
+  doc.rect(m, y, boxW, 1.5, 'F');
+  doc.rect(m + boxW + 10, y, boxW, 1.5, 'F');
+  y += 1.5;
+
+  // From box
+  doc.setFillColor(248, 248, 248);
+  doc.rect(m, y, boxW, 18, 'F');
+  doc.setDrawColor(230);
+  doc.rect(m, y, boxW, 18, 'S');
+
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(26, 26, 26);
-  doc.text('Invoice To :', margin + 4, y + 5.5);
-  doc.text(`Invoice No: ${bill.billNumber}`, pageWidth - margin - 4, y + 5.5, { align: 'right' });
+  doc.text(settings.shopName, m + 4, y + 6);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100);
+  doc.text(settings.address, m + 4, y + 11, { maxWidth: boxW - 8 });
+  doc.setFont('helvetica', 'bold');
+  doc.text(contactLine, m + 4, y + 16);
+
+  // To box
+  doc.setFillColor(248, 248, 248);
+  doc.rect(m + boxW + 10, y, boxW, 18, 'F');
+  doc.setDrawColor(230);
+  doc.rect(m + boxW + 10, y, boxW, 18, 'S');
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(26, 26, 26);
+  doc.text(bill.buyerName, m + boxW + 14, y + 6);
+  if (bill.buyerPhone) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    doc.text(`Phone: ${bill.buyerPhone}`, m + boxW + 14, y + 11);
+  }
+
+  y += 22;
+
+  // Invoice meta (right-aligned)
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(160);
+  doc.text('Invoice No:', pw - m - 60, y);
+  doc.text('Date:', pw - m - 60, y + 5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(26, 26, 26);
+  doc.text(bill.billNumber, pw - m, y, { align: 'right' });
+  doc.text(new Date(bill.date).toLocaleDateString('en-PK'), pw - m, y + 5, { align: 'right' });
 
   y += 12;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(26, 26, 26);
-  doc.text(bill.buyerName, margin + 4, y);
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(80);
-  doc.text(`Date : ${new Date(bill.date).toLocaleDateString('en-PK')}`, pageWidth - margin - 4, y, { align: 'right' });
-  
-  if (bill.buyerPhone) {
-    y += 5;
-    doc.text(`Phone: ${bill.buyerPhone}`, margin + 4, y);
-  }
 
-  // === ITEMS TABLE ===
-  y += 6;
+  // ── ITEMS TABLE ──
   autoTable(doc, {
     startY: y,
     head: [['#', 'Part Name', 'Code', 'Brand', 'Qty', 'Price (Rs)', 'Total (Rs)']],
@@ -138,9 +144,15 @@ export function generateBillPdf(
       item.price.toLocaleString(),
       item.total.toLocaleString(),
     ]),
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 9, cellPadding: 4 },
-    headStyles: { fillColor: [50, 50, 50], textColor: 255, fontStyle: 'bold', halign: 'center' },
+    margin: { left: m, right: m },
+    styles: { fontSize: 9, cellPadding: 3.5 },
+    headStyles: {
+      fillColor: [26, 26, 26],
+      textColor: [244, 196, 48],
+      fontStyle: 'bold',
+      halign: 'center',
+      fontSize: 8,
+    },
     columnStyles: {
       0: { halign: 'center', cellWidth: 12 },
       1: { halign: 'left' },
@@ -150,128 +162,134 @@ export function generateBillPdf(
       5: { halign: 'right' },
       6: { halign: 'right' },
     },
-    alternateRowStyles: { fillColor: [249, 249, 249] },
+    alternateRowStyles: { fillColor: [250, 250, 250] },
     theme: 'grid',
   });
 
-  // === TOTALS ===
-  y = (doc as any).lastAutoTable.finalY + 4;
-  const totalsX = pageWidth - margin;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(40);
-
-  // Subtotal
-  doc.text(`Subtotal :`, totalsX - 50, y, { align: 'right' });
-  doc.text(`Rs ${bill.subtotal.toLocaleString()}`, totalsX, y, { align: 'right' });
+  // ── TOTALS ──
+  y = (doc as any).lastAutoTable.finalY + 2;
+  doc.setDrawColor(26, 26, 26);
+  doc.setLineWidth(0.8);
+  doc.line(m, y, pw - m, y);
   y += 6;
 
-  // Discount
+  const tx = pw - m;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100);
+  doc.text('Subtotal:', tx - 55, y, { align: 'right' });
+  doc.setTextColor(26, 26, 26);
+  doc.text(`Rs ${bill.subtotal.toLocaleString()}`, tx, y, { align: 'right' });
+  y += 6;
+
   if (bill.discount > 0) {
-    doc.text(`Discount :`, totalsX - 50, y, { align: 'right' });
-    doc.text(`Rs ${bill.discount.toLocaleString()}`, totalsX, y, { align: 'right' });
+    doc.setTextColor(100);
+    doc.text('Discount:', tx - 55, y, { align: 'right' });
+    doc.setTextColor(26, 26, 26);
+    doc.text(`Rs ${bill.discount.toLocaleString()}`, tx, y, { align: 'right' });
     y += 6;
   }
 
-  // Grand Total bar
+  // Grand total bar
   y += 2;
-  const gtBarWidth = 130;
-  const gtBarX = pageWidth - margin - gtBarWidth;
+  const gtW = 120;
+  const gtX = pw - m - gtW;
   doc.setFillColor(218, 165, 32);
-  doc.rect(gtBarX, y - 5, gtBarWidth, 12, 'F');
-  doc.setFontSize(13);
+  doc.rect(gtX, y - 5, gtW, 12, 'F');
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(26, 26, 26);
-  doc.text('GRAND TOTAL :', gtBarX + 8, y + 2);
-  doc.text(`Rs ${bill.finalTotal.toLocaleString()}`, pageWidth - margin - 4, y + 2, { align: 'right' });
+  doc.text('GRAND TOTAL:', gtX + 6, y + 2);
+  doc.text(`Rs ${bill.finalTotal.toLocaleString()}`, pw - m - 4, y + 2, { align: 'right' });
 
-  // === TERMS & PAYMENT ===
+  // ── TERMS & PAYMENT ──
   const showPayment = bill.showPaymentInfo ?? settings.showPaymentInfo;
   const paymentInfo = bill.paymentInfo ?? settings.paymentInfo;
   const showTerms = bill.showTerms ?? settings.showTerms;
   const terms = bill.termsConditions ?? settings.termsConditions;
 
   if (showTerms || showPayment) {
-    y += 18;
-    const colWidth = (pageWidth - margin * 2 - 10) / 2;
+    y += 16;
+    const colW = (pw - m * 2 - 10) / 2;
 
     if (showTerms && terms && terms.length > 0) {
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(218, 165, 32);
-      doc.text('TERMS & CONDITIONS', margin, y);
-      doc.setFontSize(9);
+      doc.text('TERMS & CONDITIONS', m, y);
+      doc.setDrawColor(218, 165, 32);
+      doc.setLineWidth(0.5);
+      doc.line(m, y + 1, m + 50, y + 1);
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(60);
-      terms.forEach((t, i) => {
-        y += 5;
-        doc.text(`• ${t}`, margin + 2, y);
+      doc.setTextColor(80);
+      let ty = y + 6;
+      terms.forEach(t => {
+        doc.text(`• ${t}`, m + 2, ty);
+        ty += 4.5;
       });
     }
 
     if (showPayment && paymentInfo) {
-      let py = (doc as any).lastAutoTable.finalY + 34;
-      const px = showTerms ? margin + colWidth + 10 : margin;
-      if (!showTerms) py = y - 18 + 18;
-      
-      // Payment box
+      const px = showTerms ? m + colW + 10 : m;
+      let py = y;
+
       doc.setDrawColor(218, 165, 32);
       doc.setLineWidth(0.5);
-      const boxY = py - 5;
-      
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(218, 165, 32);
-      doc.text('PAYMENT INFORMATION', px + 2, py);
-      
-      doc.setFontSize(9);
+      doc.text('PAYMENT INFORMATION', px + 4, py);
+      doc.line(px + 4, py + 1, px + 55, py + 1);
+
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(60);
-      let pLine = py + 5;
-      if (paymentInfo.bankName) { doc.text(`• Bank Name: ${paymentInfo.bankName}`, px + 4, pLine); pLine += 5; }
-      if (paymentInfo.accountTitle) { doc.text(`• Account Title: ${paymentInfo.accountTitle}`, px + 4, pLine); pLine += 5; }
-      if (paymentInfo.accountNumber) { doc.text(`• Account No. ${paymentInfo.accountNumber}`, px + 4, pLine); pLine += 5; }
-      if (paymentInfo.iban) { doc.text(`• IBAN: ${paymentInfo.iban}`, px + 4, pLine); pLine += 5; }
-      if (paymentInfo.easypaisaNumber) { doc.text(`• EasyPaisa: ${paymentInfo.easypaisaNumber}`, px + 4, pLine); pLine += 5; }
-      if (paymentInfo.jazzcashNumber) { doc.text(`• JazzCash: ${paymentInfo.jazzcashNumber}`, px + 4, pLine); pLine += 5; }
-      
-      doc.rect(px, boxY, colWidth, pLine - boxY + 2, 'S');
-      y = Math.max(y, pLine);
+      doc.setTextColor(80);
+      let pl = py + 6;
+      const addLine = (label: string, val: string) => {
+        if (val) { doc.text(`• ${label}: ${val}`, px + 6, pl); pl += 4.5; }
+      };
+      addLine('Bank', paymentInfo.bankName);
+      addLine('Account', paymentInfo.accountTitle);
+      addLine('Acc No', paymentInfo.accountNumber);
+      addLine('IBAN', paymentInfo.iban);
+      addLine('EasyPaisa', paymentInfo.easypaisaNumber);
+      addLine('JazzCash', paymentInfo.jazzcashNumber);
+
+      doc.setFillColor(255, 253, 245);
+      doc.rect(px, py - 4, colW, pl - py + 6, 'S');
     }
   }
 
-  // === NOTES ===
+  // ── NOTES ──
   if (bill.notes) {
-    y += 12;
-    doc.setFontSize(9);
+    y = Math.max(y, (doc as any).lastAutoTable.finalY) + 40;
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'italic');
-    doc.setTextColor(80);
-    doc.text(`Notes: ${bill.notes}`, margin, y);
+    doc.setTextColor(120);
+    doc.text(`Notes: ${bill.notes}`, m, y);
   }
 
-  // === FOOTER MESSAGE ===
+  // ── FOOTER MESSAGE ──
   if (settings.footerMessage) {
-    y += 16;
-    doc.setDrawColor(180);
-    doc.setLineWidth(0.2);
-    doc.line(margin + 40, y - 4, pageWidth - margin - 40, y - 4);
-    doc.setFontSize(11);
-    doc.setTextColor(100);
+    doc.setFontSize(10);
+    doc.setTextColor(140);
     doc.setFont('helvetica', 'normal');
-    doc.text(settings.footerMessage, pageWidth / 2, y, { align: 'center' });
+    doc.text(settings.footerMessage, pw / 2, ph - 22, { align: 'center' });
   }
 
-  // === BOTTOM BAR ===
-  const barH = 14;
-  const barY = pageHeight - barH;
+  // ── BOTTOM BAR ──
   doc.setFillColor(26, 26, 26);
-  doc.rect(0, barY, pageWidth, barH, 'F');
-  doc.setFontSize(8);
+  doc.rect(0, ph - 14, pw, 14, 'F');
+  doc.setFontSize(7);
   doc.setTextColor(180);
   doc.setFont('helvetica', 'normal');
-  const footerParts = [settings.phone1, settings.phone2].filter(Boolean);
-  const footerText = footerParts.join('  |  ');
-  doc.text(footerText, pageWidth / 2, barY + 9, { align: 'center' });
+  const footerParts = [
+    settings.phone1 && `📞 ${settings.phone1}`,
+    settings.phone2 && `📱 ${settings.phone2}`,
+    settings.address && `📍 ${settings.address.split(',').slice(0, 2).join(',')}`,
+  ].filter(Boolean);
+  doc.text(footerParts.join('   |   '), pw / 2, ph - 6, { align: 'center' });
 
   return doc;
 }
