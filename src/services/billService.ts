@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
   phone1: '0346-9900252',
   phone2: '0333-9962461',
   address: 'Shop #53, Block B, Al-Madina Plaza, Tarnol, Islamabad',
+  website: '',
   logoPath: null,
   footerMessage: 'Thank you for your business',
   lastBillNumber: 0,
@@ -31,19 +32,10 @@ const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
 export async function getBillSettings(): Promise<BillSettings> {
   const existing = await db.table('billSettings').toArray();
   if (existing.length > 0) {
-    // Ensure new fields exist via migration
     const s = existing[0] as BillSettings;
-    return {
-      ...DEFAULT_SETTINGS,
-      ...s,
-    };
+    return { ...DEFAULT_SETTINGS, ...s };
   }
-  
-  const settings: BillSettings = {
-    id: uuidv4(),
-    ...DEFAULT_SETTINGS,
-    updatedAt: new Date(),
-  };
+  const settings: BillSettings = { id: uuidv4(), ...DEFAULT_SETTINGS, updatedAt: new Date() };
   await db.table('billSettings').add(settings);
   return settings;
 }
@@ -67,52 +59,26 @@ export async function resetBillCounter(): Promise<void> {
 }
 
 export async function createBill(
-  buyerName: string,
-  buyerPhone: string,
-  date: Date,
-  items: BillFormItem[],
-  discount: number,
-  notes: string,
-  options?: {
-    showPaymentInfo?: boolean;
-    paymentInfo?: PaymentInfo;
-    showTerms?: boolean;
-    termsConditions?: string[];
-  },
+  buyerName: string, buyerPhone: string, date: Date, items: BillFormItem[],
+  discount: number, notes: string,
+  options?: { showPaymentInfo?: boolean; paymentInfo?: PaymentInfo; showTerms?: boolean; termsConditions?: string[]; },
 ): Promise<Bill> {
   const settings = await getBillSettings();
   const nextNum = settings.lastBillNumber + 1;
   const billNumber = `AMT-${String(nextNum).padStart(4, '0')}`;
-
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
   const finalTotal = subtotal - discount;
 
   const bill: Bill = {
-    id: uuidv4(),
-    billNumber,
-    buyerName,
-    buyerPhone,
-    date,
-    subtotal,
-    discount,
-    finalTotal,
-    notes,
-    showPaymentInfo: options?.showPaymentInfo,
-    paymentInfo: options?.paymentInfo,
-    showTerms: options?.showTerms,
-    termsConditions: options?.termsConditions,
+    id: uuidv4(), billNumber, buyerName, buyerPhone, date, subtotal, discount, finalTotal, notes,
+    showPaymentInfo: options?.showPaymentInfo, paymentInfo: options?.paymentInfo,
+    showTerms: options?.showTerms, termsConditions: options?.termsConditions,
     createdAt: new Date(),
   };
 
   const billItems: BillItem[] = items.map(item => ({
-    id: uuidv4(),
-    billId: bill.id,
-    partName: item.partName,
-    partCode: item.partCode,
-    brand: item.brand,
-    quantity: item.quantity,
-    price: item.price,
-    total: item.quantity * item.price,
+    id: uuidv4(), billId: bill.id, partName: item.partName, partCode: item.partCode,
+    brand: item.brand, quantity: item.quantity, price: item.price, total: item.quantity * item.price,
   }));
 
   await db.transaction('rw', [db.table('bills'), db.table('billItems'), db.table('billSettings')], async () => {
@@ -122,9 +88,7 @@ export async function createBill(
   });
 
   await logActivity({
-    action: 'create',
-    entityType: 'sale',
-    entityId: bill.id,
+    action: 'create', entityType: 'sale', entityId: bill.id,
     description: `Bill ${billNumber} created for ${buyerName} – Rs ${finalTotal.toLocaleString()}`,
   });
 
@@ -146,18 +110,10 @@ export async function getBillItems(billId: string): Promise<BillItem[]> {
 export async function deleteBill(id: string): Promise<boolean> {
   const bill = await db.table('bills').get(id) as Bill | undefined;
   if (!bill) return false;
-
   await db.transaction('rw', [db.table('bills'), db.table('billItems')], async () => {
     await db.table('billItems').where('billId').equals(id).delete();
     await db.table('bills').delete(id);
   });
-
-  await logActivity({
-    action: 'delete',
-    entityType: 'sale',
-    entityId: id,
-    description: `Deleted bill ${bill.billNumber}`,
-  });
-
+  await logActivity({ action: 'delete', entityType: 'sale', entityId: id, description: `Deleted bill ${bill.billNumber}` });
   return true;
 }

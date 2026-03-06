@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2 } from 'lucide-react';
+import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2 } from 'lucide-react';
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
@@ -13,20 +13,11 @@ import { captureBillAsImage, downloadDataUrl, getExtension, getMimeType } from '
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
 export default function BillHistory() {
@@ -38,9 +29,7 @@ export default function BillHistory() {
 
   const previewRef = useRef<HTMLDivElement>(null);
   const [renderBill, setRenderBill] = useState<{
-    settings: BillSettingsType;
-    bill: Bill;
-    items: BillItem[];
+    settings: BillSettingsType; bill: Bill; items: BillItem[];
   } | null>(null);
   const pendingAction = useRef<'image' | 'share' | null>(null);
 
@@ -53,29 +42,21 @@ export default function BillHistory() {
 
   useEffect(() => { loadBills(); }, []);
 
-  // Fixed image capture: use setTimeout to ensure full DOM paint + font loading
+  // Image capture with proper delay
   useEffect(() => {
     if (!renderBill || !pendingAction.current) return;
-
     const action = pendingAction.current;
     const billData = renderBill;
 
-    // Use a 600ms delay to guarantee DOM paint, font loading, and image loading
     const timer = setTimeout(async () => {
       if (!previewRef.current) {
         setRenderBill(null);
         pendingAction.current = null;
         return;
       }
-
       try {
         const dataUrl = await captureBillAsImage(previewRef.current, 'png');
-        
-        // Verify the image is not blank (check data URL length)
-        if (!dataUrl || dataUrl.length < 1000) {
-          throw new Error('Captured image appears to be blank');
-        }
-
+        if (!dataUrl || dataUrl.length < 1000) throw new Error('Blank image');
         if (action === 'image') {
           downloadDataUrl(dataUrl, `${billData.bill.billNumber}.png`);
           toast({ title: 'Image downloaded' });
@@ -89,16 +70,13 @@ export default function BillHistory() {
         setRenderBill(null);
         pendingAction.current = null;
       }
-    }, 800);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, [renderBill]);
 
   const prepareBillData = useCallback(async (bill: Bill) => {
-    const [settings, items] = await Promise.all([
-      getBillSettings(),
-      getBillItems(bill.id),
-    ]);
+    const [settings, items] = await Promise.all([getBillSettings(), getBillItems(bill.id)]);
     return { settings, bill, items };
   }, []);
 
@@ -123,15 +101,9 @@ export default function BillHistory() {
         const ext = format === 'pdf' ? 'pdf' : getExtension(format as 'png');
         const mime = format === 'pdf' ? 'application/pdf' : getMimeType(format as 'png');
         const file = new File([blob], `${bill.billNumber}.${ext}`, { type: mime });
-        await navigator.share({
-          title: `Bill ${bill.billNumber}`,
-          text: `Bill for ${bill.buyerName} – Rs ${bill.finalTotal.toLocaleString()}`,
-          files: [file],
-        });
+        await navigator.share({ title: `Bill ${bill.billNumber}`, text: `Bill for ${bill.buyerName} – Rs ${bill.finalTotal.toLocaleString()}`, files: [file] });
         return;
-      } catch {
-        // fallback
-      }
+      } catch { /* fallback */ }
     }
     const text = `Bill ${bill.billNumber}\nBuyer: ${bill.buyerName}\nTotal: Rs ${bill.finalTotal.toLocaleString()}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
@@ -153,11 +125,17 @@ export default function BillHistory() {
 
   return (
     <AppLayout>
-      <Header title="Bill History" showBack />
+      <Header title="Bills" showBack />
       <div className="p-4 space-y-4">
-        <Button className="w-full gap-2" onClick={() => navigate('/bills/create')}>
-          <Plus className="h-4 w-4" /> Create New Bill
-        </Button>
+        {/* Two-button header */}
+        <div className="flex gap-3">
+          <Button className="flex-1 gap-2" onClick={() => navigate('/bills/create')}>
+            <Plus className="h-4 w-4" /> Create New Bill
+          </Button>
+          <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate('/bills/settings')}>
+            <Palette className="h-4 w-4" /> Bill Designer
+          </Button>
+        </div>
 
         {loading ? (
           <div className="text-center text-muted-foreground text-sm py-8">Loading...</div>
@@ -176,46 +154,27 @@ export default function BillHistory() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-primary">{bill.billNumber}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(bill.date).toLocaleDateString('en-PK')}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{new Date(bill.date).toLocaleDateString('en-PK')}</span>
                       </div>
                       <p className="text-sm font-medium mt-0.5 truncate">{bill.buyerName}</p>
                       <p className="text-xs text-muted-foreground">{formatCurrency(bill.finalTotal)}</p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleExportImage(bill)}>
-                          <ImageIcon className="h-4 w-4 mr-2" /> Export as Image
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExportPdf(bill)}>
-                          <FileText className="h-4 w-4 mr-2" /> Export as PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleShare(bill)}>
-                          <Share2 className="h-4 w-4 mr-2" /> Share
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}>
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportImage(bill)}><ImageIcon className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExportPdf(bill)}><FileText className="h-4 w-4 mr-2" /> Export as PDF</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleShare(bill)}><Share2 className="h-4 w-4 mr-2" /> Share</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-
                   <div className="flex gap-2 mt-2 pt-2 border-t border-border">
-                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}>
-                      <ImageIcon className="h-3 w-3" /> Image
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportPdf(bill)}>
-                      <FileText className="h-3 w-3" /> PDF
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleShare(bill)}>
-                      <Share2 className="h-3 w-3" /> Share
-                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}><ImageIcon className="h-3 w-3" /> Image</Button>
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportPdf(bill)}><FileText className="h-3 w-3" /> PDF</Button>
+                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleShare(bill)}><Share2 className="h-3 w-3" /> Share</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -224,9 +183,19 @@ export default function BillHistory() {
         )}
       </div>
 
-      {/* Offscreen bill template for image capture — positioned fixed but clipped */}
+      {/* Offscreen template for image capture — visible but off-viewport for rendering */}
       {renderBill && (
-        <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0.01, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            top: '0',
+            width: '794px',
+            background: '#ffffff',
+            zIndex: -1,
+          }}
+          aria-hidden="true"
+        >
           <BillPreviewTemplate
             ref={previewRef}
             settings={renderBill.settings}
@@ -240,9 +209,7 @@ export default function BillHistory() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Bill?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this bill? This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

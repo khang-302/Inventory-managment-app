@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
 import type { BillSettings } from '@/types/bill';
 import {
@@ -26,7 +26,7 @@ export default function BillSettingsPage() {
   const handleSave = async () => {
     if (!settings) return;
     await updateBillSettings(settings);
-    toast({ title: 'Bill settings saved' });
+    toast({ title: 'Bill Designer settings saved' });
   };
 
   const handleResetCounter = async () => {
@@ -71,12 +71,15 @@ export default function BillSettingsPage() {
 
   return (
     <AppLayout>
-      <Header title="Bill Settings" showBack />
+      <Header title="Bill Designer" showBack />
       <div className="p-4 space-y-4 pb-24">
         {/* Shop Info */}
         <Card className="bg-card">
           <CardContent className="p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Shop Information</h3>
+            <div className="flex items-center gap-2 mb-1">
+              <Store className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Shop Information</h3>
+            </div>
             <div>
               <Label className="text-xs">Shop Name</Label>
               <Input value={settings.shopName} onChange={e => setSettings({ ...settings, shopName: e.target.value })} className="text-sm" />
@@ -104,6 +107,10 @@ export default function BillSettingsPage() {
               <Textarea value={settings.address} onChange={e => setSettings({ ...settings, address: e.target.value })} rows={2} className="text-sm" />
             </div>
             <div>
+              <Label className="text-xs flex items-center gap-1"><Globe className="h-3 w-3" /> Website</Label>
+              <Input value={settings.website || ''} onChange={e => setSettings({ ...settings, website: e.target.value })} className="text-sm" placeholder="www.yoursite.com" />
+            </div>
+            <div>
               <Label className="text-xs">Footer Message</Label>
               <Input value={settings.footerMessage} onChange={e => setSettings({ ...settings, footerMessage: e.target.value })} className="text-sm" placeholder="Thank you for your business" />
             </div>
@@ -112,7 +119,7 @@ export default function BillSettingsPage() {
               <Input type="file" accept="image/*" onChange={handleLogoUpload} className="text-sm" />
               {settings.logoPath && (
                 <div className="mt-2 flex items-center gap-2">
-                  <img src={settings.logoPath} alt="Logo" className="h-10 w-10 rounded object-contain bg-muted" />
+                  <img src={settings.logoPath} alt="Logo" className="h-10 w-10 rounded-full object-contain bg-muted" />
                   <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => setSettings({ ...settings, logoPath: null })}>Remove</Button>
                 </div>
               )}
@@ -203,7 +210,7 @@ export default function BillSettingsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Reset Bill Counter?</AlertDialogTitle>
-            <AlertDialogDescription>This will reset the bill number counter back to AMT-0001. Existing bills won't be affected.</AlertDialogDescription>
+            <AlertDialogDescription>This will reset the bill number counter back to AMT-0001.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
