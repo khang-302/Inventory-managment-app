@@ -106,13 +106,8 @@ export default function BillCreate() {
           termsConditions: showTerms ? termsConditions.filter(t => t.trim()) : undefined,
         }
       );
-      
-      const settings = await getBillSettings();
-      const billItemsData = await getBillItems(bill.id);
-      const pdf = generateBillPdf(settings, bill, billItemsData);
-      pdf.save(`${bill.billNumber}.pdf`);
 
-      toast({ title: `Bill ${bill.billNumber} saved & downloaded` });
+      toast({ title: `Bill ${bill.billNumber} saved successfully` });
       navigate('/bills');
     } catch (e) {
       toast({ title: 'Failed to create bill', variant: 'destructive' });
