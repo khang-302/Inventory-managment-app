@@ -111,6 +111,10 @@ export default function BillSettingsPage() {
               <Input value={settings.website || ''} onChange={e => setSettings({ ...settings, website: e.target.value })} className="text-sm" placeholder="www.yoursite.com" />
             </div>
             <div>
+              <Label className="text-xs flex items-center gap-1"><Globe className="h-3 w-3" /> Social Media</Label>
+              <Input value={settings.socialMedia || ''} onChange={e => setSettings({ ...settings, socialMedia: e.target.value })} className="text-sm" placeholder="Facebook / Instagram / WhatsApp link" />
+            </div>
+            <div>
               <Label className="text-xs">Footer Message</Label>
               <Input value={settings.footerMessage} onChange={e => setSettings({ ...settings, footerMessage: e.target.value })} className="text-sm" placeholder="Thank you for your business" />
             </div>
