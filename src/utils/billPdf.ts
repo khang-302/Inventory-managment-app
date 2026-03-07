@@ -5,6 +5,7 @@ import type { BillSettings, Bill, BillItem } from '@/types/bill';
 const TEAL: [number, number, number] = [13, 110, 110];
 const TEAL_DARK: [number, number, number] = [10, 90, 90];
 const GOLD: [number, number, number] = [212, 160, 23];
+const GOLD_LIGHT: [number, number, number] = [232, 185, 35];
 const RED: [number, number, number] = [192, 57, 43];
 
 export function generateBillPdf(
@@ -18,7 +19,7 @@ export function generateBillPdf(
   const m = 15;
   let y = 0;
 
-  // ── HEADER BANNER (dark teal) ──
+  // ── HEADER BANNER ──
   doc.setFillColor(...TEAL);
   doc.rect(0, 0, pw, 36, 'F');
 
@@ -33,7 +34,7 @@ export function generateBillPdf(
     doc.text(initials, m + 12, 21, { align: 'center' });
   }
 
-  // Shop name
+  // Shop name + tagline
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
@@ -44,6 +45,19 @@ export function generateBillPdf(
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(200, 230, 230);
     doc.text(settings.tagline, m + 28, 24);
+  }
+
+  // Header right: contact info
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 230, 230);
+  let hy = 14;
+  if (settings.phone1) { doc.text(settings.phone1, pw - m, hy, { align: 'right' }); hy += 4; }
+  if (settings.address) { doc.text(settings.address, pw - m, hy, { align: 'right', maxWidth: 60 }); hy += 4; }
+  if (settings.footerMessage) {
+    doc.setTextColor(...GOLD_LIGHT);
+    doc.setFont('helvetica', 'italic');
+    doc.text(settings.footerMessage, pw - m, hy + 2, { align: 'right' });
   }
 
   // ── GOLD SEPARATOR ──
@@ -62,12 +76,18 @@ export function generateBillPdf(
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30);
   doc.text(settings.shopName.toUpperCase(), m + 28, y + 6);
+  if (settings.ownerName) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120);
+    doc.text(`Owner: ${settings.ownerName}`, pw - m, y + 6, { align: 'right' });
+  }
   y += 12;
 
   // ── BUYER / INVOICE INFO ──
   const halfW = (pw - m * 2) / 2;
 
-  // Left: Invoice To header
+  // Left: Invoice To
   doc.setFillColor(...TEAL);
   doc.rect(m, y, halfW, 8, 'F');
   doc.setFontSize(9);
@@ -75,18 +95,23 @@ export function generateBillPdf(
   doc.setTextColor(255, 255, 255);
   doc.text('Invoice To :', m + 4, y + 5.5);
 
-  // Right: Invoice No header
+  // Right: Invoice No
   doc.setFillColor(...TEAL);
   doc.rect(m + halfW, y, halfW, 8, 'F');
-  doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
   doc.text('Invoice No :', pw - m - 55, y + 5.5);
-  doc.setTextColor(...GOLD);
+  doc.setTextColor(...GOLD_LIGHT);
   doc.text(bill.billNumber, pw - m - 4, y + 5.5, { align: 'right' });
 
   y += 8;
 
-  // Left box: buyer
+  // Gold top border on boxes
+  doc.setFillColor(...GOLD);
+  doc.rect(m, y, halfW, 1.5, 'F');
+  doc.rect(m + halfW, y, halfW, 1.5, 'F');
+  y += 1.5;
+
+  // Left box
   doc.setDrawColor(220);
   doc.rect(m, y, halfW, 16, 'S');
   doc.setFontSize(12);
@@ -100,12 +125,18 @@ export function generateBillPdf(
     doc.text(`Phone: ${bill.buyerPhone}`, m + 4, y + 12);
   }
 
-  // Right box: date
+  // Right box
   doc.rect(m + halfW, y, halfW, 16, 'S');
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(60);
-  doc.text(`Date : ${new Date(bill.date).toLocaleDateString('en-PK')}`, pw - m - 4, y + 10, { align: 'right' });
+  doc.text(`Date : ${new Date(bill.date).toLocaleDateString('en-PK')}`, pw - m - 4, y + 7, { align: 'right' });
+  if (bill.notes) {
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(120);
+    doc.text(`Notes: ${bill.notes}`, pw - m - 4, y + 12, { align: 'right', maxWidth: halfW - 8 });
+  }
 
   y += 20;
 
@@ -149,7 +180,6 @@ export function generateBillPdf(
   // ── TOTALS ──
   y = (doc as any).lastAutoTable.finalY + 2;
 
-  // Subtotal
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(60);
@@ -162,13 +192,13 @@ export function generateBillPdf(
     y += 7;
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(60);
-    doc.text('Discount', pw - m - 55, y + 5);
+    doc.text('Discount :', pw - m - 55, y + 5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(30);
-    doc.text(bill.discount.toLocaleString(), pw - m, y + 5, { align: 'right' });
+    doc.setTextColor(192, 57, 43);
+    doc.text(`- ${bill.discount.toLocaleString()}`, pw - m, y + 5, { align: 'right' });
   }
 
-  // Grand Total bar (gold left + teal right)
+  // Grand Total bar
   y += 12;
   const barW = 120;
   const barX = pw - m - barW;
@@ -184,7 +214,7 @@ export function generateBillPdf(
   doc.setTextColor(30);
   doc.text('GRAND TOTAL :', barX + 6, y + 8);
   doc.setTextColor(255, 255, 255);
-  doc.text(bill.finalTotal.toLocaleString(), pw - m - 4, y + 8, { align: 'right' });
+  doc.text(`Rs ${bill.finalTotal.toLocaleString()}`, pw - m - 4, y + 8, { align: 'right' });
 
   // ── TERMS & PAYMENT ──
   const showPayment = bill.showPaymentInfo ?? settings.showPaymentInfo;
@@ -201,10 +231,13 @@ export function generateBillPdf(
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...TEAL);
       doc.text('TERMS & CONDITIONS', m, y);
+      // Gold underline
+      doc.setFillColor(...GOLD);
+      doc.rect(m, y + 1.5, 45, 0.8, 'F');
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(80);
-      let ty = y + 6;
+      let ty = y + 7;
       terms.forEach(t => {
         doc.text(`• ${t}`, m + 2, ty);
         ty += 4.5;
@@ -215,21 +248,21 @@ export function generateBillPdf(
       const px = showTerms ? m + colW + 10 : m;
       let py = y;
 
-      // Dashed border box
       doc.setDrawColor(...TEAL);
-      doc.setLineDashPattern([2, 2], 0);
+      doc.setLineWidth(0.5);
       doc.rect(px, py - 4, colW, 40, 'S');
-      doc.setLineDashPattern([], 0);
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...TEAL);
       doc.text('PAYMENT INFORMATION', px + 4, py);
+      doc.setFillColor(...GOLD);
+      doc.rect(px + 4, py + 1.5, 50, 0.8, 'F');
 
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(80);
-      let pl = py + 6;
+      let pl = py + 7;
       const addLine = (label: string, val: string) => {
         if (val) { doc.text(`• ${label}: ${val}`, px + 6, pl); pl += 4.5; }
       };
@@ -242,20 +275,11 @@ export function generateBillPdf(
     }
   }
 
-  // ── NOTES ──
-  if (bill.notes) {
-    y = Math.max(y + 50, (doc as any).lastAutoTable.finalY + 40);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(120);
-    doc.text(`Notes: ${bill.notes}`, m, y);
-  }
-
   // ── FOOTER ──
-  // Icon row
   const fy = ph - 28;
   const thirdW = pw / 3;
 
+  // Icon row
   doc.setFillColor(...RED);
   doc.rect(0, fy, thirdW, 8, 'F');
   doc.setFillColor(...TEAL);
@@ -272,18 +296,16 @@ export function generateBillPdf(
   // Info row
   doc.setFillColor(...TEAL_DARK);
   doc.rect(0, fy + 8, pw, 20, 'F');
-
   doc.setFontSize(7);
   doc.setTextColor(200, 230, 230);
   doc.setFont('helvetica', 'normal');
 
-  const addr = settings.address || 'Shop Address';
-  doc.text(addr, thirdW * 0.5, fy + 16, { align: 'center', maxWidth: thirdW - 10 });
+  doc.text(settings.address || 'Shop Address', thirdW * 0.5, fy + 16, { align: 'center', maxWidth: thirdW - 10 });
 
   const phones = [settings.phone1, settings.phone2].filter(Boolean).join('\n');
   doc.text(phones, thirdW * 1.5, fy + 15, { align: 'center' });
 
-  doc.text(settings.website || 'Website Coming Soon', thirdW * 2.5, fy + 16, { align: 'center' });
+  doc.text(settings.socialMedia || settings.website || 'Social Media', thirdW * 2.5, fy + 16, { align: 'center', maxWidth: thirdW - 10 });
 
   return doc;
 }

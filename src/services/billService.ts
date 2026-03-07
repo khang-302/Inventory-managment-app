@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
   phone2: '0333-9962461',
   address: 'Shop #53, Block B, Al-Madina Plaza, Tarnol, Islamabad',
   website: '',
+  socialMedia: '',
   logoPath: null,
   footerMessage: 'Thank you for your business',
   lastBillNumber: 0,

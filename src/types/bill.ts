@@ -18,6 +18,7 @@ export interface BillSettings {
   phone2: string;
   address: string;
   website: string;
+  socialMedia: string;
   logoPath: string | null;
   footerMessage: string;
   lastBillNumber: number;
