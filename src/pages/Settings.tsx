@@ -193,51 +193,53 @@ export default function Settings() {
 
         {/* Profile Card */}
         {!search && (
-          <Card className="bg-card overflow-hidden cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => navigate('/settings/branding')}>
-            <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
-              <Avatar className="h-20 w-20">
-                {customLogo ? (
-                  <AvatarImage src={customLogo} alt={appName} />
-                ) : null}
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
-                  <Store className="h-8 w-8" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="text-xl font-bold">{appName}</h2>
-                <p className="text-sm text-muted-foreground">Inventory & Sales Manager</p>
-                <p className="text-xs text-primary mt-1">Tap to edit branding →</p>
-              </div>
-              <div className="flex gap-3 w-full justify-center">
-                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-                  <Package className="h-4 w-4 text-primary" />
-                  <div className="text-left">
-                    <p className="text-sm font-semibold">{totalParts}</p>
-                    <p className="text-[10px] text-muted-foreground">Parts</p>
+          <div className="animate-fade-in opacity-0" style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}>
+            <Card className="bg-card overflow-hidden cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => navigate('/settings/branding')}>
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+                <Avatar className="h-20 w-20">
+                  {customLogo ? (
+                    <AvatarImage src={customLogo} alt={appName} />
+                  ) : null}
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                    <Store className="h-8 w-8" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-xl font-bold">{appName}</h2>
+                  <p className="text-sm text-muted-foreground">Inventory & Sales Manager</p>
+                  <p className="text-xs text-primary mt-1">Tap to edit branding →</p>
+                </div>
+                <div className="flex gap-3 w-full justify-center">
+                  <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                    <Package className="h-4 w-4 text-primary" />
+                    <div className="text-left">
+                      <p className="text-sm font-semibold">{totalParts}</p>
+                      <p className="text-[10px] text-muted-foreground">Parts</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                    <Tags className="h-4 w-4 text-primary" />
+                    <div className="text-left">
+                      <p className="text-sm font-semibold">{totalBrands}</p>
+                      <p className="text-[10px] text-muted-foreground">Brands</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <div className="text-left">
+                      <p className="text-sm font-semibold">{stats.lowStockCount}</p>
+                      <p className="text-[10px] text-muted-foreground">Low Stock</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-                  <Tags className="h-4 w-4 text-primary" />
-                  <div className="text-left">
-                    <p className="text-sm font-semibold">{totalBrands}</p>
-                    <p className="text-[10px] text-muted-foreground">Brands</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2">
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
-                  <div className="text-left">
-                    <p className="text-sm font-semibold">{stats.lowStockCount}</p>
-                    <p className="text-[10px] text-muted-foreground">Low Stock</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Branding */}
         {filteredBranding.length > 0 && (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 animate-fade-in opacity-0" style={{ animationDelay: '60ms', animationFillMode: 'forwards' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Branding</p>
             <Card className="bg-card overflow-hidden">
               <CardContent className="p-0 divide-y divide-border">
@@ -257,7 +259,7 @@ export default function Settings() {
 
         {/* General Settings */}
         {filteredSettings.length > 0 && (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 animate-fade-in opacity-0" style={{ animationDelay: '120ms', animationFillMode: 'forwards' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">General</p>
             <Card className="bg-card overflow-hidden">
               <CardContent className="p-0 divide-y divide-border">
@@ -277,7 +279,7 @@ export default function Settings() {
 
         {/* Data & Sync */}
         {(filteredSync.length > 0 || !search || 'notifications'.includes(search.toLowerCase())) && (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 animate-fade-in opacity-0" style={{ animationDelay: '180ms', animationFillMode: 'forwards' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Data & Sync</p>
             <Card className="bg-card overflow-hidden">
               <CardContent className="p-0 divide-y divide-border">
@@ -314,7 +316,7 @@ export default function Settings() {
 
         {/* Activity & Logs */}
         {(!search || 'activity log backup sync'.includes(search.toLowerCase())) && (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 animate-fade-in opacity-0" style={{ animationDelay: '240ms', animationFillMode: 'forwards' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Activity & Logs</p>
             <Card className="bg-card overflow-hidden">
               <CardContent className="p-0">
@@ -349,7 +351,7 @@ export default function Settings() {
 
         {/* Legal & Info */}
         {filteredLegal.length > 0 && (
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 animate-fade-in opacity-0" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Legal & Info</p>
             <Card className="bg-card overflow-hidden">
               <CardContent className="p-0 divide-y divide-border">
@@ -368,7 +370,7 @@ export default function Settings() {
         )}
 
         {/* App Info */}
-        <div className="text-center pt-4 pb-8 text-muted-foreground">
+        <div className="text-center pt-4 pb-8 text-muted-foreground animate-fade-in opacity-0" style={{ animationDelay: '360ms', animationFillMode: 'forwards' }}>
           <p className="text-sm font-medium">{appName}</p>
           <p className="text-xs">Inventory & Sales Manager</p>
           <p className="text-xs mt-1 font-mono text-primary/70">v1.2.0</p>
