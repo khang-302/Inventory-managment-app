@@ -55,6 +55,44 @@ export default function Reports() {
   const [inventoryValue, setInventoryValue] = useState<{ cost: number; retail: number }>({ cost: 0, retail: 0 });
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Pull-to-refresh state
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const PULL_THRESHOLD = 80;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0) {
+      touchStartY.current = e.touches[0].clientY;
+    } else {
+      touchStartY.current = 0;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartY.current || isRefreshing) return;
+    const distance = Math.max(0, e.touches[0].clientY - touchStartY.current);
+    // Apply dampening
+    setPullDistance(Math.min(distance * 0.5, 120));
+  }, [isRefreshing]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+      setIsRefreshing(true);
+      setPullDistance(PULL_THRESHOLD * 0.6);
+      setRefreshKey(k => k + 1);
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }, 800);
+    } else {
+      setPullDistance(0);
+    }
+    touchStartY.current = 0;
+  }, [pullDistance, isRefreshing]);
 
   // Refs for PDF capture
   const kpiGridRef = useRef<HTMLDivElement | null>(null);
@@ -97,7 +135,7 @@ export default function Reports() {
       }
     };
     fetchData();
-  }, [selectedRange.startDate.getTime(), selectedRange.endDate.getTime(), selectedRange.label]);
+  }, [selectedRange.startDate.getTime(), selectedRange.endDate.getTime(), selectedRange.label, refreshKey]);
 
   const captureVisibleSections = useCallback(async (): Promise<CapturedSection[]> => {
     const candidates = [
