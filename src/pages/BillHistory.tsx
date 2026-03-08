@@ -184,8 +184,15 @@ export default function BillHistory() {
             <p className="text-muted-foreground/60 text-xs mt-1">Create your first bill to get started</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {bills.map(bill => (
+          <>
+            <BillSearchFilter bills={bills} onFiltered={setFilteredBills} />
+            {filteredBills.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground text-sm">No bills match your search</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredBills.map(bill => (
               <Card key={bill.id} className="bg-card">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
