@@ -309,14 +309,18 @@ export default function Settings() {
                     title={item.title}
                     description={item.description}
                     onClick={() => navigate(item.path)}
+                    iconBg={item.iconBg}
+                    iconColor={item.iconColor}
                   />
                 ))}
                 {(!search || 'notifications'.includes(search.toLowerCase()) || 'low stock'.includes(search.toLowerCase()) || 'alerts'.includes(search.toLowerCase())) && (
                   <SettingItem
-                    icon={Bell}
+                    icon={BellRing}
                     title="Notifications"
                     description="Low stock and sync alerts"
                     onClick={handleNotificationsClick}
+                    iconBg="bg-orange-500/10"
+                    iconColor="text-orange-500"
                     rightElement={
                       <Switch
                         checked={notifications}
