@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2 } from 'lucide-react';
+import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2, MessageCircle } from 'lucide-react';
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
