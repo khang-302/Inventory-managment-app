@@ -249,7 +249,7 @@ export default function Inventory() {
               variant="ghost"
               size="icon"
               className="h-9 w-9"
-              onClick={cycleViewMode}
+              onClick={() => { setSelectedIds(new Set()); cycleViewMode(); }}
               title={`Switch to ${VIEW_CYCLE[nextViewIndex]} view`}
             >
               <NextViewIcon className="h-5 w-5" />
