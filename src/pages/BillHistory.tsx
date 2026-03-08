@@ -164,8 +164,10 @@ export default function BillHistory() {
           <div className="text-center text-muted-foreground text-sm py-8">Loading...</div>
         ) : bills.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground text-sm">No bills yet</p>
+            <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-10 w-10 text-muted-foreground/40" />
+            </div>
+            <p className="text-muted-foreground text-sm font-medium">No bills yet</p>
             <p className="text-muted-foreground/60 text-xs mt-1">Create your first bill to get started</p>
           </div>
         ) : (
