@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, type AutocompleteField } from '@/services/autocompleteService';
+import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, exportAutocompleteData, importAutocompleteData, type AutocompleteField } from '@/services/autocompleteService';
 import type { AutocompleteEntry } from '@/types';
 import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
