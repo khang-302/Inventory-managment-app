@@ -18,6 +18,7 @@ interface TopSellingPartsProps {
 }
 
 export function TopSellingParts({ data, title = "Top Sellers" }: TopSellingPartsProps) {
+  const { formatFull } = useCurrencyFormat();
   if (data.length === 0) return null;
 
   const maxQty = Math.max(...data.map(d => d.quantitySold), 1);
