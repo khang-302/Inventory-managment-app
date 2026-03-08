@@ -4,7 +4,7 @@ import { db, initializeDatabase, getSetting, updateSetting } from '@/db/database
 import { clearAllDemoData } from '@/services/demoSeedService';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category, WeeklySaleDay, StockDistribution } from '@/types';
-import { startOfDay, endOfDay, startOfMonth, subDays } from 'date-fns';
+import { startOfDay, endOfDay, startOfMonth, subDays, format } from 'date-fns';
 import { toSafeNumber, toSafeQuantity, safeAdd } from '@/utils/safeNumber';
 
 type NavigationLayout = 'bottom' | 'sidebar';
