@@ -19,6 +19,7 @@ import {
   TimeRangeSelector,
   TopSellingParts,
   InsightsPanel,
+  MonthComparison,
 } from '@/components/reports';
 import {
   ShoppingCart,
@@ -414,6 +415,9 @@ export default function Reports() {
             accentColor="hsl(280, 45%, 55%)"
           />
         </div>
+
+        {/* Month-over-Month Comparison */}
+        {sales.length > 0 && <MonthComparison sales={sales} />}
 
         {/* Quick Insights */}
         {summary && (

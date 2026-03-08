@@ -7,3 +7,4 @@ export { SalesHeatmap } from './SalesHeatmap';
 export { TimeRangeSelector } from './TimeRangeSelector';
 export { TopSellingParts } from './TopSellingParts';
 export { InsightsPanel } from './InsightsPanel';
+export { MonthComparison } from './MonthComparison';
