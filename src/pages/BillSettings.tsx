@@ -9,9 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
-import type { BillSettings } from '@/types/bill';
+import type { BillSettings, WatermarkStyle } from '@/types/bill';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -204,15 +204,49 @@ export default function BillSettingsPage() {
             <p className="text-xs text-muted-foreground">Add a subtle diagonal watermark pattern to the bill body</p>
             {settings.watermarkEnabled && (
               <div className="space-y-3 pt-2 border-t border-border">
+                {/* Style selector */}
                 <div>
-                  <Label className="text-xs">Watermark Text</Label>
-                  <Input
-                    value={settings.watermarkText}
-                    onChange={e => setSettings({ ...settings, watermarkText: e.target.value })}
-                    className="text-sm"
-                    placeholder={settings.shopName || 'Shop name used by default'}
-                  />
+                  <Label className="text-xs mb-2 block">Watermark Style</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { value: 'text' as WatermarkStyle, label: 'Text', icon: Type, desc: 'Diagonal text pattern' },
+                      { value: 'logo' as WatermarkStyle, label: 'Logo / Initials', icon: Image, desc: 'Repeating logo or initials' },
+                      { value: 'border-frame' as WatermarkStyle, label: 'Border Frame', icon: Frame, desc: 'Elegant ornamental border' },
+                      { value: 'diagonal-lines' as WatermarkStyle, label: 'Diagonal Lines', icon: StretchHorizontal, desc: 'Gold diagonal line pattern' },
+                    ]).map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSettings({ ...settings, watermarkStyle: opt.value })}
+                        className={`flex items-start gap-2 p-2.5 rounded-lg border text-left transition-all ${
+                          (settings.watermarkStyle || 'text') === opt.value
+                            ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                            : 'border-border hover:border-muted-foreground/30'
+                        }`}
+                      >
+                        <opt.icon className={`h-4 w-4 mt-0.5 shrink-0 ${(settings.watermarkStyle || 'text') === opt.value ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div>
+                          <p className="text-xs font-medium">{opt.label}</p>
+                          <p className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Text input — only for text style */}
+                {(settings.watermarkStyle || 'text') === 'text' && (
+                  <div>
+                    <Label className="text-xs">Watermark Text</Label>
+                    <Input
+                      value={settings.watermarkText}
+                      onChange={e => setSettings({ ...settings, watermarkText: e.target.value })}
+                      className="text-sm"
+                      placeholder={settings.shopName || 'Shop name used by default'}
+                    />
+                  </div>
+                )}
+
                 <div>
                   <Label className="text-xs">Opacity ({Math.round(settings.watermarkOpacity * 100)}%)</Label>
                   <Slider

@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { BillSettings, Bill, BillItem } from '@/types/bill';
+import type { BillSettings, Bill, BillItem, WatermarkStyle } from '@/types/bill';
 
 /* ── Premium Color Palette (RGB tuples) ── */
 const TEAL: [number, number, number] = [27, 77, 77];
@@ -76,26 +76,79 @@ function getShopNamePdfSize(name: string): number {
 /* ── Draw watermark pattern on PDF ── */
 function drawWatermark(doc: jsPDF, settings: BillSettings) {
   if (!settings.watermarkEnabled) return;
-  const text = (settings.watermarkText || settings.shopName).toUpperCase();
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
-  // Use very light gray to simulate low opacity
-  const gray = Math.round(255 - (255 * settings.watermarkOpacity * 3));
-  doc.setTextColor(gray, gray, gray);
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  // Draw diagonal watermark grid
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 3; col++) {
-      const x = 20 + col * (pw / 3);
-      const y = 80 + row * 100;
-      if (y < ph - 40) {
-        doc.text(text, x, y, { angle: 30 });
+  const style = (settings.watermarkStyle || 'text') as WatermarkStyle;
+  const opacity = settings.watermarkOpacity;
+  const gray = Math.round(255 - (255 * opacity * 3));
+
+  switch (style) {
+    case 'text': {
+      const text = (settings.watermarkText || settings.shopName).toUpperCase();
+      doc.setTextColor(gray, gray, gray);
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 3; col++) {
+          const x = 20 + col * (pw / 3);
+          const y = 80 + row * 100;
+          if (y < ph - 40) doc.text(text, x, y, { angle: 30 });
+        }
       }
+      doc.setTextColor(0, 0, 0);
+      break;
+    }
+    case 'logo': {
+      const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      doc.setTextColor(gray, gray, gray);
+      doc.setFontSize(28);
+      doc.setFont('helvetica', 'bold');
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 3; col++) {
+          const x = 30 + col * (pw / 3);
+          const y = 80 + row * 140;
+          if (y < ph - 40) doc.text(initials, x, y, { angle: 15 });
+        }
+      }
+      doc.setTextColor(0, 0, 0);
+      break;
+    }
+    case 'border-frame': {
+      const GOLD_RGB: [number, number, number] = [201, 160, 32];
+      const frameGray = Math.round(255 - (255 - GOLD_RGB[0]) * opacity * 4);
+      const frameG = Math.round(255 - (255 - GOLD_RGB[1]) * opacity * 4);
+      const frameB = Math.round(255 - (255 - GOLD_RGB[2]) * opacity * 4);
+      doc.setDrawColor(frameGray, frameG, frameB);
+      doc.setLineWidth(0.8);
+      // Outer double border
+      doc.rect(6, 6, pw - 12, ph - 12, 'S');
+      doc.setLineWidth(0.3);
+      doc.rect(10, 10, pw - 20, ph - 20, 'S');
+      // Corner ornaments
+      const cLen = 8;
+      doc.setLineWidth(0.6);
+      [[10, 10, 1, 1], [pw - 10, 10, -1, 1], [10, ph - 10, 1, -1], [pw - 10, ph - 10, -1, -1]].forEach(([cx, cy, dx, dy]) => {
+        doc.line(cx, cy, cx + cLen * dx, cy);
+        doc.line(cx, cy, cx, cy + cLen * dy);
+      });
+      break;
+    }
+    case 'diagonal-lines': {
+      const lineGold = Math.round(255 - (255 - 201) * opacity * 3);
+      const lineG = Math.round(255 - (255 - 160) * opacity * 3);
+      const lineB = Math.round(255 - (255 - 32) * opacity * 3);
+      doc.setDrawColor(lineGold, lineG, lineB);
+      doc.setLineWidth(0.3);
+      for (let i = 0; i < 30; i++) {
+        const x1 = i * 15 - 100;
+        const y1 = 0;
+        const x2 = x1 + ph * 0.7;
+        const y2 = ph;
+        doc.line(x1, y1, x2, y2);
+      }
+      break;
     }
   }
-  // Reset text color
-  doc.setTextColor(0, 0, 0);
 }
 
 export function generateBillPdf(
