@@ -81,10 +81,12 @@ export default function Settings() {
 
   const brandingItems = [
     {
-      icon: ImageIcon,
+      icon: Store,
       title: 'Branding',
       description: 'App name, logo customization',
       path: '/settings/branding',
+      iconBg: 'bg-primary/10',
+      iconColor: 'text-primary',
     },
   ];
 
