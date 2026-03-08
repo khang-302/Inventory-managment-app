@@ -8,16 +8,36 @@ interface BillPreviewTemplateProps {
 }
 
 /* ── Premium Color Palette ── */
-const GOLD = '#C5A22E';
-const DARK_OLIVE = '#3D3D1B';
-const CHARCOAL = '#2B2B2B';
-const MED_GRAY = '#888888';
-const LIGHT_GRAY = '#E0E0E0';
-const FOOTER_BG = '#F5F5F5';
-const FOOTER_TEXT = '#999999';
+const TEAL = '#1B4D4D';
+const GOLD = '#C9A020';
+const RED_ICON = '#CC3333';
 const WHITE = '#FFFFFF';
-const WARM_BG = '#FAFAF7';
-const ACCENT_BG = '#FBF9F3';
+const CHARCOAL = '#2B2B2B';
+const LIGHT_GRAY = '#F0F0F0';
+const MED_GRAY = '#888888';
+const BODY_TEXT = '#555555';
+
+/* ── SVG Icons (inline, no icon fonts) ── */
+const LocationIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+  </svg>
+);
+
+const GlobeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
 
 const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>(
   ({ settings, bill, items }, ref) => {
@@ -45,20 +65,19 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
         }}
       >
-        {/* ═══ HEADER — White background ═══ */}
+        {/* ═══ HEADER — Dark Teal ═══ */}
         <div style={{
-          background: WHITE,
-          padding: '28px 36px 20px',
+          background: TEAL,
+          padding: '24px 36px',
           display: 'flex',
           alignItems: 'center',
           gap: '20px',
-          borderBottom: `2px solid ${LIGHT_GRAY}`,
         }}>
           {/* Logo Circle */}
           <div style={{
-            width: '82px', height: '82px', borderRadius: '50%',
+            width: '78px', height: '78px', borderRadius: '50%',
             border: `3px solid ${GOLD}`,
-            boxShadow: `0 0 0 2px ${WHITE}, 0 0 0 4px ${GOLD}30`,
+            boxShadow: `0 0 0 3px ${TEAL}, 0 0 0 5px ${GOLD}50`,
             background: WHITE,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, overflow: 'hidden',
@@ -68,15 +87,15 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
                 src={settings.logoPath}
                 alt="Logo"
                 style={{
-                  width: '70px', height: '70px', objectFit: 'cover',
+                  width: '100%', height: '100%', objectFit: 'contain',
                   borderRadius: '50%',
                 }}
                 crossOrigin="anonymous"
               />
             ) : (
               <div style={{
-                width: '70px', height: '70px', borderRadius: '50%',
-                background: `linear-gradient(135deg, ${GOLD}, ${DARK_OLIVE})`,
+                width: '100%', height: '100%', borderRadius: '50%',
+                background: `linear-gradient(135deg, ${GOLD}, ${TEAL})`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <span style={{ fontSize: '22px', fontWeight: 800, color: WHITE, letterSpacing: '1px' }}>
@@ -89,15 +108,15 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           {/* Shop Name + Tagline */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{
-              fontSize: '32px', fontWeight: 800, color: DARK_OLIVE,
-              lineHeight: '1.15', letterSpacing: '0.3px',
+              fontSize: '30px', fontWeight: 800, color: WHITE,
+              lineHeight: '1.15', letterSpacing: '0.5px',
             }}>
               {settings.shopName}
             </div>
             {settings.tagline && (
               <div style={{
-                fontSize: '14px', fontWeight: 400, color: MED_GRAY,
-                marginTop: '4px', letterSpacing: '0.3px',
+                fontSize: '13px', fontWeight: 400, color: 'rgba(255,255,255,0.75)',
+                marginTop: '4px', letterSpacing: '0.5px',
               }}>
                 {settings.tagline}
               </div>
@@ -105,14 +124,17 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           </div>
         </div>
 
+        {/* ═══ Gold Accent Bar ═══ */}
+        <div style={{ height: '5px', background: GOLD }} />
+
         {/* ═══ "Invoice From" line ═══ */}
         <div style={{
           padding: '10px 36px',
-          background: WARM_BG,
+          background: WHITE,
           borderBottom: `1px solid ${LIGHT_GRAY}`,
         }}>
           <p style={{ fontSize: '13px', fontWeight: 400, color: MED_GRAY, margin: 0 }}>
-            Invoice From : <strong style={{ fontWeight: 700, color: DARK_OLIVE }}>{settings.shopName.toUpperCase()}</strong>
+            Invoice From : <strong style={{ fontWeight: 700, color: CHARCOAL }}>{settings.shopName.toUpperCase()}</strong>
           </p>
         </div>
 
@@ -121,21 +143,20 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
 
           {/* ── Invoice To Block ── */}
           <div style={{
-            border: `1px solid ${LIGHT_GRAY}`,
-            borderRadius: '6px',
+            border: `1px solid #D0D0D0`,
+            borderRadius: '4px',
             overflow: 'hidden',
             marginBottom: '20px',
           }}>
             <div style={{
-              backgroundColor: WARM_BG,
+              backgroundColor: TEAL,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '10px 16px',
-              borderBottom: `1px solid ${LIGHT_GRAY}`,
             }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: DARK_OLIVE }}>Invoice To :</span>
-              <span style={{ fontSize: '12px', fontWeight: 400, color: MED_GRAY }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: WHITE }}>Invoice To :</span>
+              <span style={{ fontSize: '12px', fontWeight: 400, color: 'rgba(255,255,255,0.8)' }}>
                 Invoice No : <strong style={{ fontWeight: 700, color: GOLD }}>{bill.billNumber}</strong>
               </span>
             </div>
@@ -163,9 +184,9 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           </div>
 
           {/* ── ITEMS TABLE ── */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '0' }}>
             <thead>
-              <tr style={{ borderBottom: `2px solid ${LIGHT_GRAY}` }}>
+              <tr style={{ background: TEAL }}>
                 <th style={{ ...thStyle, width: '40px' }}>#</th>
                 <th style={{ ...thStyle, width: '160px', textAlign: 'left' }}>Part Name</th>
                 <th style={{ ...thStyle, width: '100px' }}>Code</th>
@@ -177,7 +198,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
             </thead>
             <tbody>
               {items.map((item, i) => (
-                <tr key={item.id} style={{ borderBottom: `1px solid ${LIGHT_GRAY}`, background: i % 2 === 0 ? WHITE : ACCENT_BG }}>
+                <tr key={item.id} style={{ borderBottom: `1px solid #E0E0E0`, background: i % 2 === 0 ? WHITE : LIGHT_GRAY }}>
                   <td style={{ ...tdStyle, color: MED_GRAY }}>{i + 1}</td>
                   <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600, color: CHARCOAL }}>{item.partName}</td>
                   <td style={tdStyle}>{item.partCode || '-'}</td>
@@ -190,25 +211,27 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
             </tbody>
           </table>
 
-          {/* ── TOTALS ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '10px 0', gap: '6px' }}>
-            <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: MED_GRAY, minWidth: '90px', textAlign: 'right' }}>Subtotal :</span>
-              <span style={{ fontSize: '14px', fontWeight: 700, color: CHARCOAL, minWidth: '90px', textAlign: 'right' }}>Rs {bill.subtotal.toLocaleString()}</span>
+          {/* ── Grand Total Bar ── */}
+          <div style={{ display: 'flex', width: '100%', marginBottom: '6px' }}>
+            <div style={{
+              flex: 1, background: GOLD, padding: '10px 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: WHITE, textTransform: 'uppercase' }}>Grand Total</span>
+              {bill.discount > 0 && (
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.85)' }}>
+                  (Subtotal: Rs {bill.subtotal.toLocaleString()} | Discount: Rs {bill.discount.toLocaleString()})
+                </span>
+              )}
             </div>
-            {bill.discount > 0 && (
-              <>
-                <div style={{ width: '220px', height: '1px', background: LIGHT_GRAY }} />
-                <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: MED_GRAY, minWidth: '90px', textAlign: 'right' }}>Discount :</span>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: CHARCOAL, minWidth: '90px', textAlign: 'right' }}>- Rs {bill.discount.toLocaleString()}</span>
-                </div>
-              </>
-            )}
-            <div style={{ width: '220px', height: '2px', background: GOLD, marginTop: '4px' }} />
-            <div style={{ display: 'flex', gap: '32px', alignItems: 'center', marginTop: '4px' }}>
-              <span style={{ fontSize: '15px', fontWeight: 800, color: DARK_OLIVE, minWidth: '90px', textAlign: 'right' }}>GRAND TOTAL :</span>
-              <span style={{ fontSize: '18px', fontWeight: 800, color: DARK_OLIVE, minWidth: '90px', textAlign: 'right' }}>Rs {bill.finalTotal.toLocaleString()}</span>
+            <div style={{
+              background: TEAL, padding: '10px 20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              minWidth: '180px',
+            }}>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: WHITE }}>
+                Rs {bill.finalTotal.toLocaleString()}
+              </span>
             </div>
           </div>
 
@@ -221,7 +244,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
             {showTerms && terms && terms.length > 0 && (
               <div style={{ flex: 1 }}>
                 <div style={{
-                  fontSize: '13px', fontWeight: 800, color: DARK_OLIVE,
+                  fontSize: '13px', fontWeight: 800, color: TEAL,
                   marginBottom: '8px', textTransform: 'uppercase' as const, letterSpacing: '0.5px',
                   borderBottom: `2px solid ${GOLD}`, paddingBottom: '4px', display: 'inline-block',
                 }}>
@@ -229,7 +252,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
                 </div>
                 <ul style={{ listStyle: 'disc', paddingLeft: '16px', margin: 0 }}>
                   {terms.map((t, i) => (
-                    <li key={i} style={{ fontSize: '11.5px', color: MED_GRAY, lineHeight: '1.8', fontWeight: 400 }}>{t}</li>
+                    <li key={i} style={{ fontSize: '11.5px', color: BODY_TEXT, lineHeight: '1.8', fontWeight: 400 }}>{t}</li>
                   ))}
                 </ul>
               </div>
@@ -237,10 +260,10 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
             {showPayment && paymentInfo && (
               <div style={{
                 flex: 1, border: `1.5px dashed ${GOLD}`,
-                borderRadius: '6px', padding: '12px 16px', background: ACCENT_BG,
+                borderRadius: '6px', padding: '12px 16px', background: '#FFFDF5',
               }}>
                 <div style={{
-                  fontSize: '13px', fontWeight: 800, color: DARK_OLIVE,
+                  fontSize: '13px', fontWeight: 800, color: TEAL,
                   marginBottom: '6px', textTransform: 'uppercase' as const, letterSpacing: '0.5px',
                 }}>
                   Payment Information
@@ -258,41 +281,55 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           </div>
         )}
 
-        {/* ═══ FOOTER — Light gray ═══ */}
+        {/* ═══ FOOTER — Dark Teal with icon circles ═══ */}
         <div style={{
-          backgroundColor: FOOTER_BG,
-          padding: '18px 36px',
+          backgroundColor: TEAL,
+          padding: '20px 36px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
-          borderTop: `1px solid ${LIGHT_GRAY}`,
         }}>
           {/* Location */}
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: DARK_OLIVE, marginBottom: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Address</div>
-            <div style={{ fontSize: '11px', color: FOOTER_TEXT, lineHeight: '1.6' }}>
+          <div style={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '34px', height: '34px', borderRadius: '50%', background: RED_ICON,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <LocationIcon />
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5', maxWidth: '180px' }}>
               {settings.address || 'Shop Address'}
             </div>
           </div>
 
-          <div style={{ width: '1px', background: LIGHT_GRAY, alignSelf: 'stretch', margin: '0 12px' }} />
+          <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch', margin: '0 8px' }} />
 
           {/* Phone */}
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: DARK_OLIVE, marginBottom: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Contact</div>
-            <div style={{ fontSize: '11px', color: FOOTER_TEXT, lineHeight: '1.6' }}>
+          <div style={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '34px', height: '34px', borderRadius: '50%', background: RED_ICON,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <PhoneIcon />
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5' }}>
               {settings.phone1 && <div>{settings.phone1}</div>}
               {settings.phone2 && <div>{settings.phone2}</div>}
               {!settings.phone1 && !settings.phone2 && 'Contact'}
             </div>
           </div>
 
-          <div style={{ width: '1px', background: LIGHT_GRAY, alignSelf: 'stretch', margin: '0 12px' }} />
+          <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch', margin: '0 8px' }} />
 
           {/* Social */}
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: DARK_OLIVE, marginBottom: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Social</div>
-            <div style={{ fontSize: '11px', color: FOOTER_TEXT, lineHeight: '1.6' }}>
+          <div style={{ flex: 1, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '34px', height: '34px', borderRadius: '50%', background: RED_ICON,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <GlobeIcon />
+            </div>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.5' }}>
               {settings.socialMedia || settings.website || 'Website Coming Soon'}
             </div>
           </div>
@@ -303,7 +340,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
 );
 
 const thStyle: React.CSSProperties = {
-  color: '#888888',
+  color: WHITE,
   fontSize: '12px',
   fontWeight: 700,
   padding: '10px 10px',
