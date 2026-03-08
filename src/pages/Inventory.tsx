@@ -10,6 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { 
   Select,
   SelectContent,
@@ -23,12 +31,26 @@ import {
   Package, 
   Grid3X3, 
   List,
+  Table2,
   Filter,
-  X
+  X,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
 import type { StockStatus, ViewMode, Part } from '@/types';
+
+type SortColumn = 'name' | 'sku' | 'brand' | 'quantity' | 'price';
+type SortDirection = 'asc' | 'desc';
+
+const VIEW_CYCLE: ViewMode[] = ['list', 'grid', 'table'];
+const VIEW_ICONS: Record<ViewMode, typeof List> = {
+  list: List,
+  grid: Grid3X3,
+  table: Table2,
+};
 
 export default function Inventory() {
   const navigate = useNavigate();
@@ -42,17 +64,26 @@ export default function Inventory() {
   const [stockFilter, setStockFilter] = useState<StockStatus>(
     (searchParams.get('status') as StockStatus) || 'all'
   );
+  const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Live queries
   const parts = useLiveQuery(() => db.parts.toArray(), []) ?? [];
   const brands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
   const categories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
 
+  const getBrandName = (brandId: string) => {
+    return brands.find(b => b.id === brandId)?.name || 'Unknown';
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    return categories.find(c => c.id === categoryId)?.name || 'Unknown';
+  };
+
   // Filter and search parts
   const filteredParts = useMemo(() => {
     let result = [...parts];
 
-    // Search filter
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(p => 
@@ -61,17 +92,14 @@ export default function Inventory() {
       );
     }
 
-    // Brand filter
     if (brandFilter && brandFilter !== 'all') {
       result = result.filter(p => p.brandId === brandFilter);
     }
 
-    // Category filter
     if (categoryFilter && categoryFilter !== 'all') {
       result = result.filter(p => p.categoryId === categoryFilter);
     }
 
-    // Stock status filter
     if (stockFilter !== 'all') {
       result = result.filter(p => {
         switch (stockFilter) {
@@ -87,9 +115,27 @@ export default function Inventory() {
       });
     }
 
-    // Sort by name
-    return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [parts, search, brandFilter, categoryFilter, stockFilter]);
+    // Sort
+    const dir = sortDirection === 'asc' ? 1 : -1;
+    result.sort((a, b) => {
+      switch (sortColumn) {
+        case 'name':
+          return dir * a.name.localeCompare(b.name);
+        case 'sku':
+          return dir * a.sku.localeCompare(b.sku);
+        case 'brand':
+          return dir * getBrandName(a.brandId).localeCompare(getBrandName(b.brandId));
+        case 'quantity':
+          return dir * (toSafeQuantity(a.quantity, 0) - toSafeQuantity(b.quantity, 0));
+        case 'price':
+          return dir * ((a.sellingPrice || 0) - (b.sellingPrice || 0));
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [parts, search, brandFilter, categoryFilter, stockFilter, sortColumn, sortDirection, brands]);
 
   const hasActiveFilters = brandFilter !== 'all' || categoryFilter !== 'all' || stockFilter !== 'all';
 
@@ -100,12 +146,26 @@ export default function Inventory() {
     setSearchParams({});
   };
 
-  const getBrandName = (brandId: string) => {
-    return brands.find(b => b.id === brandId)?.name || 'Unknown';
+  const cycleViewMode = () => {
+    const currentIndex = VIEW_CYCLE.indexOf(viewMode);
+    const nextIndex = (currentIndex + 1) % VIEW_CYCLE.length;
+    setViewMode(VIEW_CYCLE[nextIndex]);
   };
 
-  const getCategoryName = (categoryId: string) => {
-    return categories.find(c => c.id === categoryId)?.name || 'Unknown';
+  const toggleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-3 w-3 text-primary" /> 
+      : <ArrowDown className="h-3 w-3 text-primary" />;
   };
 
   const getStockBadge = (part: Part) => {
@@ -121,6 +181,10 @@ export default function Inventory() {
     return null;
   };
 
+  // Next view icon (show what clicking will switch TO)
+  const nextViewIndex = (VIEW_CYCLE.indexOf(viewMode) + 1) % VIEW_CYCLE.length;
+  const NextViewIcon = VIEW_ICONS[VIEW_CYCLE[nextViewIndex]];
+
   return (
     <AppLayout>
       <Header 
@@ -132,13 +196,10 @@ export default function Inventory() {
               variant="ghost"
               size="icon"
               className="h-9 w-9"
-              onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+              onClick={cycleViewMode}
+              title={`Switch to ${VIEW_CYCLE[nextViewIndex]} view`}
             >
-              {viewMode === 'list' ? (
-                <Grid3X3 className="h-5 w-5" />
-              ) : (
-                <List className="h-5 w-5" />
-              )}
+              <NextViewIcon className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
@@ -228,7 +289,7 @@ export default function Inventory() {
           </Card>
         )}
 
-        {/* Parts List/Grid */}
+        {/* Parts List/Grid/Table */}
         {filteredParts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -245,6 +306,96 @@ export default function Inventory() {
               </Button>
             )}
           </div>
+        ) : viewMode === 'table' ? (
+          /* ── Table View ── */
+          <Card className="bg-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead 
+                      className="cursor-pointer select-none whitespace-nowrap text-xs"
+                      onClick={() => toggleSort('name')}
+                    >
+                      <span className="flex items-center gap-1">
+                        Name <SortIcon column="name" />
+                      </span>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer select-none whitespace-nowrap text-xs"
+                      onClick={() => toggleSort('sku')}
+                    >
+                      <span className="flex items-center gap-1">
+                        SKU <SortIcon column="sku" />
+                      </span>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer select-none whitespace-nowrap text-xs"
+                      onClick={() => toggleSort('brand')}
+                    >
+                      <span className="flex items-center gap-1">
+                        Brand <SortIcon column="brand" />
+                      </span>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
+                      onClick={() => toggleSort('quantity')}
+                    >
+                      <span className="flex items-center justify-end gap-1">
+                        Qty <SortIcon column="quantity" />
+                      </span>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer select-none whitespace-nowrap text-xs text-right"
+                      onClick={() => toggleSort('price')}
+                    >
+                      <span className="flex items-center justify-end gap-1">
+                        Price <SortIcon column="price" />
+                      </span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredParts.map((part) => {
+                    const qty = toSafeQuantity(part.quantity, 0);
+                    const minStock = toSafeQuantity(part.minStockLevel, 0);
+                    const low = isLowStock(qty, minStock);
+
+                    return (
+                      <TableRow 
+                        key={part.id}
+                        className="cursor-pointer"
+                        onClick={() => navigate(`/inventory/${part.id}`)}
+                      >
+                        <TableCell className="py-2.5 px-3 text-sm font-medium whitespace-nowrap">
+                          <span className="flex items-center gap-1.5">
+                            {part.name}
+                            {low && <EmergencyIndicator size="sm" />}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {part.sku}
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {getBrandName(part.brandId)}
+                        </TableCell>
+                        <TableCell className={cn(
+                          "py-2.5 px-3 text-sm text-right whitespace-nowrap font-medium",
+                          qty === 0 && 'text-destructive',
+                          qty > 0 && low && 'text-warning'
+                        )}>
+                          {qty}
+                        </TableCell>
+                        <TableCell className="py-2.5 px-3 text-sm text-right whitespace-nowrap font-semibold text-primary">
+                          {formatCurrency(part.sellingPrice)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
         ) : viewMode === 'list' ? (
           <div className="space-y-2">
             {filteredParts.map((part) => (
@@ -255,7 +406,6 @@ export default function Inventory() {
               >
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
-                    {/* Image placeholder */}
                     <div className="h-14 w-14 rounded-md bg-muted flex items-center justify-center shrink-0">
                       {part.images?.[0] ? (
                         <img 
@@ -307,7 +457,6 @@ export default function Inventory() {
                 onClick={() => navigate(`/inventory/${part.id}`)}
               >
                 <CardContent className="p-3">
-                  {/* Image */}
                   <div className="aspect-square rounded-md bg-muted flex items-center justify-center mb-2">
                     {part.images?.[0] ? (
                       <img 
