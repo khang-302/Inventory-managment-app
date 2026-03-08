@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrencyShort } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { ArrowUpRight, ArrowDownRight, Minus, CalendarRange } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Sale } from '@/types';
