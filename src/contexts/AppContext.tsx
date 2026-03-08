@@ -8,6 +8,10 @@ import { startOfDay, endOfDay, startOfMonth, subDays, format } from 'date-fns';
 import { toSafeNumber, toSafeQuantity, safeAdd } from '@/utils/safeNumber';
 
 type NavigationLayout = 'bottom' | 'sidebar';
+type NavIconStyle = 'outline' | 'filled' | 'rounded';
+type NavIconSize = 'small' | 'medium' | 'large';
+type NavHighlightStyle = 'icon-only' | 'icon-label' | 'background';
+type NavAnimation = 'none' | 'fade' | 'slide';
 
 interface AppContextType {
   // Database initialization
@@ -44,6 +48,16 @@ interface AppContextType {
   // Navigation layout
   navigationLayout: NavigationLayout;
   setNavigationLayout: (layout: NavigationLayout) => Promise<void>;
+
+  // New navigation customization
+  navIconStyle: NavIconStyle;
+  setNavIconStyle: (style: NavIconStyle) => Promise<void>;
+  navIconSize: NavIconSize;
+  setNavIconSize: (size: NavIconSize) => Promise<void>;
+  navHighlightStyle: NavHighlightStyle;
+  setNavHighlightStyle: (style: NavHighlightStyle) => Promise<void>;
+  navAnimation: NavAnimation;
+  setNavAnimation: (animation: NavAnimation) => Promise<void>;
   
   // Custom logo
   customLogo: string | null;
@@ -74,6 +88,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [navShowLabels, setNavShowLabelsState] = useState(true);
   const [navCompactMode, setNavCompactModeState] = useState(false);
   const [navigationLayout, setNavigationLayoutState] = useState<NavigationLayout>('bottom');
+  const [navIconStyle, setNavIconStyleState] = useState<NavIconStyle>('outline');
+  const [navIconSize, setNavIconSizeState] = useState<NavIconSize>('medium');
+  const [navHighlightStyle, setNavHighlightStyleState] = useState<NavHighlightStyle>('background');
+  const [navAnimation, setNavAnimationState] = useState<NavAnimation>('fade');
   const [customLogo, setCustomLogoState] = useState<string | null>(null);
   const [appName, setAppNameState] = useState('Ameer Autos');
 
@@ -91,6 +109,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const savedShowLabels = await getSetting<boolean>('navShowLabels');
         const savedCompactMode = await getSetting<boolean>('navCompactMode');
         const savedNavigationLayout = await getSetting<NavigationLayout>('navigationLayout');
+        const savedNavIconStyle = await getSetting<NavIconStyle>('navIconStyle');
+        const savedNavIconSize = await getSetting<NavIconSize>('navIconSize');
+        const savedNavHighlightStyle = await getSetting<NavHighlightStyle>('navHighlightStyle');
+        const savedNavAnimation = await getSetting<NavAnimation>('navAnimation');
         const savedCustomLogo = await getSetting<string | null>('customLogo');
         const savedAppName = await getSetting<string>('appName');
         
@@ -100,6 +122,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (savedShowLabels !== undefined) setNavShowLabelsState(savedShowLabels);
         if (savedCompactMode !== undefined) setNavCompactModeState(savedCompactMode);
         if (savedNavigationLayout) setNavigationLayoutState(savedNavigationLayout);
+        if (savedNavIconStyle) setNavIconStyleState(savedNavIconStyle);
+        if (savedNavIconSize) setNavIconSizeState(savedNavIconSize);
+        if (savedNavHighlightStyle) setNavHighlightStyleState(savedNavHighlightStyle);
+        if (savedNavAnimation) setNavAnimationState(savedNavAnimation);
         if (savedCustomLogo !== undefined) setCustomLogoState(savedCustomLogo);
         
         setIsInitialized(true);
@@ -142,7 +168,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  // Live query for parts — wrapped safely so AppProvider never crashes
+  // Live query for parts
   const parts = useLiveQuery(() => {
     try { return db.parts.toArray().catch(() => []); } catch { return Promise.resolve([]); }
   }, []) ?? [];
@@ -163,10 +189,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch { return Promise.resolve([]); }
   }, []) ?? [];
 
-  // Calculate low stock parts
   const lowStockParts = parts.filter(p => p.quantity <= p.minStockLevel);
 
-  // Calculate dashboard stats with defensive NaN checks
+  // Calculate dashboard stats
   const refreshStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
@@ -175,51 +200,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const todayEnd = endOfDay(today);
       const monthStart = startOfMonth(today);
 
-      // Get all parts for inventory value
       const allParts = await db.parts.toArray();
       const totalParts = allParts.length;
       
-      // Calculate inventory value with safe number handling
       const inventoryValue = allParts.reduce((sum, p) => {
         const qty = toSafeQuantity(p.quantity, 0);
         const price = toSafeNumber(p.buyingPrice, 0);
         return safeAdd(sum, qty * price);
       }, 0);
       
-      // Calculate low stock count with safe comparison
       const lowStockCount = allParts.filter(p => {
         const qty = toSafeQuantity(p.quantity, 0);
         const minStock = toSafeQuantity(p.minStockLevel, 0);
         return qty <= minStock;
       }).length;
 
-      // Get today's sales
       const allSales = await db.sales.toArray();
       const todaySalesData = allSales.filter(s => {
         const saleDate = new Date(s.createdAt);
         return saleDate >= todayStart && saleDate <= todayEnd;
       });
       
-      // Calculate today's totals with safe number handling
-      const todaySales = todaySalesData.reduce((sum, s) => {
-        return safeAdd(sum, toSafeNumber(s.totalAmount, 0));
-      }, 0);
-      
-      const todayProfit = todaySalesData.reduce((sum, s) => {
-        return safeAdd(sum, toSafeNumber(s.profit, 0));
-      }, 0);
+      const todaySales = todaySalesData.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.totalAmount, 0)), 0);
+      const todayProfit = todaySalesData.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.profit, 0)), 0);
 
-      // Get monthly profit
       const monthlySalesData = allSales.filter(s => {
         const saleDate = new Date(s.createdAt);
         return saleDate >= monthStart && saleDate <= todayEnd;
       });
-      
-      const monthlyProfit = monthlySalesData.reduce((sum, s) => {
-        return safeAdd(sum, toSafeNumber(s.profit, 0));
-      }, 0);
+      const monthlyProfit = monthlySalesData.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.profit, 0)), 0);
 
-      // Weekly sales (last 7 days)
       const weeklySales: WeeklySaleDay[] = [];
       for (let i = 6; i >= 0; i--) {
         const day = subDays(today, i);
@@ -236,7 +246,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      // Stock distribution
       const outOfStock = allParts.filter(p => toSafeQuantity(p.quantity, 0) === 0).length;
       const stockDistribution: StockDistribution = {
         inStock: totalParts - lowStockCount - outOfStock,
@@ -244,26 +253,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         outOfStock,
       };
 
-      setStats({
-        totalParts,
-        inventoryValue,
-        todaySales,
-        todayProfit,
-        monthlyProfit,
-        lowStockCount,
-        weeklySales,
-        stockDistribution,
-      });
+      setStats({ totalParts, inventoryValue, todaySales, todayProfit, monthlyProfit, lowStockCount, weeklySales, stockDistribution });
     } catch (error) {
       console.error('Failed to refresh stats:', error);
       setStats({
-        totalParts: 0,
-        inventoryValue: 0,
-        todaySales: 0,
-        todayProfit: 0,
-        monthlyProfit: 0,
-        lowStockCount: 0,
-        weeklySales: [],
+        totalParts: 0, inventoryValue: 0, todaySales: 0, todayProfit: 0,
+        monthlyProfit: 0, lowStockCount: 0, weeklySales: [],
         stockDistribution: { inStock: 0, lowStock: 0, outOfStock: 0 },
       });
     } finally {
@@ -271,81 +266,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Refresh stats when parts or sales change
   useEffect(() => {
-    if (isInitialized) {
-      refreshStats();
-    }
+    if (isInitialized) refreshStats();
   }, [isInitialized, parts.length, sales.length, refreshStats]);
 
-  // Theme setter
-  const setTheme = async (newTheme: 'dark' | 'light' | 'system') => {
-    setThemeState(newTheme);
-    await updateSetting('theme', newTheme);
-  };
-
-  // Notifications setter
-  const setNotifications = async (enabled: boolean) => {
-    setNotificationsState(enabled);
-    await updateSetting('notifications', enabled);
-  };
-
-  // Nav settings setters
-  const setNavShowLabels = async (show: boolean) => {
-    setNavShowLabelsState(show);
-    await updateSetting('navShowLabels', show);
-  };
-
-  const setNavCompactMode = async (compact: boolean) => {
-    setNavCompactModeState(compact);
-    await updateSetting('navCompactMode', compact);
-  };
-
-  // Navigation layout setter
-  const setNavigationLayout = async (layout: NavigationLayout) => {
-    setNavigationLayoutState(layout);
-    await updateSetting('navigationLayout', layout);
-  };
-
-  // Custom logo setter
-  const setCustomLogo = async (logo: string | null) => {
-    setCustomLogoState(logo);
-    await updateSetting('customLogo', logo);
-  };
-
-  // App name setter
-  const setAppName = async (name: string) => {
-    setAppNameState(name);
-    await updateSetting('appName', name);
-  };
+  // Setters
+  const setTheme = async (v: 'dark' | 'light' | 'system') => { setThemeState(v); await updateSetting('theme', v); };
+  const setNotifications = async (v: boolean) => { setNotificationsState(v); await updateSetting('notifications', v); };
+  const setNavShowLabels = async (v: boolean) => { setNavShowLabelsState(v); await updateSetting('navShowLabels', v); };
+  const setNavCompactMode = async (v: boolean) => { setNavCompactModeState(v); await updateSetting('navCompactMode', v); };
+  const setNavigationLayout = async (v: NavigationLayout) => { setNavigationLayoutState(v); await updateSetting('navigationLayout', v); };
+  const setNavIconStyle = async (v: NavIconStyle) => { setNavIconStyleState(v); await updateSetting('navIconStyle', v); };
+  const setNavIconSize = async (v: NavIconSize) => { setNavIconSizeState(v); await updateSetting('navIconSize', v); };
+  const setNavHighlightStyle = async (v: NavHighlightStyle) => { setNavHighlightStyleState(v); await updateSetting('navHighlightStyle', v); };
+  const setNavAnimation = async (v: NavAnimation) => { setNavAnimationState(v); await updateSetting('navAnimation', v); };
+  const setCustomLogo = async (v: string | null) => { setCustomLogoState(v); await updateSetting('customLogo', v); };
+  const setAppName = async (v: string) => { setAppNameState(v); await updateSetting('appName', v); };
 
   const value: AppContextType = {
-    isInitialized,
-    stats,
-    isLoadingStats,
-    refreshStats,
-    lowStockParts,
-    recentActivity: activityLogs,
-    totalParts: parts.length,
-    totalBrands: brands.length,
-    totalCategories: categories.length,
-    theme,
-    setTheme,
-    notifications,
-    setNotifications,
-    navShowLabels,
-    setNavShowLabels,
-    navCompactMode,
-    setNavCompactMode,
-    navigationLayout,
-    setNavigationLayout,
-    customLogo,
-    setCustomLogo,
-    appName,
-    setAppName,
+    isInitialized, stats, isLoadingStats, refreshStats, lowStockParts,
+    recentActivity: activityLogs, totalParts: parts.length, totalBrands: brands.length, totalCategories: categories.length,
+    theme, setTheme, notifications, setNotifications,
+    navShowLabels, setNavShowLabels, navCompactMode, setNavCompactMode,
+    navigationLayout, setNavigationLayout,
+    navIconStyle, setNavIconStyle, navIconSize, setNavIconSize,
+    navHighlightStyle, setNavHighlightStyle, navAnimation, setNavAnimation,
+    customLogo, setCustomLogo, appName, setAppName,
   };
 
-  // Mount notification scheduler
   useNotificationScheduler();
 
   return (
