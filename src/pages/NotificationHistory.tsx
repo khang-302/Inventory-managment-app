@@ -5,21 +5,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Bell, BellOff, CheckCheck, Trash2, Search, Package, 
+  BellOff, CheckCheck, Trash2, Search, Package, 
   ShoppingCart, HardDrive, RefreshCw, MessageSquare, Clock,
-  AlertTriangle
+  ListChecks, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   markAsRead, markAllAsRead, deleteNotification, deleteAllNotifications 
 } from '@/services/notificationService';
-import type { AppNotification, NotificationType } from '@/types/notification';
-import { formatDistanceToNow, format } from 'date-fns';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/database';
+import type { AppNotification, NotificationType } from '@/types/notification';
+import { formatDistanceToNow } from 'date-fns';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -57,9 +58,13 @@ export default function NotificationHistory() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [readFilter, setReadFilter] = useState<string>('all');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const allNotifications = useLiveQuery(
-    () => db.notifications.orderBy('createdAt').reverse().toArray().then(n => n.filter(x => x.isFired)),
+    () => db.notifications.orderBy('createdAt').reverse().toArray()
+      .then(n => n.filter(x => x.isFired))
+      .catch(() => [] as AppNotification[]),
     []
   ) ?? [];
 
@@ -76,47 +81,160 @@ export default function NotificationHistory() {
 
   const unreadCount = allNotifications.filter(n => !n.isRead).length;
 
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelected(new Set(filtered.map(n => n.id)));
+  };
+
+  const deselectAll = () => {
+    setSelected(new Set());
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelected(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    try {
+      await Promise.all(Array.from(selected).map(id => deleteNotification(id)));
+      toast.success(`Deleted ${selected.size} notification${selected.size !== 1 ? 's' : ''}`);
+      exitSelectMode();
+    } catch {
+      toast.error('Failed to delete notifications');
+    }
+  };
+
+  const handleBulkMarkRead = async () => {
+    if (selected.size === 0) return;
+    try {
+      await Promise.all(Array.from(selected).map(id => markAsRead(id)));
+      toast.success(`Marked ${selected.size} as read`);
+      exitSelectMode();
+    } catch {
+      toast.error('Failed to mark as read');
+    }
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every(n => selected.has(n.id));
+
   return (
     <AppLayout>
       <Header 
         title="Notification History" 
         showBack 
         rightAction={
-          <div className="flex items-center gap-1">
-            {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => markAllAsRead()}>
-                <CheckCheck className="h-3.5 w-3.5 mr-1" />
-                Read all
-              </Button>
-            )}
-            {allNotifications.length > 0 && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive">
-                    <Trash2 className="h-3.5 w-3.5" />
+          selectMode ? (
+            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={exitSelectMode}>
+              <X className="h-3.5 w-3.5 mr-1" />
+              Cancel
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1">
+              {unreadCount > 0 && (
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => markAllAsRead()}>
+                  <CheckCheck className="h-3.5 w-3.5 mr-1" />
+                  Read all
+                </Button>
+              )}
+              {allNotifications.length > 0 && (
+                <>
+                  <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setSelectMode(true)}>
+                    <ListChecks className="h-3.5 w-3.5" />
                   </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Clear All Notifications</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete all notification history. This cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => deleteAllNotifications()}>
-                      Clear All
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Clear All Notifications</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete all notification history. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteAllNotifications()}>
+                          Clear All
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+            </div>
+          )
         }
       />
 
       <div className="p-4 space-y-3">
+        {/* Bulk action bar */}
+        {selectMode && (
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={allFilteredSelected}
+                    onCheckedChange={(checked) => checked ? selectAll() : deselectAll()}
+                  />
+                  <span className="text-xs font-medium">
+                    {selected.size} selected
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    disabled={selected.size === 0}
+                    onClick={handleBulkMarkRead}
+                  >
+                    <CheckCheck className="h-3 w-3 mr-1" />
+                    Read
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-7 text-xs"
+                        disabled={selected.size === 0}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {selected.size} Notification{selected.size !== 1 ? 's' : ''}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the selected notifications. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleBulkDelete}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Search & Filters */}
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -188,11 +306,22 @@ export default function NotificationHistory() {
                 className={cn(
                   'bg-card transition-colors',
                   !n.isRead && 'border-primary/20',
-                  n.priority === 'critical' && !n.isRead && 'border-destructive/40 bg-destructive/5'
+                  n.priority === 'critical' && !n.isRead && 'border-destructive/40 bg-destructive/5',
+                  selectMode && selected.has(n.id) && 'border-primary ring-1 ring-primary/30'
                 )}
+                onClick={selectMode ? () => toggleSelect(n.id) : undefined}
               >
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
+                    {selectMode && (
+                      <div className="pt-0.5 shrink-0">
+                        <Checkbox
+                          checked={selected.has(n.id)}
+                          onCheckedChange={() => toggleSelect(n.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
                     <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full', typeColors[n.type])}>
                       {typeIcons[n.type]}
                     </div>
@@ -217,26 +346,18 @@ export default function NotificationHistory() {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col gap-1 shrink-0">
-                      {!n.isRead && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => markAsRead(n.id)}
-                        >
-                          <CheckCheck className="h-3.5 w-3.5 text-primary" />
+                    {!selectMode && (
+                      <div className="flex flex-col gap-1 shrink-0">
+                        {!n.isRead && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => markAsRead(n.id)}>
+                            <CheckCheck className="h-3.5 w-3.5 text-primary" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteNotification(n.id)}>
+                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => deleteNotification(n.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
