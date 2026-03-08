@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { formatCurrencyShort } from '@/utils/currency';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCountUp } from '@/hooks/useCountUp';
 
 interface KPICardProps {
   title: string;
@@ -25,14 +26,21 @@ export function KPICard({
   loading,
   accentColor,
 }: KPICardProps) {
+  const numericEnd = typeof value === 'number' ? value : 0;
+  const animatedValue = useCountUp(loading ? 0 : numericEnd, 800);
+
   const formatValue = () => {
     if (isCurrency && typeof value === 'number') {
-      const abs = Math.abs(value);
-      const sign = value < 0 ? '-' : '';
+      const v = animatedValue;
+      const abs = Math.abs(v);
+      const sign = v < 0 ? '-' : '';
       if (abs >= 10000000) return `${sign}${(abs / 10000000).toFixed(2)} Cr`;
       if (abs >= 100000) return `${sign}${(abs / 100000).toFixed(2)} Lac`;
       if (abs >= 1000) return `${sign}${(abs / 1000).toFixed(1)}K`;
-      return formatCurrencyShort(value).replace('Rs ', '');
+      return formatCurrencyShort(v).replace('Rs ', '');
+    }
+    if (typeof value === 'number') {
+      return `${Math.round(animatedValue)}${suffix}`;
     }
     return `${value}${suffix}`;
   };
