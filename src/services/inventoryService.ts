@@ -144,7 +144,7 @@ export async function deletePart(id: string): Promise<boolean> {
 /**
  * Update stock quantity
  */
-export async function updateStock(id: string, quantityChange: number, reason?: string): Promise<Part | undefined> {
+export async function updateStock(id: string, quantityChange: number, reason?: string, skipLog?: boolean): Promise<Part | undefined> {
   const part = await db.parts.get(id);
   if (!part) return undefined;
   
@@ -157,13 +157,15 @@ export async function updateStock(id: string, quantityChange: number, reason?: s
     updatedAt: new Date() 
   });
   
-  await logActivity({
-    action: 'update',
-    entityType: 'part',
-    entityId: id,
-    description: `Stock ${change >= 0 ? 'increased' : 'decreased'} for ${part.name}: ${currentQuantity} → ${newQuantity}`,
-    metadata: { previousQuantity: currentQuantity, newQuantity, change, reason },
-  });
+  if (!skipLog) {
+    await logActivity({
+      action: 'update',
+      entityType: 'part',
+      entityId: id,
+      description: `Stock ${change >= 0 ? 'increased' : 'decreased'} for ${part.name}: ${currentQuantity} → ${newQuantity}`,
+      metadata: { previousQuantity: currentQuantity, newQuantity, change, reason },
+    });
+  }
   
   return { ...part, quantity: newQuantity, updatedAt: new Date() };
 }

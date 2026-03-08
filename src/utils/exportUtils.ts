@@ -332,7 +332,7 @@ export async function exportReportToPDF(
     );
   }
 
-  const filename = `ameer-autos-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+  const filename = `${shopName.toLowerCase().replace(/\s+/g, '-')}-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(filename);
 }
 

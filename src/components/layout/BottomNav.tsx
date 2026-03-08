@@ -41,7 +41,7 @@ export const BottomNav = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElemen
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex flex-col items-center justify-center flex-1 h-full px-2 py-1 transition-colors touch-target',
+                  'relative flex flex-col items-center justify-center flex-1 h-full px-2 py-1 transition-colors touch-target',
                   active 
                     ? 'text-primary' 
                     : 'text-muted-foreground hover:text-foreground',

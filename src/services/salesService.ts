@@ -73,11 +73,11 @@ export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sa
     grandProfit += profit;
   }
 
-  // Atomic transaction
+  // Atomic transaction (skipLog on updateStock to avoid N+1 activity entries)
   await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
     for (const sale of sales) {
       await db.sales.add(sale);
-      await updateStock(sale.partId, -sale.quantity, 'Sale');
+      await updateStock(sale.partId, -sale.quantity, 'Sale', true);
     }
   });
 

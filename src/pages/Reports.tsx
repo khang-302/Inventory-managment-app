@@ -329,7 +329,7 @@ export default function Reports() {
       await exportReportToPDF(
         selectedRange, summary, topParts, salesByDate, parts,
         lowStockItems.map(i => ({ name: i.name, quantity: i.quantity, minStock: i.minStock })),
-        inventoryByCategory, inventoryByBrand, visuals,
+        inventoryByCategory, inventoryByBrand, visuals, appName,
       );
       toast.success('PDF exported');
     } catch (error) {
