@@ -38,7 +38,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 const activityIconMap: Record<string, React.ElementType> = {
-  Plus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
+  Plus: PackagePlus, Pencil, Trash2, ShoppingCart, Download, Upload, RefreshCw, Activity,
 };
 
 const ACTION_LABELS: Record<ActivityAction, string> = {
