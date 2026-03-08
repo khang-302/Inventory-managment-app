@@ -102,16 +102,16 @@ export default function AddEditPart() {
   const savedBrands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
   const savedCategories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
 
-  // Combine predefined with user-added (avoiding duplicates)
-  const allBrands = [
+  // Combine predefined with user-added (avoiding duplicates) — memoized to prevent infinite re-renders
+  const allBrands = useMemo(() => [
     ...PREDEFINED_BRANDS.map(name => ({ id: `predefined-${name}`, name, isPredefined: true })),
     ...savedBrands.filter(b => !PREDEFINED_BRANDS.includes(b.name)).map(b => ({ ...b, isPredefined: false })),
-  ];
+  ], [savedBrands]);
   
-  const allCategories = [
+  const allCategories = useMemo(() => [
     ...PREDEFINED_CATEGORIES.map(name => ({ id: `predefined-${name}`, name, isPredefined: true })),
     ...savedCategories.filter(c => !PREDEFINED_CATEGORIES.includes(c.name)).map(c => ({ ...c, isPredefined: false })),
-  ];
+  ], [savedCategories]);
 
   const form = useForm<PartFormValues>({
     resolver: zodResolver(partSchema),
