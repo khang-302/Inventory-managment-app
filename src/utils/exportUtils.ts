@@ -109,7 +109,7 @@ export async function exportReportToPDF(
       body: summaryData,
       theme: 'grid',
       headStyles: { 
-        fillColor: [22, 101, 52],
+        fillColor: [15, 118, 110],
         textColor: 255,
         fontStyle: 'bold'
       },
