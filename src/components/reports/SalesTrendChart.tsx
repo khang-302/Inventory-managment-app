@@ -102,7 +102,7 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
                 tick={{ fontSize: 9, fill: textColor }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => formatCurrencyShort(v).replace('Rs ', '')}
+                tickFormatter={(v) => formatValue(v)}
                 width={45}
               />
               <Tooltip
