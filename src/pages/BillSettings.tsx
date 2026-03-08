@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw as ResetZoom } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw as ResetZoom, Palette } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
-import type { BillSettings, WatermarkStyle, Bill, BillItem } from '@/types/bill';
+import type { BillSettings, WatermarkStyle, Bill, BillItem, BillColorThemeId } from '@/types/bill';
+import { BILL_COLOR_THEMES } from '@/utils/billColorThemes';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
