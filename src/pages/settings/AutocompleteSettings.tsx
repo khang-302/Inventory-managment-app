@@ -16,9 +16,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, type AutocompleteField } from '@/services/autocompleteService';
+import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, exportAutocompleteData, importAutocompleteData, type AutocompleteField } from '@/services/autocompleteService';
 import type { AutocompleteEntry } from '@/types';
-import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X } from 'lucide-react';
+import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 const FIELD_CONFIG: { field: AutocompleteField; label: string; icon: React.ElementType; placeholder: string }[] = [
@@ -128,15 +128,59 @@ export default function AutocompleteSettings() {
     toast.success('Entry updated');
   };
 
+  const handleExport = async () => {
+    try {
+      const json = await exportAutocompleteData();
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `autocomplete-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Autocomplete data exported');
+    } catch { toast.error('Export failed'); }
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) { toast.error('File too large (max 10MB)'); return; }
+      try {
+        const text = await file.text();
+        const { added, skipped } = await importAutocompleteData(text);
+        await loadAll();
+        toast.success(`Imported ${added} entries (${skipped} duplicates skipped)`);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Invalid backup file');
+      }
+    };
+    input.click();
+  };
+
   const totalEntries = Object.values(entries).reduce((s, arr) => s + arr.length, 0);
 
   return (
     <AppLayout>
       <Header title="Smart Autocomplete" showBack />
       <div className="p-4 space-y-4 pb-24">
-        <p className="text-sm text-muted-foreground">
-          Manage saved autocomplete suggestions. {totalEntries} total entries.
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {totalEntries} total entries
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={handleImport}>
+              <Upload className="h-3.5 w-3.5" /> Import
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={handleExport} disabled={totalEntries === 0}>
+              <Download className="h-3.5 w-3.5" /> Export
+            </Button>
+          </div>
+        </div>
 
         {/* Add Customer Name + Phone Pair */}
         <Card className="bg-card border-primary/30">

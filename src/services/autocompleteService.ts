@@ -57,6 +57,39 @@ export async function clearAllEntries(field: AutocompleteField): Promise<void> {
   await db.autocompleteEntries.where('field').equals(field).delete();
 }
 
+/** Export all autocomplete entries as JSON */
+export async function exportAutocompleteData(): Promise<string> {
+  const allEntries: Record<string, AutocompleteEntry[]> = {};
+  for (const field of ['customerName', 'customerPhone', 'brand', 'category'] as AutocompleteField[]) {
+    allEntries[field] = await getAllEntries(field);
+  }
+  return JSON.stringify({ type: 'ameer-autos-autocomplete', version: 1, exportedAt: new Date().toISOString(), entries: allEntries }, null, 2);
+}
+
+/** Import autocomplete entries from JSON, merging with existing */
+export async function importAutocompleteData(jsonString: string): Promise<{ added: number; skipped: number }> {
+  const data = JSON.parse(jsonString);
+  if (data?.type !== 'ameer-autos-autocomplete') throw new Error('Invalid autocomplete backup file');
+  let added = 0, skipped = 0;
+  for (const field of ['customerName', 'customerPhone', 'brand', 'category'] as AutocompleteField[]) {
+    const items: AutocompleteEntry[] = data.entries?.[field] || [];
+    for (const item of items) {
+      if (!item.value?.trim()) { skipped++; continue; }
+      const existing = await db.autocompleteEntries.where('[field+value]').equals([field, item.value.trim()]).first();
+      if (existing) { skipped++; continue; }
+      await db.autocompleteEntries.add({
+        id: crypto.randomUUID(),
+        field,
+        value: item.value.trim(),
+        linkedPhone: item.linkedPhone || undefined,
+        createdAt: new Date(),
+      });
+      added++;
+    }
+  }
+  return { added, skipped };
+}
+
 /** Persist values after a successful sale/bill — links name ↔ phone */
 export async function persistFormValues(data: {
   customerName?: string;
