@@ -1,10 +1,11 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { 
   Package, DollarSign, BarChart3, Shield, Palette, Globe, 
   ArrowLeftRight, FileText, Zap, Code2, Database, LineChart,
-  FileDown, Cloud, Mail, Heart, Info
+  FileDown, Cloud, Mail, Heart, Info, History
 } from 'lucide-react';
 
 const features = [
