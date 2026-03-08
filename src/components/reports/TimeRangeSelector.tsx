@@ -2,14 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { CalendarIcon, X } from 'lucide-react';
+import { CalendarIcon, ChevronDown, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { DateRange } from '@/types';
@@ -24,8 +17,6 @@ interface TimeRangeSelectorProps {
   onCustomEndChange?: (date: Date | undefined) => void;
 }
 
-const CUSTOM_VALUE = 'custom';
-
 export function TimeRangeSelector({
   dateRanges,
   selectedRangeIndex,
@@ -36,24 +27,13 @@ export function TimeRangeSelector({
   onCustomEndChange,
 }: TimeRangeSelectorProps) {
   const [isCustom, setIsCustom] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleValueChange = (value: string) => {
-    if (value === CUSTOM_VALUE) {
-      setIsCustom(true);
-    } else {
-      setIsCustom(false);
-      onCustomStartChange?.(undefined);
-      onCustomEndChange?.(undefined);
-      onRangeChange(Number(value));
-    }
-  };
+  const isCustomActive = isCustom && customStartDate && customEndDate;
 
-  const currentValue = isCustom ? CUSTOM_VALUE : String(selectedRangeIndex);
   const currentLabel = isCustom
     ? 'Custom Range'
     : dateRanges[selectedRangeIndex]?.label ?? 'Select';
-
-  const isCustomActive = isCustom && customStartDate && customEndDate;
 
   const displayRange = isCustomActive
     ? `${format(customStartDate, 'dd MMM yyyy')} — ${format(customEndDate, 'dd MMM yyyy')}`
@@ -61,39 +41,74 @@ export function TimeRangeSelector({
       ? `${format(dateRanges[selectedRangeIndex].startDate, 'dd MMM yyyy')} — ${format(dateRanges[selectedRangeIndex].endDate, 'dd MMM yyyy')}`
       : '';
 
+  const handleSelect = (index: number) => {
+    setIsCustom(false);
+    setIsOpen(false);
+    onCustomStartChange?.(undefined);
+    onCustomEndChange?.(undefined);
+    onRangeChange(index);
+  };
+
+  const handleCustomSelect = () => {
+    setIsCustom(true);
+    setIsOpen(false);
+  };
+
   return (
     <div className="space-y-3">
-      {/* Dropdown selector */}
-      <Select value={currentValue} onValueChange={handleValueChange}>
-        <SelectTrigger
-          className={cn(
-            'w-full h-12 rounded-xl border-border/50 bg-card px-4',
-            'text-sm font-semibold shadow-sm',
-            'focus:ring-primary/30 focus:border-primary/60',
-          )}
+      {/* Dropdown trigger */}
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <button
+            className={cn(
+              'flex items-center justify-between w-full h-12 rounded-xl border border-border/50 bg-card px-4',
+              'text-sm font-semibold shadow-sm transition-colors',
+              'hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/60',
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-foreground">{currentLabel}</span>
+            </div>
+            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] p-1.5 rounded-xl"
+          align="start"
+          sideOffset={6}
         >
-          <div className="flex items-center gap-2.5 w-full">
-            <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
-            <SelectValue placeholder="Select Time Range">
-              {currentLabel}
-            </SelectValue>
-          </div>
-        </SelectTrigger>
-        <SelectContent className="rounded-xl">
-          {dateRanges.map((range, index) => (
-            <SelectItem
-              key={index}
-              value={String(index)}
-              className="text-sm rounded-lg"
+          <div className="flex flex-col gap-0.5 max-h-[320px] overflow-y-auto">
+            {dateRanges.map((range, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelect(index)}
+                className={cn(
+                  'flex items-center w-full px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
+                  !isCustom && selectedRangeIndex === index
+                    ? 'bg-primary text-primary-foreground font-semibold'
+                    : 'text-foreground hover:bg-accent',
+                )}
+              >
+                {range.label}
+              </button>
+            ))}
+            <div className="h-px bg-border/50 my-1" />
+            <button
+              onClick={handleCustomSelect}
+              className={cn(
+                'flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
+                isCustom
+                  ? 'bg-primary text-primary-foreground font-semibold'
+                  : 'text-foreground hover:bg-accent',
+              )}
             >
-              {range.label}
-            </SelectItem>
-          ))}
-          <SelectItem value={CUSTOM_VALUE} className="text-sm rounded-lg">
-            Custom Range
-          </SelectItem>
-        </SelectContent>
-      </Select>
+              <CalendarIcon className="h-3.5 w-3.5" />
+              Custom Range
+            </button>
+          </div>
+        </PopoverContent>
+      </Popover>
 
       {/* Custom date pickers */}
       {isCustom && onCustomStartChange && onCustomEndChange && (
