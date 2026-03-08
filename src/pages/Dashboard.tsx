@@ -14,20 +14,21 @@ import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import {
   Package,
-  TrendingUp,
+  ArrowUpRight,
   ShoppingCart,
   AlertTriangle,
   Zap,
-  Plus,
+  PackagePlus,
   Pencil,
   Trash2,
-  BarChart3,
+  ChartColumnBig,
   Download,
   Upload,
   RefreshCw,
   Activity,
   ChevronRight,
   Wallet,
+  HandCoins,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmergencyIndicator, isLowStock } from '@/components/ui/emergency-indicator';
