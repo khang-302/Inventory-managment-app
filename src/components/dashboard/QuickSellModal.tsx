@@ -101,19 +101,6 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
             profit: sale.profit,
           },
         });
-      });
-        action: 'sale',
-        entityType: 'sale',
-        entityId: sale.id,
-        description: `Quick Sell – ${sale.partName} sold | Profit: Rs ${calculations.profit.toLocaleString()}`,
-        metadata: {
-          saleType: 'quick_sell',
-          partName: sale.partName,
-          quantity: sale.quantity,
-          totalAmount: sale.totalAmount,
-          profit: sale.profit,
-        },
-      });
 
       await persistFormValues({
         customerName: buyerName.trim(),
