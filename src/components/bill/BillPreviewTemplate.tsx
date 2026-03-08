@@ -39,6 +39,40 @@ const GlobeIcon = () => (
   </svg>
 );
 
+/* ── Dynamic font size for shop name ── */
+function getShopNameFontSize(name: string): string {
+  if (name.length <= 16) return '28px';
+  if (name.length <= 24) return '22px';
+  return '18px';
+}
+
+/* ── Watermark overlay component ── */
+const WatermarkOverlay = ({ text, opacity }: { text: string; opacity: number }) => {
+  const rows = Array.from({ length: 8 });
+  const cols = Array.from({ length: 4 });
+  return (
+    <div style={{
+      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+      overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
+    }}>
+      {rows.map((_, ri) => (
+        <div key={ri} style={{ display: 'flex', justifyContent: 'space-around', marginTop: ri === 0 ? '40px' : '80px' }}>
+          {cols.map((_, ci) => (
+            <span key={ci} style={{
+              fontSize: '28px', fontWeight: 800, color: CHARCOAL,
+              opacity, transform: 'rotate(-30deg)', whiteSpace: 'nowrap',
+              letterSpacing: '6px', textTransform: 'uppercase',
+              userSelect: 'none',
+            }}>
+              {text}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>(
   ({ settings, bill, items }, ref) => {
     const showPayment = bill.showPaymentInfo ?? settings.showPaymentInfo;
@@ -46,6 +80,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
     const showTerms = bill.showTerms ?? settings.showTerms;
     const terms = bill.termsConditions ?? settings.termsConditions;
     const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const watermarkText = settings.watermarkEnabled ? (settings.watermarkText || settings.shopName) : '';
 
     return (
       <div
@@ -63,6 +98,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           flexDirection: 'column',
           overflow: 'hidden',
           boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
+          position: 'relative',
         }}
       >
         {/* ═══ HEADER — Premium Side-by-Side with Decorative Border ═══ */}
