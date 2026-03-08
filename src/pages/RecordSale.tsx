@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2, Package, Plus, Pencil, Trash2, ShoppingCart } from 'lucide-react';
+import { persistFormValues } from '@/services/autocompleteService';
 import { cn } from '@/lib/utils';
 
 interface CartItem {
