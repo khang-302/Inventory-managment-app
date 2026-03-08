@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2 } from 'lucide-react';
+import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Trash2, MessageCircle } from 'lucide-react';
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
@@ -31,7 +31,7 @@ export default function BillHistory() {
   const [renderBill, setRenderBill] = useState<{
     settings: BillSettingsType; bill: Bill; items: BillItem[];
   } | null>(null);
-  const pendingAction = useRef<'image' | 'share' | null>(null);
+  const pendingAction = useRef<'image' | 'share' | 'whatsapp' | null>(null);
 
   const loadBills = async () => {
     setLoading(true);
@@ -62,6 +62,8 @@ export default function BillHistory() {
           toast({ title: 'Image downloaded' });
         } else if (action === 'share') {
           await shareFile(dataUrl, billData.bill, 'png');
+        } else if (action === 'whatsapp') {
+          await shareViaWhatsApp(dataUrl, billData.bill);
         }
       } catch (err) {
         console.error('Image export error:', err);
@@ -109,9 +111,43 @@ export default function BillHistory() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const shareViaWhatsApp = async (dataUrl: string, bill: Bill) => {
+    const text = `*Bill ${bill.billNumber}*\nCustomer: ${bill.buyerName}\nTotal: *Rs ${bill.finalTotal.toLocaleString()}*\nDate: ${new Date(bill.date).toLocaleDateString('en-PK')}`;
+    // On mobile, navigator.share with files will open WhatsApp as an option
+    if (navigator.share && navigator.canShare) {
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          // First download the image so user has it, then open WhatsApp
+          downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
+          // Open WhatsApp with text (user can manually attach the downloaded image)
+          setTimeout(() => {
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+          }, 500);
+          toast({ title: 'Image saved. Share it on WhatsApp!', description: 'Attach the downloaded image in the WhatsApp chat' });
+          return;
+        }
+      } catch { /* fallback */ }
+    }
+    // Fallback: download image + open WhatsApp with text
+    downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
+    setTimeout(() => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }, 500);
+    toast({ title: 'Image saved. Share it on WhatsApp!', description: 'Attach the downloaded image in the WhatsApp chat' });
+  };
+
   const handleShare = async (bill: Bill) => {
     const data = await prepareBillData(bill);
     pendingAction.current = 'share';
+    setRenderBill(data);
+  };
+
+  const handleWhatsApp = async (bill: Bill) => {
+    const data = await prepareBillData(bill);
+    pendingAction.current = 'whatsapp';
     setRenderBill(data);
   };
 
@@ -167,6 +203,7 @@ export default function BillHistory() {
                         <DropdownMenuItem onClick={() => handleExportImage(bill)}><ImageIcon className="h-4 w-4 mr-2" /> Export as Image</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleExportPdf(bill)}><FileText className="h-4 w-4 mr-2" /> Export as PDF</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleShare(bill)}><Share2 className="h-4 w-4 mr-2" /> Share</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-4 w-4 mr-2" /> WhatsApp</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(bill.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -174,7 +211,7 @@ export default function BillHistory() {
                   <div className="flex gap-2 mt-2 pt-2 border-t border-border">
                     <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportImage(bill)}><ImageIcon className="h-3 w-3" /> Image</Button>
                     <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleExportPdf(bill)}><FileText className="h-3 w-3" /> PDF</Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleShare(bill)}><Share2 className="h-3 w-3" /> Share</Button>
+                    <Button size="sm" className="flex-1 h-7 text-xs gap-1 bg-[#25D366] hover:bg-[#1DA851] text-white" onClick={() => handleWhatsApp(bill)}><MessageCircle className="h-3 w-3" /> WhatsApp</Button>
                   </div>
                 </CardContent>
               </Card>
