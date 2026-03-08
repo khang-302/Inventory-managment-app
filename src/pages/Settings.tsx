@@ -150,6 +150,19 @@ export default function Settings() {
       )
     : syncItems;
 
+  const legalItems = [
+    { icon: Info, title: 'About', description: 'App info, features & tech stack', path: '/settings/about' },
+    { icon: Shield, title: 'Privacy Policy', description: 'How your data is handled', path: '/settings/privacy' },
+    { icon: FileText, title: 'Terms & Conditions', description: 'Usage terms and limitations', path: '/settings/terms' },
+  ];
+
+  const filteredLegal = search
+    ? legalItems.filter(item =>
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.description?.toLowerCase().includes(search.toLowerCase())
+      )
+    : legalItems;
+
   return (
     <AppLayout>
       <Header title="Settings" />

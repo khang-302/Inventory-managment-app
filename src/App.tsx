@@ -66,6 +66,9 @@ const App = () => (
               <Route path="/settings/logo" element={<AppLogo />} />
               <Route path="/settings/branding" element={<Branding />} />
               <Route path="/settings/typography" element={<TypographySettings />} />
+              <Route path="/settings/about" element={<About />} />
+              <Route path="/settings/privacy" element={<PrivacyPolicy />} />
+              <Route path="/settings/terms" element={<TermsConditions />} />
               <Route path="/bills" element={<BillHistory />} />
               <Route path="/bills/create" element={<BillCreate />} />
               <Route path="/bills/edit/:id" element={<BillCreate />} />
