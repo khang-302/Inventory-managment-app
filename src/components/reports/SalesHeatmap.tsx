@@ -32,6 +32,7 @@ const HEATMAP_COLORS = {
 };
 
 export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHeatmapProps) {
+  const { formatFull } = useCurrencyFormat();
   const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
   const colors = isDark ? HEATMAP_COLORS.dark : HEATMAP_COLORS.light;
 
