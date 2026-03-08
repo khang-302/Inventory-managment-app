@@ -347,16 +347,34 @@ export default function BillSettingsPage() {
         {/* Live Bill Preview */}
         {showPreview && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
-              <span className="text-[10px] text-muted-foreground">(Updates as you edit)</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
+                <span className="text-[10px] text-muted-foreground">({Math.round(zoom * 100)}%)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} disabled={zoom <= 0.25}>
+                  <ZoomOut className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomReset}>
+                  <ResetZoom className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn} disabled={zoom >= 1.2}>
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
-            <div className="border border-border rounded-lg overflow-hidden" style={{ height: '540px' }}>
+            <div
+              ref={previewContainerRef}
+              className="border border-border rounded-lg overflow-auto bg-muted/30 touch-pan-x touch-pan-y"
+              style={{ height: '540px', WebkitOverflowScrolling: 'touch' }}
+            >
               <div style={{
-                transform: 'scale(0.48)',
+                transform: `scale(${zoom})`,
                 transformOrigin: 'top left',
                 width: '794px',
+                minHeight: `${1123 * zoom}px`,
               }}>
                 <BillPreviewTemplate
                   settings={settings}
@@ -365,6 +383,7 @@ export default function BillSettingsPage() {
                 />
               </div>
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">Pinch to zoom on mobile • Scroll to explore</p>
           </div>
         )}
       </div>
