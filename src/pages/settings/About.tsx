@@ -50,6 +50,40 @@ const categoryIcons: Record<string, React.ElementType> = {
   'Cloud & Sync': Cloud,
 };
 
+const changelog = [
+  {
+    version: '1.2.0',
+    date: 'March 2026',
+    changes: [
+      'Added About, Privacy Policy & Terms pages',
+      'Version changelog section',
+      'Settings persistence across restarts',
+      'Error boundary for crash protection',
+    ],
+  },
+  {
+    version: '1.1.0',
+    date: 'February 2026',
+    changes: [
+      'Professional Bill Generator with PDF/image export',
+      'Bulk actions for inventory table view',
+      'Google Drive auto-sync',
+      'Advanced theme & typography controls',
+    ],
+  },
+  {
+    version: '1.0.0',
+    date: 'January 2026',
+    changes: [
+      'Initial release',
+      'Inventory management with CRUD operations',
+      'Sales recording & profit tracking',
+      'Reports & analytics with charts',
+      'Offline-first architecture with Dexie.js',
+    ],
+  },
+];
+
 export default function About() {
   return (
     <AppLayout>
