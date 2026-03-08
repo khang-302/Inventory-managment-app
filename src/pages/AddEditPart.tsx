@@ -738,6 +738,44 @@ export default function AddEditPart() {
           </form>
         </Form>
       </div>
+
+      {/* Full-screen image preview */}
+      <Dialog open={previewIndex !== null} onOpenChange={() => setPreviewIndex(null)}>
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 border-none bg-black/95 rounded-none sm:rounded-none">
+          <div className="relative flex items-center justify-center w-full h-full">
+            {previewIndex !== null && (
+              <img
+                src={images[previewIndex]}
+                alt={`Part preview ${previewIndex + 1}`}
+                className="max-w-full max-h-full object-contain"
+              />
+            )}
+            {images.length > 1 && previewIndex !== null && (
+              <>
+                <button
+                  type="button"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/50 flex items-center justify-center text-foreground"
+                  onClick={() => setPreviewIndex((previewIndex - 1 + images.length) % images.length)}
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/50 flex items-center justify-center text-foreground"
+                  onClick={() => setPreviewIndex((previewIndex + 1) % images.length)}
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            )}
+            {previewIndex !== null && (
+              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-foreground bg-background/50 px-3 py-1 rounded-full">
+                {previewIndex + 1} / {images.length}
+              </span>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
