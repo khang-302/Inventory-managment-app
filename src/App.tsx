@@ -18,6 +18,7 @@ import ActivityLog from "./pages/ActivityLog";
 import BillHistory from "./pages/BillHistory";
 import BillCreate from "./pages/BillCreate";
 import BillSettingsPage from "./pages/BillSettings";
+import NotificationHistory from "./pages/NotificationHistory";
 import NotFound from "./pages/NotFound";
 
 // Settings sub-pages
