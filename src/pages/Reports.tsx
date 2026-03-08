@@ -19,6 +19,7 @@ import {
   TimeRangeSelector,
   TopSellingParts,
   InsightsPanel,
+  MonthComparison,
 } from '@/components/reports';
 import {
   ShoppingCart,
