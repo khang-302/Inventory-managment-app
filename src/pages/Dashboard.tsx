@@ -76,6 +76,7 @@ const KPI_CONFIG = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const [quickSellOpen, setQuickSellOpen] = useState(false);
+  const { formatValue, formatFull } = useCurrencyFormat();
   const {
     stats,
     isLoadingStats,
