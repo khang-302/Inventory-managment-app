@@ -67,13 +67,13 @@ export async function exportReportToPDF(
     return 22;
   };
 
-  // Header with branding
-  doc.setFillColor(22, 101, 52); // Green-800
+  // Header with branding — Teal theme matching app palette
+  doc.setFillColor(15, 118, 110); // Teal-700
   doc.rect(0, 0, pageWidth, 35, 'F');
   
   doc.setFontSize(22);
   doc.setTextColor(255, 255, 255);
-  doc.text('Ameer Autos', 14, 18);
+  doc.text(shopName, 14, 18);
 
   doc.setFontSize(11);
   doc.text('Inventory & Sales Manager', 14, 26);
@@ -81,8 +81,7 @@ export async function exportReportToPDF(
   // Report title section
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
-  // Title requirement: Shop Name + Selected Time Range
-  doc.text(`Ameer Autos - ${range.label}`, 14, 50);
+  doc.text(`${shopName} - ${range.label}`, 14, 50);
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
