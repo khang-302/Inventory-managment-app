@@ -26,6 +26,7 @@ interface SalesTrendChartProps {
 export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrendChartProps) {
   const [showSales, setShowSales] = useState(true);
   const [showProfit, setShowProfit] = useState(true);
+  const { formatValue, formatFull } = useCurrencyFormat();
 
   if (data.length === 0) return null;
 
