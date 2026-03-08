@@ -101,6 +101,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
             profit: sale.profit,
           },
         });
+      });
 
       await persistFormValues({
         customerName: buyerName.trim(),
