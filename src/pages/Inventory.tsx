@@ -178,6 +178,42 @@ export default function Inventory() {
     }
   };
 
+  // Bulk selection
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === filteredParts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredParts.map(p => p.id)));
+    }
+  }, [filteredParts, selectedIds.size]);
+
+  const toggleSelectOne = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      const ids = Array.from(selectedIds);
+      for (const id of ids) {
+        await deletePart(id);
+      }
+      toast.success(`Deleted ${ids.length} part${ids.length > 1 ? 's' : ''}`);
+      setSelectedIds(new Set());
+      setShowDeleteDialog(false);
+    } catch (error) {
+      toast.error('Failed to delete parts');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [selectedIds]);
+
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
     return sortDirection === 'asc' 
