@@ -319,12 +319,11 @@ export default function BillSettingsPage() {
               <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
               <span className="text-[10px] text-muted-foreground">(Updates as you edit)</span>
             </div>
-            <div className="border border-border rounded-lg overflow-hidden">
+            <div className="border border-border rounded-lg overflow-hidden" style={{ height: '540px' }}>
               <div style={{
                 transform: 'scale(0.48)',
                 transformOrigin: 'top left',
                 width: '794px',
-                height: 'auto',
               }}>
                 <BillPreviewTemplate
                   settings={settings}
