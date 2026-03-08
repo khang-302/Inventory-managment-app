@@ -15,6 +15,7 @@ import { toSafeNumber, toSafeQuantity, calculateTotalSafe, calculateProfitSafe }
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { persistFormValues } from '@/services/autocompleteService';
 
 interface QuickSellModalProps {
   open: boolean;
