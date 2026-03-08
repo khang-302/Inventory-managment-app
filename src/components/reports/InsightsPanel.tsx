@@ -17,6 +17,7 @@ export function InsightsPanel({
   avgDailySales,
   profitMargin,
 }: InsightsPanelProps) {
+  const { formatValue } = useCurrencyFormat();
   const insights = [
     {
       icon: salesGrowth >= 0 ? TrendingUp : TrendingDown,
