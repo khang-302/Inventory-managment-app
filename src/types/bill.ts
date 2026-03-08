@@ -11,6 +11,8 @@ export interface PaymentInfo {
   jazzcashNumber: string;
 }
 
+export type BillColorThemeId = 'modern-black-orange' | 'classic-teal-gold' | 'royal-blue-gold' | 'burgundy-cream' | 'forest-bronze';
+
 export interface BillSettings {
   id: string;
   shopName: string;
@@ -33,6 +35,7 @@ export interface BillSettings {
   watermarkStyle: WatermarkStyle;
   watermarkText: string;
   watermarkOpacity: number;
+  billColorTheme: BillColorThemeId;
   updatedAt: Date;
 }
 

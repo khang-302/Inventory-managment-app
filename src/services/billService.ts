@@ -32,6 +32,7 @@ const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
   watermarkStyle: 'text' as WatermarkStyle,
   watermarkText: '',
   watermarkOpacity: 0.05,
+  billColorTheme: 'modern-black-orange' as const,
 };
 
 export async function getBillSettings(): Promise<BillSettings> {

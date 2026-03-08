@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw as ResetZoom } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw as ResetZoom, Palette } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
-import type { BillSettings, WatermarkStyle, Bill, BillItem } from '@/types/bill';
+import type { BillSettings, WatermarkStyle, Bill, BillItem, BillColorThemeId } from '@/types/bill';
+import { BILL_COLOR_THEMES } from '@/utils/billColorThemes';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -176,6 +177,53 @@ export default function BillSettingsPage() {
                   <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => setSettings({ ...settings, logoPath: null })}>Remove</Button>
                 </div>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bill Color Theme */}
+        <Card className="bg-card">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Palette className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Bill Color Theme</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">Choose a premium color palette for your invoices</p>
+            <div className="grid grid-cols-1 gap-2">
+              {BILL_COLOR_THEMES.map(theme => {
+                const isActive = (settings.billColorTheme || 'modern-black-orange') === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => setSettings({ ...settings, billColorTheme: theme.id as BillColorThemeId })}
+                    className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                      isActive
+                        ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                        : 'border-border hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {/* Color swatches */}
+                    <div className="flex gap-0.5 shrink-0">
+                      <div className="w-5 h-8 rounded-l-md" style={{ background: theme.preview.bg }} />
+                      <div className="w-5 h-8" style={{ background: theme.preview.accent }} />
+                      <div className="w-5 h-8" style={{ background: theme.preview.stripe }} />
+                      <div className="w-5 h-8 rounded-r-md border border-border" style={{ background: theme.preview.text }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold truncate">{theme.name}</p>
+                      <p className="text-[10px] text-muted-foreground leading-tight">{theme.description}</p>
+                    </div>
+                    {isActive && (
+                      <div className="ml-auto shrink-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
