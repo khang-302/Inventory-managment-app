@@ -224,7 +224,7 @@ export default function BillCreate() {
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <Label className="text-[10px]">Brand</Label>
-                      <Input value={item.brand} onChange={e => updateItem(idx, 'brand', e.target.value)} placeholder="Brand" className="text-sm h-8" />
+                      <AutocompleteInput field="brand" value={item.brand} onChange={v => updateItem(idx, 'brand', v)} placeholder="Brand" className="text-sm h-8" />
                     </div>
                     <div>
                       <Label className="text-[10px]">Qty *</Label>
