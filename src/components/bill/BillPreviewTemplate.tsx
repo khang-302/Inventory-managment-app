@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import type { BillSettings, Bill, BillItem } from '@/types/bill';
+import type { BillSettings, Bill, BillItem, WatermarkStyle } from '@/types/bill';
 
 interface BillPreviewTemplateProps {
   settings: BillSettings;
