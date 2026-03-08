@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { db, initializeDatabase, getSetting, updateSetting } from '@/db/database';
-import { seedDemoDataIfNeeded } from '@/services/demoSeedService';
+import { clearAllDemoData } from '@/services/demoSeedService';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category } from '@/types';
 import { startOfDay, endOfDay, startOfMonth, subDays } from 'date-fns';
