@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrencyShort } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { ArrowUpRight, ArrowDownRight, Minus, CalendarRange } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Sale } from '@/types';
@@ -56,7 +56,8 @@ function ChangeIndicator({ current, previous }: { current: number; previous: num
 function MetricRow({ label, current, previous, isCurrency }: {
   label: string; current: number; previous: number; isCurrency?: boolean;
 }) {
-  const fmt = (v: number) => isCurrency ? formatCurrencyShort(v) : v.toLocaleString();
+  const { formatFull } = useCurrencyFormat();
+  const fmt = (v: number) => isCurrency ? formatFull(v) : v.toLocaleString();
   return (
     <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-2 py-2 border-b border-border/20 last:border-0">
       <span className="text-[11px] font-medium text-muted-foreground">{label}</span>

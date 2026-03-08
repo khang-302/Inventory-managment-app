@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { PieChart as PieIcon, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -54,6 +54,8 @@ export function InventoryDistributionChart({
   brandData,
   title = "Inventory Value Distribution" 
 }: InventoryDistributionChartProps) {
+  const { formatFull, formatValue } = useCurrencyFormat();
+
   if (categoryData.length === 0 && brandData.length === 0) return null;
 
   const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -144,7 +146,7 @@ export function InventoryDistributionChart({
                         fontSize: '12px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
-                      formatter={(value: number) => [formatCurrency(value), 'Value']}
+                      formatter={(value: number) => [formatFull(value), 'Value']}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -180,7 +182,7 @@ export function InventoryDistributionChart({
                       type="number"
                       tick={{ fontSize: 10, fill: textColor }}
                       axisLine={{ stroke: gridColor }}
-                      tickFormatter={(v) => formatCurrencyShort(v)}
+                      tickFormatter={(v) => formatValue(v)}
                     />
                     <YAxis
                       dataKey="name"
@@ -197,7 +199,7 @@ export function InventoryDistributionChart({
                         fontSize: '12px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
-                      formatter={(value: number) => [formatCurrency(value), 'Value']}
+                      formatter={(value: number) => [formatFull(value), 'Value']}
                     />
                     <Bar 
                       dataKey="value" 

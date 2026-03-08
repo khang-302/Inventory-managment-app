@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from 'lucide-react';
 import { useMemo } from 'react';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface SalesHeatmapData {
   date: string; // YYYY-MM-DD format
@@ -31,6 +32,7 @@ const HEATMAP_COLORS = {
 };
 
 export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHeatmapProps) {
+  const { formatFull } = useCurrencyFormat();
   const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
   const colors = isDark ? HEATMAP_COLORS.dark : HEATMAP_COLORS.light;
 
@@ -178,7 +180,7 @@ export function SalesHeatmap({ data, title = "Sales Activity Heatmap" }: SalesHe
                       key={dayIdx}
                       className="w-3 h-3 rounded-sm transition-colors duration-150 hover:ring-1 hover:ring-primary/40 cursor-pointer"
                       style={{ backgroundColor: getColorIntensity(day.value) }}
-                      title={`${day.date.toLocaleDateString('en-GB')}: Rs ${day.value.toLocaleString()}`}
+                      title={`${day.date.toLocaleDateString('en-GB')}: ${formatFull(day.value)}`}
                     />
                   ))}
                 </div>

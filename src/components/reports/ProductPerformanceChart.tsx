@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { BarChart3 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -40,6 +40,8 @@ export function ProductPerformanceChart({
   data,
   title = "Product Performance",
 }: ProductPerformanceChartProps) {
+  const { formatFull } = useCurrencyFormat();
+
   if (data.length === 0) return null;
 
   const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -97,7 +99,7 @@ export function ProductPerformanceChart({
                   padding: '8px 12px',
                 }}
                 formatter={(value: number, name: string) => {
-                  if (name === 'Revenue') return [formatCurrency(value), name];
+                  if (name === 'Revenue') return [formatFull(value), name];
                   return [value, name];
                 }}
                 labelFormatter={(_, payload) => payload?.[0]?.payload?.name || ''}

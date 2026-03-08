@@ -5,7 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { db, getSetting, updateSetting } from '@/db/database';
 import { getSalesSummary, getTopSellingParts } from '@/services/salesService';
 import { getInventoryValue } from '@/services/inventoryService';
-import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
+import { formatCurrency } from '@/utils/currency';
 import { getDateRanges, formatDateRange } from '@/utils/dateUtils';
 import { toSafeNumber, toSafeQuantity, safeAdd, safeDivide } from '@/utils/safeNumber';
 import { Button } from '@/components/ui/button';
