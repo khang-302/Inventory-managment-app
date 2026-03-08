@@ -4,16 +4,18 @@ import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getAllEntries, removeEntry, clearAllEntries, type AutocompleteField } from '@/services/autocompleteService';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getAllEntries, removeEntry, clearAllEntries, addEntry, type AutocompleteField } from '@/services/autocompleteService';
 import type { AutocompleteEntry } from '@/types';
-import { Trash2, User, Phone, Tag, FolderOpen } from 'lucide-react';
+import { Trash2, User, Phone, Tag, FolderOpen, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-const FIELD_CONFIG: { field: AutocompleteField; label: string; icon: React.ElementType }[] = [
-  { field: 'customerName', label: 'Customer Names', icon: User },
-  { field: 'customerPhone', label: 'Phone Numbers', icon: Phone },
-  { field: 'brand', label: 'Brands', icon: Tag },
-  { field: 'category', label: 'Categories', icon: FolderOpen },
+const FIELD_CONFIG: { field: AutocompleteField; label: string; icon: React.ElementType; placeholder: string }[] = [
+  { field: 'customerName', label: 'Customer Names', icon: User, placeholder: 'e.g. Ali Khan' },
+  { field: 'customerPhone', label: 'Phone Numbers', icon: Phone, placeholder: 'e.g. 0300-1234567' },
+  { field: 'brand', label: 'Brands', icon: Tag, placeholder: 'e.g. Toyota' },
+  { field: 'category', label: 'Categories', icon: FolderOpen, placeholder: 'e.g. Brake Parts' },
 ];
 
 export default function AutocompleteSettings() {
@@ -22,6 +24,18 @@ export default function AutocompleteSettings() {
     customerPhone: [],
     brand: [],
     category: [],
+  });
+
+  // Add Customer pair form
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+
+  // Individual field add inputs
+  const [fieldInputs, setFieldInputs] = useState<Record<AutocompleteField, string>>({
+    customerName: '',
+    customerPhone: '',
+    brand: '',
+    category: '',
   });
 
   const loadAll = async () => {
@@ -50,6 +64,31 @@ export default function AutocompleteSettings() {
     toast.success(`All ${label.toLowerCase()} cleared`);
   };
 
+  const handleAddCustomerPair = async () => {
+    const name = newName.trim();
+    const phone = newPhone.trim();
+    if (!name) { toast.error('Customer name is required'); return; }
+    if (name.length > 100) { toast.error('Name must be less than 100 characters'); return; }
+    if (phone && phone.length > 20) { toast.error('Phone must be less than 20 characters'); return; }
+
+    await addEntry('customerName', name, phone || undefined);
+    if (phone) await addEntry('customerPhone', phone);
+    setNewName('');
+    setNewPhone('');
+    await loadAll();
+    toast.success(`Customer "${name}" added`);
+  };
+
+  const handleAddFieldEntry = async (field: AutocompleteField) => {
+    const val = fieldInputs[field].trim();
+    if (!val) return;
+    if (val.length > 100) { toast.error('Entry must be less than 100 characters'); return; }
+    await addEntry(field, val);
+    setFieldInputs(prev => ({ ...prev, [field]: '' }));
+    await loadAll();
+    toast.success('Entry added');
+  };
+
   const totalEntries = Object.values(entries).reduce((s, arr) => s + arr.length, 0);
 
   return (
@@ -60,8 +99,51 @@ export default function AutocompleteSettings() {
           Manage saved autocomplete suggestions. {totalEntries} total entries.
         </p>
 
-        {FIELD_CONFIG.map(({ field, label, icon: Icon }) => {
+        {/* Add Customer Name + Phone Pair */}
+        <Card className="bg-card border-primary/30">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Plus className="h-4 w-4 text-primary" />
+              Add Customer
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Name *</Label>
+                <Input
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  placeholder="Customer name"
+                  className="text-sm mt-1"
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Phone</Label>
+                <Input
+                  value={newPhone}
+                  onChange={e => setNewPhone(e.target.value)}
+                  placeholder="Phone number"
+                  className="text-sm mt-1"
+                  maxLength={20}
+                />
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="w-full h-8 text-xs"
+              onClick={handleAddCustomerPair}
+              disabled={!newName.trim()}
+            >
+              <Plus className="h-3 w-3 mr-1" /> Add Customer
+            </Button>
+          </CardContent>
+        </Card>
+
+        {FIELD_CONFIG.map(({ field, label, icon: Icon, placeholder }) => {
           const items = entries[field];
+          const isCustomerField = field === 'customerName' || field === 'customerPhone';
           return (
             <Card key={field} className="bg-card">
               <CardHeader className="pb-2 pt-4 px-4">
@@ -83,11 +165,33 @@ export default function AutocompleteSettings() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="p-2">
+              <CardContent className="p-2 space-y-2">
+                {/* Quick add for non-customer fields */}
+                {!isCustomerField && (
+                  <div className="flex gap-2 px-1">
+                    <Input
+                      value={fieldInputs[field]}
+                      onChange={e => setFieldInputs(prev => ({ ...prev, [field]: e.target.value }))}
+                      placeholder={placeholder}
+                      className="text-xs h-8 flex-1"
+                      maxLength={100}
+                      onKeyDown={e => { if (e.key === 'Enter') handleAddFieldEntry(field); }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2"
+                      onClick={() => handleAddFieldEntry(field)}
+                      disabled={!fieldInputs[field].trim()}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
                 {items.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-3">No saved entries</p>
                 ) : (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5 px-1">
                     {items.map(item => (
                       <Badge
                         key={item.id}
@@ -95,6 +199,9 @@ export default function AutocompleteSettings() {
                         className="gap-1 pr-1 text-xs font-normal"
                       >
                         {item.value}
+                        {item.linkedPhone && field === 'customerName' && (
+                          <span className="text-[10px] text-muted-foreground ml-0.5">📞 {item.linkedPhone}</span>
+                        )}
                         <button
                           onClick={() => handleRemove(item.id)}
                           className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/20 transition-colors"
