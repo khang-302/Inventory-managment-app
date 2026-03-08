@@ -137,7 +137,7 @@ export function SidebarNav({ isOpen, onClose }: SidebarNavProps) {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 touch-target',
+                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150 touch-target active:scale-95',
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'text-foreground hover:bg-muted/50'
