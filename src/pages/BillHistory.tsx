@@ -226,7 +226,9 @@ export default function BillHistory() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
