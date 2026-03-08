@@ -6,3 +6,4 @@ export { ProductPerformanceChart } from './ProductPerformanceChart';
 export { SalesHeatmap } from './SalesHeatmap';
 export { TimeRangeSelector } from './TimeRangeSelector';
 export { TopSellingParts } from './TopSellingParts';
+export { InsightsPanel } from './InsightsPanel';
