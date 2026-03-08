@@ -33,6 +33,7 @@ import {
   Receipt,
   Boxes,
 } from 'lucide-react';
+import { useApp } from '@/contexts/AppContext';
 import type { DateRange, ReportSummary } from '@/types';
 import {
   exportReportToPDF,
