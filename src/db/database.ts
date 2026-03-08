@@ -19,6 +19,7 @@ export class AmeerAutosDB extends Dexie {
   activityLogs!: Table<ActivityLog>;
   settings!: Table<AppSettings>;
   backupRecords!: Table<BackupRecord>;
+  autocompleteEntries!: Table<AutocompleteEntry>;
 
   constructor() {
     super('AmeerAutosDB');
