@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { db, initializeDatabase, getSetting, updateSetting } from '@/db/database';
 import { clearAllDemoData } from '@/services/demoSeedService';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -313,6 +314,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     appName,
     setAppName,
   };
+
+  // Mount notification scheduler
+  useNotificationScheduler();
 
   return (
     <AppContext.Provider value={value}>

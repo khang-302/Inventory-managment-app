@@ -18,6 +18,7 @@ import ActivityLog from "./pages/ActivityLog";
 import BillHistory from "./pages/BillHistory";
 import BillCreate from "./pages/BillCreate";
 import BillSettingsPage from "./pages/BillSettings";
+import NotificationHistory from "./pages/NotificationHistory";
 import NotFound from "./pages/NotFound";
 
 // Settings sub-pages
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/bills/create" element={<BillCreate />} />
               <Route path="/bills/edit/:id" element={<BillCreate />} />
               <Route path="/bills/settings" element={<BillSettingsPage />} />
+              <Route path="/notifications" element={<NotificationHistory />} />
               <Route path="/activity-log" element={<ActivityLog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
