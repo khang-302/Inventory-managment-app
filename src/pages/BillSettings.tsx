@@ -37,6 +37,39 @@ export default function BillSettingsPage() {
     { id: '2', billId: 'preview', partName: 'Hydraulic Pump Seal', partCode: 'HPS-105', brand: 'Komatsu', quantity: 1, price: 8500, total: 8500 },
   ], []);
 
+  // Zoom state for live preview
+  const [zoom, setZoom] = useState(0.48);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const lastTouchDist = useRef<number | null>(null);
+
+  const handleZoomIn = useCallback(() => setZoom(z => Math.min(z + 0.1, 1.2)), []);
+  const handleZoomOut = useCallback(() => setZoom(z => Math.max(z - 0.1, 0.25)), []);
+  const handleZoomReset = useCallback(() => setZoom(0.48), []);
+
+  // Pinch-to-zoom handler
+  useEffect(() => {
+    const el = previewContainerRef.current;
+    if (!el || !showPreview) return;
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2) { lastTouchDist.current = null; return; }
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (lastTouchDist.current !== null) {
+        const delta = (dist - lastTouchDist.current) * 0.003;
+        setZoom(z => Math.min(Math.max(z + delta, 0.25), 1.2));
+      }
+      lastTouchDist.current = dist;
+      e.preventDefault();
+    };
+    const onTouchEnd = () => { lastTouchDist.current = null; };
+
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    return () => { el.removeEventListener('touchmove', onTouchMove); el.removeEventListener('touchend', onTouchEnd); };
+  }, [showPreview]);
+
   useEffect(() => { getBillSettings().then(setSettings); }, []);
 
   const handleSave = async () => {
