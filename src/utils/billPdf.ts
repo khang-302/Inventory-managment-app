@@ -226,6 +226,9 @@ export function generateBillPdf(
   // ═══════════════════════════════════════
   // Gold Accent Bar
   // ═══════════════════════════════════════
+  // Draw watermark before content
+  drawWatermark(doc, settings);
+
   doc.setFillColor(...GOLD);
   doc.rect(0, y, pw, 2.5, 'F');
   y += 2.5;
