@@ -92,34 +92,44 @@ export default function Settings() {
 
   const settingsItems = [
     {
-      icon: Globe,
+      icon: Languages,
       title: 'Language & Localization',
       description: 'Currency format, date format',
       path: '/settings/language',
+      iconBg: 'bg-blue-500/10',
+      iconColor: 'text-blue-500',
     },
     {
-      icon: Palette,
+      icon: Paintbrush,
       title: 'Theme & Appearance',
       description: 'Dark mode, AMOLED black',
       path: '/settings/theme',
+      iconBg: 'bg-purple-500/10',
+      iconColor: 'text-purple-500',
     },
     {
       icon: Type,
       title: 'Typography & Icon Size',
       description: 'Text scale, icon size controls',
       path: '/settings/typography',
+      iconBg: 'bg-indigo-500/10',
+      iconColor: 'text-indigo-500',
     },
     {
-      icon: Layout,
+      icon: PanelLeftClose,
       title: 'Navigation Layout',
       description: 'Bottom nav or sidebar drawer',
       path: '/settings/navigation',
+      iconBg: 'bg-teal-500/10',
+      iconColor: 'text-teal-500',
     },
     {
-      icon: Sparkles,
+      icon: Wand2,
       title: 'Smart Autocomplete',
       description: 'Manage saved form suggestions',
       path: '/settings/autocomplete',
+      iconBg: 'bg-amber-500/10',
+      iconColor: 'text-amber-500',
     },
   ];
 
