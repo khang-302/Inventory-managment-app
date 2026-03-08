@@ -46,31 +46,104 @@ function getShopNameFontSize(name: string): string {
   return '18px';
 }
 
-/* ── Watermark overlay component ── */
-const WatermarkOverlay = ({ text, opacity }: { text: string; opacity: number }) => {
+/* ── Watermark overlay components ── */
+const TextWatermark = ({ text, opacity }: { text: string; opacity: number }) => {
   const rows = Array.from({ length: 8 });
   const cols = Array.from({ length: 4 });
   return (
-    <div style={{
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-      overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
-    }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
       {rows.map((_, ri) => (
         <div key={ri} style={{ display: 'flex', justifyContent: 'space-around', marginTop: ri === 0 ? '40px' : '80px' }}>
           {cols.map((_, ci) => (
             <span key={ci} style={{
               fontSize: '28px', fontWeight: 800, color: CHARCOAL,
               opacity, transform: 'rotate(-30deg)', whiteSpace: 'nowrap',
-              letterSpacing: '6px', textTransform: 'uppercase',
-              userSelect: 'none',
-            }}>
-              {text}
-            </span>
+              letterSpacing: '6px', textTransform: 'uppercase', userSelect: 'none',
+            }}>{text}</span>
           ))}
         </div>
       ))}
     </div>
   );
+};
+
+const LogoWatermark = ({ logoPath, initials, opacity }: { logoPath: string | null; initials: string; opacity: number }) => {
+  const rows = Array.from({ length: 5 });
+  const cols = Array.from({ length: 3 });
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      {rows.map((_, ri) => (
+        <div key={ri} style={{ display: 'flex', justifyContent: 'space-around', marginTop: ri === 0 ? '60px' : '120px' }}>
+          {cols.map((_, ci) => (
+            <div key={ci} style={{
+              width: '80px', height: '80px', opacity: opacity * 1.5,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transform: 'rotate(-15deg)',
+            }}>
+              {logoPath ? (
+                <img src={logoPath} alt="" style={{ width: '70px', height: '70px', objectFit: 'contain', filter: 'grayscale(100%)' }} />
+              ) : (
+                <span style={{ fontSize: '32px', fontWeight: 800, color: CHARCOAL, letterSpacing: '3px' }}>{initials}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const BorderFrameWatermark = ({ opacity }: { opacity: number }) => (
+  <div style={{
+    position: 'absolute', top: '8px', left: '8px', right: '8px', bottom: '8px',
+    border: `3px double ${GOLD}`, pointerEvents: 'none', zIndex: 0,
+    opacity: opacity * 4,
+  }}>
+    <div style={{
+      position: 'absolute', top: '6px', left: '6px', right: '6px', bottom: '6px',
+      border: `1px solid ${GOLD}`,
+    }}>
+      {/* Corner ornaments */}
+      {[{ top: '-4px', left: '-4px' }, { top: '-4px', right: '-4px' }, { bottom: '-4px', left: '-4px' }, { bottom: '-4px', right: '-4px' }].map((pos, i) => (
+        <div key={i} style={{
+          position: 'absolute', ...pos,
+          width: '20px', height: '20px',
+          borderTop: pos.top ? `2px solid ${GOLD}` : undefined,
+          borderBottom: pos.bottom ? `2px solid ${GOLD}` : undefined,
+          borderLeft: pos.left ? `2px solid ${GOLD}` : undefined,
+          borderRight: pos.right ? `2px solid ${GOLD}` : undefined,
+        }} />
+      ))}
+    </div>
+  </div>
+);
+
+const DiagonalLinesWatermark = ({ opacity }: { opacity: number }) => {
+  const lines = Array.from({ length: 30 });
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+      <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
+        {lines.map((_, i) => (
+          <line key={i}
+            x1={i * 60 - 200} y1="0" x2={i * 60 + 800} y2="1200"
+            stroke={GOLD} strokeWidth="0.8" opacity={opacity * 3}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+};
+
+const WatermarkRenderer = ({ settings, initials }: { settings: BillSettings; initials: string }) => {
+  if (!settings.watermarkEnabled) return null;
+  const style = (settings.watermarkStyle || 'text') as WatermarkStyle;
+  const text = settings.watermarkText || settings.shopName;
+  switch (style) {
+    case 'logo': return <LogoWatermark logoPath={settings.logoPath} initials={initials} opacity={settings.watermarkOpacity} />;
+    case 'border-frame': return <BorderFrameWatermark opacity={settings.watermarkOpacity} />;
+    case 'diagonal-lines': return <DiagonalLinesWatermark opacity={settings.watermarkOpacity} />;
+    case 'text': default: return <TextWatermark text={text} opacity={settings.watermarkOpacity} />;
+  }
 };
 
 const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>(
