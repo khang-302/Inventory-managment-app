@@ -2,13 +2,17 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { BillSettings, Bill, BillItem } from '@/types/bill';
 
-// Color palette: Yellow / Orange / Gray / Black / White
-const DARK: [number, number, number] = [26, 26, 26];
-const ORANGE: [number, number, number] = [232, 130, 12];
-const YELLOW: [number, number, number] = [245, 166, 35];
+/* ── Premium Color Palette (RGB tuples) ── */
+const GOLD: [number, number, number] = [197, 162, 46];
+const DARK_OLIVE: [number, number, number] = [61, 61, 27];
+const CHARCOAL: [number, number, number] = [43, 43, 43];
+const MED_GRAY: [number, number, number] = [136, 136, 136];
+const LIGHT_GRAY: [number, number, number] = [224, 224, 224];
+const FOOTER_BG: [number, number, number] = [245, 245, 245];
+const FOOTER_TEXT: [number, number, number] = [153, 153, 153];
 const WHITE: [number, number, number] = [255, 255, 255];
-const ACCENT_BG: [number, number, number] = [255, 248, 237];
-const MED_GRAY: [number, number, number] = [85, 85, 85];
+const WARM_BG: [number, number, number] = [250, 250, 247];
+const ACCENT_BG: [number, number, number] = [251, 249, 243];
 
 function parseLogoDataUrl(dataUrl: string): { data: string; format: string } | null {
   if (!dataUrl || !dataUrl.startsWith('data:image/')) return null;
@@ -16,48 +20,6 @@ function parseLogoDataUrl(dataUrl: string): { data: string; format: string } | n
   if (!match) return null;
   const format = match[1].toUpperCase() === 'JPG' ? 'JPEG' : match[1].toUpperCase();
   return { data: dataUrl, format };
-}
-
-// Draw simple geometric icons instead of emoji/font icons
-function drawLocationIcon(doc: jsPDF, cx: number, cy: number) {
-  // Pin shape: triangle + circle
-  doc.setFillColor(...WHITE);
-  // Circle head
-  doc.circle(cx, cy - 1.5, 2.5, 'F');
-  // Inner dot
-  doc.setFillColor(...ORANGE);
-  doc.circle(cx, cy - 1.5, 1, 'F');
-  // Triangle point
-  doc.setFillColor(...WHITE);
-  doc.triangle(cx - 2, cy - 0.5, cx + 2, cy - 0.5, cx, cy + 3.5, 'F');
-}
-
-function drawPhoneIcon(doc: jsPDF, cx: number, cy: number) {
-  // Simple phone rectangle
-  doc.setFillColor(...WHITE);
-  doc.roundedRect(cx - 2, cy - 3, 4, 6, 0.8, 0.8, 'F');
-  // Screen
-  doc.setFillColor(...ORANGE);
-  doc.rect(cx - 1.3, cy - 2, 2.6, 3.5, 'F');
-  // Home button dot
-  doc.setFillColor(...WHITE);
-  doc.circle(cx, cy + 2, 0.4, 'F');
-}
-
-function drawGlobeIcon(doc: jsPDF, cx: number, cy: number) {
-  // Circle outline
-  doc.setDrawColor(...WHITE);
-  doc.setLineWidth(0.6);
-  doc.setFillColor(...ORANGE);
-  doc.circle(cx, cy, 3, 'FD');
-  // Horizontal lines
-  doc.setLineWidth(0.3);
-  doc.line(cx - 3, cy, cx + 3, cy);
-  doc.line(cx - 2.2, cy - 1.5, cx + 2.2, cy - 1.5);
-  doc.line(cx - 2.2, cy + 1.5, cx + 2.2, cy + 1.5);
-  // Vertical ellipse
-  doc.setFillColor(...ORANGE);
-  doc.ellipse(cx, cy, 1.5, 3, 'S');
 }
 
 export function generateBillPdf(
@@ -68,31 +30,34 @@ export function generateBillPdf(
   const doc = new jsPDF('p', 'mm', 'a4');
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
-  const mx = 15;
+  const mx = 16;
   let y = 0;
 
   const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   // ═══════════════════════════════════════
-  // HEADER — dark background with logo + shop name
+  // HEADER — White background with logo circle
   // ═══════════════════════════════════════
-  const headerH = 38;
-  doc.setFillColor(...DARK);
-  doc.rect(0, 0, pw, headerH, 'F');
+  const headerH = 34;
+  y = 10;
 
   // Logo circle
-  const logoD = 24;
-  const logoR = logoD / 2;
+  const logoR = 13;
   const logoX = mx + logoR + 2;
-  const logoY = headerH / 2;
-  let logoRendered = false;
+  const logoY = y + headerH / 2;
 
-  // White circle background for logo
+  // Gold border circle
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(1.2);
   doc.setFillColor(...WHITE);
-  doc.setDrawColor(...YELLOW);
-  doc.setLineWidth(1);
   doc.circle(logoX, logoY, logoR, 'FD');
 
+  // Outer subtle ring
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.3);
+  doc.circle(logoX, logoY, logoR + 2, 'S');
+
+  let logoRendered = false;
   if (settings.logoPath) {
     const parsed = parseLogoDataUrl(settings.logoPath);
     if (parsed) {
@@ -107,10 +72,9 @@ export function generateBillPdf(
   }
 
   if (!logoRendered) {
-    // Orange circle with initials
-    doc.setFillColor(...ORANGE);
+    doc.setFillColor(...DARK_OLIVE);
     doc.circle(logoX, logoY, logoR - 2, 'F');
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...WHITE);
     doc.text(initials, logoX, logoY + 1.5, { align: 'center' });
@@ -118,91 +82,100 @@ export function generateBillPdf(
 
   // Shop name
   const textX = logoX + logoR + 8;
-  doc.setFontSize(24);
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...WHITE);
-  doc.text(settings.shopName, textX, headerH / 2 - 1);
+  doc.setTextColor(...DARK_OLIVE);
+  doc.text(settings.shopName, textX, logoY - 1);
 
   // Tagline
   if (settings.tagline) {
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...YELLOW);
-    doc.text(settings.tagline, textX, headerH / 2 + 7);
+    doc.setTextColor(...MED_GRAY);
+    doc.text(settings.tagline, textX, logoY + 6);
   }
 
-  y = headerH;
+  y += headerH;
+
+  // Header bottom border
+  doc.setDrawColor(...LIGHT_GRAY);
+  doc.setLineWidth(0.6);
+  doc.line(mx, y, pw - mx, y);
+  y += 1;
 
   // ═══════════════════════════════════════
-  // ORANGE "INVOICE FROM" BANNER
+  // "Invoice From" line
   // ═══════════════════════════════════════
-  const bannerH = 9;
-  doc.setFillColor(...ORANGE);
-  doc.rect(0, y, pw, bannerH, 'F');
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...WHITE);
-  doc.text('Invoice From :', mx, y + 6);
-  doc.setFont('helvetica', 'bold');
-  doc.text(settings.shopName.toUpperCase(), mx + 28, y + 6);
-  y += bannerH;
-
-  // ═══════════════════════════════════════
-  // INVOICE BODY
-  // ═══════════════════════════════════════
-  y += 5;
-  const bodyMx = mx;
-  const blockW = pw - bodyMx * 2;
-
-  // ── Invoice To Block ──
-  const blockHeaderH = 9;
-  const blockTopY = y;
-
-  // Dark header bar
-  doc.setFillColor(...DARK);
-  doc.rect(bodyMx, y, blockW, blockHeaderH, 'F');
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...WHITE);
-  doc.text('Invoice To :', bodyMx + 5, y + 6.5);
+  doc.setFillColor(...WARM_BG);
+  doc.rect(0, y, pw, 8, 'F');
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(200, 200, 200);
-  doc.text('Invoice No :', pw - bodyMx - 50, y + 6.5);
+  doc.setTextColor(...MED_GRAY);
+  doc.text('Invoice From :', mx, y + 5.5);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...YELLOW);
-  doc.text(bill.billNumber, pw - bodyMx - 5, y + 6.5, { align: 'right' });
-  y += blockHeaderH;
+  doc.setTextColor(...DARK_OLIVE);
+  doc.text(settings.shopName.toUpperCase(), mx + 24, y + 5.5);
 
-  // Body area with warm bg
-  const bodyBoxH = 18;
-  doc.setFillColor(...ACCENT_BG);
-  doc.rect(bodyMx, y, blockW, bodyBoxH, 'F');
-  doc.setDrawColor(204, 204, 204);
-  doc.setLineWidth(0.4);
-  doc.rect(bodyMx, blockTopY, blockW, blockHeaderH + bodyBoxH, 'S');
+  // Bottom border
+  doc.setDrawColor(...LIGHT_GRAY);
+  doc.setLineWidth(0.3);
+  doc.line(0, y + 8, pw, y + 8);
+  y += 12;
+
+  // ═══════════════════════════════════════
+  // Invoice To Block
+  // ═══════════════════════════════════════
+  const blockW = pw - mx * 2;
+  const blockTop = y;
+
+  // Header row
+  doc.setFillColor(...WARM_BG);
+  doc.rect(mx, y, blockW, 8, 'F');
+  doc.setDrawColor(...LIGHT_GRAY);
+  doc.setLineWidth(0.3);
+  doc.rect(mx, y, blockW, 8, 'S');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...DARK_OLIVE);
+  doc.text('Invoice To :', mx + 4, y + 5.5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...MED_GRAY);
+  doc.text('Invoice No :', pw - mx - 42, y + 5.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...GOLD);
+  doc.text(bill.billNumber, pw - mx - 4, y + 5.5, { align: 'right' });
+  y += 8;
+
+  // Body row
+  const bodyH = 16;
+  doc.setFillColor(...WHITE);
+  doc.rect(mx, y, blockW, bodyH, 'F');
+  doc.setDrawColor(...LIGHT_GRAY);
+  doc.rect(mx, blockTop, blockW, 8 + bodyH, 'S');
 
   // Buyer name
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...DARK);
-  doc.text(bill.buyerName.toUpperCase(), bodyMx + 5, y + 7);
+  doc.setTextColor(...CHARCOAL);
+  doc.text(bill.buyerName.toUpperCase(), mx + 4, y + 6);
 
   // Buyer phone
   if (bill.buyerPhone) {
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...MED_GRAY);
-    doc.text(`Phone: ${bill.buyerPhone}`, bodyMx + 5, y + 13);
+    doc.text(`Phone: ${bill.buyerPhone}`, mx + 4, y + 11);
   }
 
   // Date
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...MED_GRAY);
-  doc.text(`Date : ${new Date(bill.date).toLocaleDateString('en-PK')}`, pw - bodyMx - 5, y + 7, { align: 'right' });
+  doc.text(`Date : ${new Date(bill.date).toLocaleDateString('en-PK')}`, pw - mx - 4, y + 6, { align: 'right' });
 
-  y += bodyBoxH + 5;
+  y += bodyH + 6;
 
   // ═══════════════════════════════════════
   // ITEMS TABLE
@@ -219,23 +192,23 @@ export function generateBillPdf(
       item.price.toLocaleString(),
       item.total.toLocaleString(),
     ]),
-    margin: { left: bodyMx, right: bodyMx },
+    margin: { left: mx, right: mx },
     styles: {
-      fontSize: 9.5,
-      cellPadding: 3.5,
-      textColor: [34, 34, 34],
-      lineColor: [221, 221, 221],
+      fontSize: 9,
+      cellPadding: 3,
+      textColor: [85, 85, 85],
+      lineColor: LIGHT_GRAY,
       lineWidth: 0.2,
     },
     headStyles: {
-      fillColor: DARK,
-      textColor: [255, 255, 255],
+      fillColor: WHITE,
+      textColor: MED_GRAY,
       fontStyle: 'bold',
       halign: 'center',
-      fontSize: 9.5,
+      fontSize: 8.5,
     },
     alternateRowStyles: {
-      fillColor: [250, 250, 250],
+      fillColor: ACCENT_BG,
     },
     columnStyles: {
       0: { halign: 'center', cellWidth: 12 },
@@ -247,209 +220,206 @@ export function generateBillPdf(
       6: { halign: 'center', cellWidth: 28 },
     },
     theme: 'grid',
-    tableLineColor: [221, 221, 221],
+    tableLineColor: LIGHT_GRAY,
     tableLineWidth: 0.2,
   });
 
   // ═══════════════════════════════════════
   // TOTALS
   // ═══════════════════════════════════════
-  y = (doc as any).lastAutoTable.finalY + 5;
+  y = (doc as any).lastAutoTable.finalY + 6;
 
   // Subtotal
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...MED_GRAY);
-  doc.text('Subtotal :', pw - bodyMx - 55, y + 4);
-  doc.setFontSize(11);
+  doc.text('Subtotal :', pw - mx - 50, y);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...DARK);
-  doc.text(`Rs ${bill.subtotal.toLocaleString()}`, pw - bodyMx, y + 4, { align: 'right' });
+  doc.setTextColor(...CHARCOAL);
+  doc.text(`Rs ${bill.subtotal.toLocaleString()}`, pw - mx, y, { align: 'right' });
 
-  y += 9;
-  doc.setDrawColor(204, 204, 204);
-  doc.setLineWidth(0.3);
-  doc.line(pw - bodyMx - 80, y, pw - bodyMx, y);
+  y += 5;
 
   // Discount
   if (bill.discount > 0) {
-    y += 3;
-    doc.setFontSize(10);
+    doc.setDrawColor(...LIGHT_GRAY);
+    doc.setLineWidth(0.3);
+    doc.line(pw - mx - 70, y, pw - mx, y);
+    y += 4;
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...MED_GRAY);
-    doc.text('Discount :', pw - bodyMx - 55, y + 4);
-    doc.setFontSize(11);
+    doc.text('Discount :', pw - mx - 50, y);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...DARK);
-    doc.text(`${bill.discount.toLocaleString()}`, pw - bodyMx, y + 4, { align: 'right' });
-    y += 9;
+    doc.setTextColor(...CHARCOAL);
+    doc.text(`- Rs ${bill.discount.toLocaleString()}`, pw - mx, y, { align: 'right' });
+    y += 5;
   }
 
-  // ═══════════════════════════════════════
-  // GRAND TOTAL BAR — yellow left, dark right
-  // ═══════════════════════════════════════
-  y += 4;
-  const gtBarH = 14;
-  const gtRightW = 110;
-  const gtLeftW = pw - gtRightW;
+  // Gold separator
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(0.8);
+  doc.line(pw - mx - 70, y, pw - mx, y);
+  y += 5;
 
-  doc.setFillColor(...YELLOW);
-  doc.rect(0, y, gtLeftW, gtBarH, 'F');
-
-  doc.setFillColor(...DARK);
-  doc.rect(gtLeftW, y, gtRightW, gtBarH, 'F');
-
-  doc.setFontSize(12);
+  // Grand total
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...YELLOW);
-  doc.text('GRAND TOTAL :', gtLeftW + 5, y + gtBarH / 2 + 1.5);
-
-  doc.setFontSize(15);
+  doc.setTextColor(...DARK_OLIVE);
+  doc.text('GRAND TOTAL :', pw - mx - 50, y);
+  doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...WHITE);
-  doc.text(`Rs ${bill.finalTotal.toLocaleString()}`, pw - 8, y + gtBarH / 2 + 1.5, { align: 'right' });
+  doc.setTextColor(...DARK_OLIVE);
+  doc.text(`Rs ${bill.finalTotal.toLocaleString()}`, pw - mx, y, { align: 'right' });
 
-  y += gtBarH;
+  y += 10;
 
   // ═══════════════════════════════════════
   // TERMS & PAYMENT SECTION
   // ═══════════════════════════════════════
   const showPayment = bill.showPaymentInfo ?? settings.showPaymentInfo;
-  const paymentInfo = bill.paymentInfo ?? settings.paymentInfo;
+  const paymentInfoData = bill.paymentInfo ?? settings.paymentInfo;
   const showTerms = bill.showTerms ?? settings.showTerms;
-  const terms = bill.termsConditions ?? settings.termsConditions;
+  const termsData = bill.termsConditions ?? settings.termsConditions;
 
   if (showTerms || showPayment) {
-    y += 10;
+    y += 4;
     const sectionMx = mx + 2;
     const colW = (pw - sectionMx * 2 - 8) / 2;
 
     // Terms & Conditions (left)
-    if (showTerms && terms && terms.length > 0) {
-      doc.setFontSize(10);
+    if (showTerms && termsData && termsData.length > 0) {
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...DARK);
+      doc.setTextColor(...DARK_OLIVE);
       doc.text('TERMS & CONDITIONS', sectionMx, y + 4);
 
-      // Orange underline
+      // Gold underline
       const titleW = doc.getTextWidth('TERMS & CONDITIONS');
-      doc.setDrawColor(...ORANGE);
-      doc.setLineWidth(0.8);
-      doc.line(sectionMx, y + 6, sectionMx + titleW, y + 6);
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.6);
+      doc.line(sectionMx, y + 5.5, sectionMx + titleW, y + 5.5);
 
-      doc.setFontSize(8.5);
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(51, 51, 51);
-      let ty = y + 13;
-      terms.forEach(t => {
-        if (ty < ph - 55) {
+      doc.setTextColor(...MED_GRAY);
+      let ty = y + 11;
+      termsData.forEach(t => {
+        if (ty < ph - 45) {
           const lines = doc.splitTextToSize(`• ${t}`, colW - 4);
           doc.text(lines, sectionMx + 2, ty);
-          ty += lines.length * 4.5;
+          ty += lines.length * 4;
         }
       });
     }
 
     // Payment Information (right)
-    if (showPayment && paymentInfo) {
+    if (showPayment && paymentInfoData) {
       const px = showTerms ? sectionMx + colW + 8 : sectionMx;
-      const py = y;
 
       const paymentLines: string[] = [];
-      if (paymentInfo.bankName) paymentLines.push(`• Bank Name: ${paymentInfo.bankName}`);
-      if (paymentInfo.accountTitle) paymentLines.push(`• Account Name: ${paymentInfo.accountTitle}`);
-      if (paymentInfo.accountNumber) paymentLines.push(`• Account No: ${paymentInfo.accountNumber}`);
-      if (paymentInfo.iban) paymentLines.push(`• IBAN: ${paymentInfo.iban}`);
-      if (paymentInfo.easypaisaNumber) paymentLines.push(`• EasyPaisa: ${paymentInfo.easypaisaNumber}`);
-      if (paymentInfo.jazzcashNumber) paymentLines.push(`• JazzCash: ${paymentInfo.jazzcashNumber}`);
+      if (paymentInfoData.bankName) paymentLines.push(`• Bank Name: ${paymentInfoData.bankName}`);
+      if (paymentInfoData.accountTitle) paymentLines.push(`• Account Name: ${paymentInfoData.accountTitle}`);
+      if (paymentInfoData.accountNumber) paymentLines.push(`• Account No: ${paymentInfoData.accountNumber}`);
+      if (paymentInfoData.iban) paymentLines.push(`• IBAN: ${paymentInfoData.iban}`);
+      if (paymentInfoData.easypaisaNumber) paymentLines.push(`• EasyPaisa: ${paymentInfoData.easypaisaNumber}`);
+      if (paymentInfoData.jazzcashNumber) paymentLines.push(`• JazzCash: ${paymentInfoData.jazzcashNumber}`);
 
-      const boxH = 12 + paymentLines.length * 5 + 6;
+      const boxH = 10 + paymentLines.length * 4.5 + 4;
 
-      // Dashed orange border
-      doc.setDrawColor(...ORANGE);
-      doc.setLineWidth(0.6);
+      // Dashed gold border
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(0.5);
       doc.setLineDashPattern([2, 2], 0);
-      doc.roundedRect(px, py - 2, colW, boxH, 2, 2, 'S');
+      doc.roundedRect(px, y - 2, colW, boxH, 2, 2, 'S');
       doc.setLineDashPattern([], 0);
 
       // Warm background
       doc.setFillColor(...ACCENT_BG);
-      doc.roundedRect(px + 0.3, py - 1.7, colW - 0.6, boxH - 0.6, 1.5, 1.5, 'F');
+      doc.roundedRect(px + 0.3, y - 1.7, colW - 0.6, boxH - 0.6, 1.5, 1.5, 'F');
 
-      // Re-draw border on top
-      doc.setDrawColor(...ORANGE);
+      // Re-draw border
+      doc.setDrawColor(...GOLD);
       doc.setLineDashPattern([2, 2], 0);
-      doc.roundedRect(px, py - 2, colW, boxH, 2, 2, 'S');
+      doc.roundedRect(px, y - 2, colW, boxH, 2, 2, 'S');
       doc.setLineDashPattern([], 0);
 
       // Title
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...DARK);
-      doc.text('PAYMENT INFORMATION', px + 5, py + 6);
+      doc.setTextColor(...DARK_OLIVE);
+      doc.text('PAYMENT INFORMATION', px + 4, y + 5);
 
       // Lines
-      doc.setFontSize(8.5);
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(51, 51, 51);
-      let pl = py + 14;
+      doc.setTextColor(85, 85, 85);
+      let pl = y + 11;
       paymentLines.forEach(line => {
-        doc.text(line, px + 7, pl);
-        pl += 5;
+        doc.text(line, px + 6, pl);
+        pl += 4.5;
       });
     }
   }
 
   // ═══════════════════════════════════════
-  // FOOTER — dark bar with geometric icons
+  // FOOTER — Light gray with plain text columns
   // ═══════════════════════════════════════
-  const footerH = 30;
+  const footerH = 22;
   const fy = ph - footerH;
-  const thirdW = pw / 3;
+  const thirdW = (pw - mx * 2) / 3;
 
-  doc.setFillColor(...DARK);
+  // Light gray background
+  doc.setFillColor(...FOOTER_BG);
   doc.rect(0, fy, pw, footerH, 'F');
 
-  // Orange pill dimensions
-  const pillW = 18;
-  const pillH = 10;
-  const pillR = 5;
-  const pillY = fy + 3;
+  // Top border
+  doc.setDrawColor(...LIGHT_GRAY);
+  doc.setLineWidth(0.3);
+  doc.line(0, fy, pw, fy);
 
-  const drawPill = (cx: number) => {
-    doc.setFillColor(...ORANGE);
-    doc.roundedRect(cx - pillW / 2, pillY, pillW, pillH, pillR, pillR, 'F');
-  };
+  // Column labels
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...DARK_OLIVE);
 
-  doc.setFontSize(7.5);
+  const col1X = mx + thirdW * 0.5;
+  const col2X = mx + thirdW * 1.5;
+  const col3X = mx + thirdW * 2.5;
+
+  doc.text('ADDRESS', col1X, fy + 5, { align: 'center' });
+  doc.text('CONTACT', col2X, fy + 5, { align: 'center' });
+  doc.text('SOCIAL', col3X, fy + 5, { align: 'center' });
+
+  // Column separators
+  doc.setDrawColor(...LIGHT_GRAY);
+  doc.setLineWidth(0.3);
+  doc.line(mx + thirdW, fy + 2, mx + thirdW, fy + footerH - 2);
+  doc.line(mx + thirdW * 2, fy + 2, mx + thirdW * 2, fy + footerH - 2);
+
+  // Column values
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(200, 200, 200);
+  doc.setTextColor(...FOOTER_TEXT);
 
-  // Column 1: Location
-  const col1X = thirdW * 0.5;
-  drawPill(col1X);
-  drawLocationIcon(doc, col1X, pillY + pillH / 2);
+  // Address
   const addr = settings.address || 'Shop Address';
-  const addrLines = doc.splitTextToSize(addr, thirdW - 12);
-  doc.text(addrLines, col1X, fy + 17, { align: 'center' });
+  const addrLines = doc.splitTextToSize(addr, thirdW - 8);
+  doc.text(addrLines, col1X, fy + 10, { align: 'center' });
 
-  // Column 2: Phone
-  const col2X = thirdW * 1.5;
-  drawPill(col2X);
-  drawPhoneIcon(doc, col2X, pillY + pillH / 2);
+  // Phone
   const phoneLines: string[] = [];
   if (settings.phone1) phoneLines.push(settings.phone1);
   if (settings.phone2) phoneLines.push(settings.phone2);
   if (phoneLines.length === 0) phoneLines.push('Contact');
-  doc.text(phoneLines, col2X, fy + 17, { align: 'center' });
+  doc.text(phoneLines, col2X, fy + 10, { align: 'center' });
 
-  // Column 3: Social / Website
-  const col3X = thirdW * 2.5;
-  drawPill(col3X);
-  drawGlobeIcon(doc, col3X, pillY + pillH / 2);
+  // Social
   const socialText = settings.socialMedia || settings.website || 'Website Coming Soon';
-  const socialLines = doc.splitTextToSize(socialText, thirdW - 12);
-  doc.text(socialLines, col3X, fy + 17, { align: 'center' });
+  const socialLines = doc.splitTextToSize(socialText, thirdW - 8);
+  doc.text(socialLines, col3X, fy + 10, { align: 'center' });
 
   return doc;
 }
