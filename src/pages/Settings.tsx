@@ -19,7 +19,10 @@ import {
   Download,
   RefreshCw,
   ImageIcon,
-  Type
+  Type,
+  Info,
+  Shield,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -147,6 +150,19 @@ export default function Settings() {
       )
     : syncItems;
 
+  const legalItems = [
+    { icon: Info, title: 'About', description: 'App info, features & tech stack', path: '/settings/about' },
+    { icon: Shield, title: 'Privacy Policy', description: 'How your data is handled', path: '/settings/privacy' },
+    { icon: FileText, title: 'Terms & Conditions', description: 'Usage terms and limitations', path: '/settings/terms' },
+  ];
+
+  const filteredLegal = search
+    ? legalItems.filter(item =>
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.description?.toLowerCase().includes(search.toLowerCase())
+      )
+    : legalItems;
+
   return (
     <AppLayout>
       <Header title="Settings" />
@@ -273,6 +289,23 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Legal & Info */}
+        {filteredLegal.length > 0 && (
+          <Card className="bg-card overflow-hidden">
+            <CardContent className="p-0 divide-y divide-border">
+              {filteredLegal.map((item) => (
+                <SettingItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  description={item.description}
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* App Info */}
         <div className="text-center pt-4 pb-8 text-muted-foreground">
