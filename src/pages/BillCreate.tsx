@@ -142,6 +142,11 @@ export default function BillCreate() {
         toast({ title: `Bill ${billNumber} updated successfully` });
       } else {
         const bill = await createBill(buyerName.trim(), buyerPhone.trim(), new Date(date), validItems, discount, notes.trim(), opts);
+        await persistFormValues({ customerName: buyerName.trim(), customerPhone: buyerPhone.trim() });
+        // Persist brand values from items
+        for (const item of validItems) {
+          if (item.brand.trim()) await persistFormValues({ brand: item.brand.trim() });
+        }
         toast({ title: `Bill ${bill.billNumber} saved successfully` });
       }
       navigate('/bills');

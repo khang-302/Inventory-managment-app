@@ -188,11 +188,11 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="qs-buyer">Buyer Name</Label>
-          <Input id="qs-buyer" value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder="Optional" />
+          <AutocompleteInput field="customerName" value={buyerName} onChange={setBuyerName} placeholder="Optional" />
         </div>
         <div>
           <Label htmlFor="qs-phone">Buyer Phone</Label>
-          <Input id="qs-phone" value={buyerPhone} onChange={e => setBuyerPhone(e.target.value)} placeholder="Optional" />
+          <AutocompleteInput field="customerPhone" value={buyerPhone} onChange={setBuyerPhone} placeholder="Optional" />
         </div>
       </div>
 

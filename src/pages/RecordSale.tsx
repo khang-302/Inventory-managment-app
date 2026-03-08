@@ -174,6 +174,7 @@ export default function RecordSale() {
         return;
       }
 
+      await persistFormValues({ customerName: customerName.trim(), customerPhone: customerPhone.trim() });
       toast.success(`Sale completed • ${cart.length} item(s)`);
       navigate('/');
     } catch (error) {

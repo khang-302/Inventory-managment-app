@@ -109,6 +109,12 @@ export default function Settings() {
       description: 'Bottom nav or sidebar drawer',
       path: '/settings/navigation',
     },
+    {
+      icon: Sparkles,
+      title: 'Smart Autocomplete',
+      description: 'Manage saved form suggestions',
+      path: '/settings/autocomplete',
+    },
   ];
 
   const syncItems = [
