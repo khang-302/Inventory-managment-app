@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getAllEntries, removeEntry, clearAllEntries, addEntry, type AutocompleteField } from '@/services/autocompleteService';
+import { getAllEntries, removeEntry, clearAllEntries, addEntry, updateEntry, type AutocompleteField } from '@/services/autocompleteService';
 import type { AutocompleteEntry } from '@/types';
-import { Trash2, User, Phone, Tag, FolderOpen, Plus } from 'lucide-react';
+import { Trash2, User, Phone, Tag, FolderOpen, Plus, Pencil, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 const FIELD_CONFIG: { field: AutocompleteField; label: string; icon: React.ElementType; placeholder: string }[] = [
@@ -18,6 +18,12 @@ const FIELD_CONFIG: { field: AutocompleteField; label: string; icon: React.Eleme
   { field: 'category', label: 'Categories', icon: FolderOpen, placeholder: 'e.g. Brake Parts' },
 ];
 
+interface EditState {
+  id: string;
+  value: string;
+  linkedPhone: string;
+}
+
 export default function AutocompleteSettings() {
   const [entries, setEntries] = useState<Record<AutocompleteField, AutocompleteEntry[]>>({
     customerName: [],
@@ -26,17 +32,15 @@ export default function AutocompleteSettings() {
     category: [],
   });
 
-  // Add Customer pair form
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
-
-  // Individual field add inputs
   const [fieldInputs, setFieldInputs] = useState<Record<AutocompleteField, string>>({
     customerName: '',
     customerPhone: '',
     brand: '',
     category: '',
   });
+  const [editing, setEditing] = useState<EditState | null>(null);
 
   const loadAll = async () => {
     const results = await Promise.all(
@@ -54,12 +58,14 @@ export default function AutocompleteSettings() {
 
   const handleRemove = async (id: string) => {
     await removeEntry(id);
+    if (editing?.id === id) setEditing(null);
     await loadAll();
     toast.success('Entry removed');
   };
 
   const handleClearAll = async (field: AutocompleteField, label: string) => {
     await clearAllEntries(field);
+    setEditing(null);
     await loadAll();
     toast.success(`All ${label.toLowerCase()} cleared`);
   };
@@ -70,7 +76,6 @@ export default function AutocompleteSettings() {
     if (!name) { toast.error('Customer name is required'); return; }
     if (name.length > 100) { toast.error('Name must be less than 100 characters'); return; }
     if (phone && phone.length > 20) { toast.error('Phone must be less than 20 characters'); return; }
-
     await addEntry('customerName', name, phone || undefined);
     if (phone) await addEntry('customerPhone', phone);
     setNewName('');
@@ -87,6 +92,27 @@ export default function AutocompleteSettings() {
     setFieldInputs(prev => ({ ...prev, [field]: '' }));
     await loadAll();
     toast.success('Entry added');
+  };
+
+  const startEdit = (item: AutocompleteEntry) => {
+    setEditing({
+      id: item.id,
+      value: item.value,
+      linkedPhone: item.linkedPhone || '',
+    });
+  };
+
+  const cancelEdit = () => setEditing(null);
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    const val = editing.value.trim();
+    if (!val) { toast.error('Value cannot be empty'); return; }
+    if (val.length > 100) { toast.error('Must be less than 100 characters'); return; }
+    await updateEntry(editing.id, { value: val, linkedPhone: editing.linkedPhone });
+    setEditing(null);
+    await loadAll();
+    toast.success('Entry updated');
   };
 
   const totalEntries = Object.values(entries).reduce((s, arr) => s + arr.length, 0);
@@ -166,7 +192,6 @@ export default function AutocompleteSettings() {
                 </div>
               </CardHeader>
               <CardContent className="p-2 space-y-2">
-                {/* Quick add for non-customer fields */}
                 {!isCustomerField && (
                   <div className="flex gap-2 px-1">
                     <Input
@@ -191,25 +216,79 @@ export default function AutocompleteSettings() {
                 {items.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-3">No saved entries</p>
                 ) : (
-                  <div className="flex flex-wrap gap-1.5 px-1">
-                    {items.map(item => (
-                      <Badge
-                        key={item.id}
-                        variant="outline"
-                        className="gap-1 pr-1 text-xs font-normal"
-                      >
-                        {item.value}
-                        {item.linkedPhone && field === 'customerName' && (
-                          <span className="text-[10px] text-muted-foreground ml-0.5">📞 {item.linkedPhone}</span>
-                        )}
-                        <button
-                          onClick={() => handleRemove(item.id)}
-                          className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/20 transition-colors"
+                  <div className="space-y-1.5 px-1">
+                    {items.map(item => {
+                      const isEditing = editing?.id === item.id;
+
+                      if (isEditing) {
+                        return (
+                          <div key={item.id} className="rounded-md border border-primary/40 bg-muted/30 p-2 space-y-2">
+                            <div className={field === 'customerName' ? 'grid grid-cols-2 gap-2' : ''}>
+                              <Input
+                                value={editing.value}
+                                onChange={e => setEditing({ ...editing, value: e.target.value })}
+                                className="text-xs h-8"
+                                maxLength={100}
+                                autoFocus
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') saveEdit();
+                                  if (e.key === 'Escape') cancelEdit();
+                                }}
+                              />
+                              {field === 'customerName' && (
+                                <Input
+                                  value={editing.linkedPhone}
+                                  onChange={e => setEditing({ ...editing, linkedPhone: e.target.value })}
+                                  placeholder="Phone"
+                                  className="text-xs h-8"
+                                  maxLength={20}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') saveEdit();
+                                    if (e.key === 'Escape') cancelEdit();
+                                  }}
+                                />
+                              )}
+                            </div>
+                            <div className="flex gap-1.5">
+                              <Button size="sm" className="h-7 text-xs flex-1 gap-1" onClick={saveEdit}>
+                                <Check className="h-3 w-3" /> Save
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 text-xs flex-1 gap-1" onClick={cancelEdit}>
+                                <X className="h-3 w-3" /> Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs group"
                         >
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </button>
-                      </Badge>
-                    ))}
+                          <span className="flex-1 truncate font-normal">
+                            {item.value}
+                            {item.linkedPhone && field === 'customerName' && (
+                              <span className="text-[10px] text-muted-foreground ml-1.5">📞 {item.linkedPhone}</span>
+                            )}
+                          </span>
+                          <button
+                            onClick={() => startEdit(item)}
+                            className="rounded-full p-0.5 opacity-60 hover:opacity-100 hover:bg-accent transition-all"
+                            title="Edit"
+                          >
+                            <Pencil className="h-3 w-3 text-muted-foreground" />
+                          </button>
+                          <button
+                            onClick={() => handleRemove(item.id)}
+                            className="rounded-full p-0.5 opacity-60 hover:opacity-100 hover:bg-destructive/20 transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

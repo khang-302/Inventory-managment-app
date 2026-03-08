@@ -22,7 +22,6 @@ export async function addEntry(field: AutocompleteField, value: string, linkedPh
     .equals([field, trimmed])
     .first();
   if (existing) {
-    // Update linkedPhone if provided and different
     if (field === 'customerName' && linkedPhone !== undefined && existing.linkedPhone !== linkedPhone) {
       await db.autocompleteEntries.update(existing.id, { linkedPhone });
     }
@@ -35,6 +34,15 @@ export async function addEntry(field: AutocompleteField, value: string, linkedPh
     linkedPhone: field === 'customerName' ? linkedPhone : undefined,
     createdAt: new Date(),
   });
+}
+
+export async function updateEntry(id: string, updates: { value?: string; linkedPhone?: string }): Promise<void> {
+  const patch: Record<string, unknown> = {};
+  if (updates.value !== undefined) patch.value = updates.value.trim();
+  if (updates.linkedPhone !== undefined) patch.linkedPhone = updates.linkedPhone.trim() || undefined;
+  if (Object.keys(patch).length > 0) {
+    await db.autocompleteEntries.update(id, patch);
+  }
 }
 
 export async function removeEntry(id: string): Promise<void> {
