@@ -145,8 +145,8 @@ export default function Dashboard() {
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Sales This Week</p>
                   <p className="text-lg font-bold mt-0.5 whitespace-nowrap">{formatFull(weeklyTotal)}</p>
                 </div>
-                <div className="h-9 w-9 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                <div className="h-9 w-9 rounded-xl bg-green-500/10 flex items-center justify-center shadow-sm">
+                  <ArrowUpRight className="h-4 w-4 text-green-500" />
                 </div>
               </div>
               <div className="h-[80px] -mx-1">
