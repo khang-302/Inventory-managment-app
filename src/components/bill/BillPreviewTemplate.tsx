@@ -153,7 +153,7 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
     const showTerms = bill.showTerms ?? settings.showTerms;
     const terms = bill.termsConditions ?? settings.termsConditions;
     const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    const watermarkText = settings.watermarkEnabled ? (settings.watermarkText || settings.shopName) : '';
+    const watermarkActive = settings.watermarkEnabled;
 
     return (
       <div
