@@ -386,133 +386,150 @@ export default function Reports() {
           onCustomEndChange={handleCustomEndChange}
         />
 
-        {/* KPI Summary Cards */}
-        <div ref={kpiGridRef} className="grid grid-cols-2 gap-3">
-          <KPICard
-            title="Total Revenue"
-            value={summary?.totalSales || 0}
-            icon={<ShoppingCart className="h-5 w-5 text-primary" />}
-            isCurrency
-            accentColor="hsl(37, 92%, 50%)"
-          />
-          <KPICard
-            title="Total Profit"
-            value={summary?.totalProfit || 0}
-            icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
-            isCurrency
-            accentColor="hsl(152, 50%, 45%)"
-          />
-          <KPICard
-            title="Orders / Bills"
-            value={summary?.salesCount || 0}
-            icon={<Receipt className="h-5 w-5 text-blue-500" />}
-            accentColor="hsl(210, 60%, 50%)"
-          />
-          <KPICard
-            title="Products Sold"
-            value={totalProductsSold}
-            icon={<Boxes className="h-5 w-5 text-violet-500" />}
-            accentColor="hsl(280, 45%, 55%)"
-          />
-        </div>
-
-        {/* Month-over-Month Comparison */}
-        <MonthComparison sales={sales} />
-
-        {/* Quick Insights */}
-        {summary && (
-          <InsightsPanel
-            salesGrowth={salesGrowth}
-            topProduct={topProduct}
-            lowestProduct={lowestProduct}
-            avgDailySales={avgDailySales}
-            profitMargin={summary.profitMargin}
-          />
-        )}
-
-        {/* Sales & Profit Trend Chart */}
-        {salesByDate.length > 0 && (
-          <div ref={salesTrendRef}>
-            <SalesTrendChart data={salesByDate} />
-          </div>
-        )}
-
-        {/* Product Performance Bar Chart */}
-        {productPerformance.length > 0 && (
-          <div ref={productPerfRef}>
-            <ProductPerformanceChart data={productPerformance} />
-          </div>
-        )}
-
-        {/* Top Sellers */}
-        {topParts.length > 0 && <TopSellingParts data={topParts} />}
-
-        {/* Inventory Distribution */}
-        {(inventoryByCategory.length > 0 || inventoryByBrand.length > 0) && (
-          <div ref={inventoryDistRef}>
-            <InventoryDistributionChart categoryData={inventoryByCategory} brandData={inventoryByBrand} />
-          </div>
-        )}
-
-        {/* Low Stock Risk */}
-        {lowStockItems.length > 0 && (
-          <div ref={lowStockChartRef}>
-            <LowStockChart data={lowStockItems} />
-          </div>
-        )}
-
-        {/* Sales Heatmap */}
-        {salesHeatmapData.length > 0 && (
-          <div ref={heatmapRef}>
-            <SalesHeatmap data={salesHeatmapData} />
-          </div>
-        )}
-
-        {/* Export Buttons */}
-        <div className="space-y-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 px-1">
-            Export Reports
-          </h3>
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              variant="outline"
-              className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
-              onClick={handleExportPDF}
-              disabled={isExporting !== null || loading}
-            >
-              {isExporting === 'pdf' ? <Loader2 className="h-5 w-5 mb-1 animate-spin" /> : <FileText className="h-5 w-5 mb-1 text-red-500" />}
-              <span className="text-[10px] font-medium">PDF</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
-              onClick={handleExportExcel}
-              disabled={isExporting !== null || loading}
-            >
-              {isExporting === 'excel' ? <Loader2 className="h-5 w-5 mb-1 animate-spin" /> : <FileSpreadsheet className="h-5 w-5 mb-1 text-emerald-500" />}
-              <span className="text-[10px] font-medium">Excel</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
-              onClick={handleExportCSV}
-              disabled={isExporting !== null || loading}
-            >
-              {isExporting === 'csv' ? <Loader2 className="h-5 w-5 mb-1 animate-spin" /> : <FileDown className="h-5 w-5 mb-1 text-blue-500" />}
-              <span className="text-[10px] font-medium">CSV</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Empty State */}
-        {!loading && sales.length === 0 && (
-          <div className="text-center py-16">
+        {/* Empty State — show when no parts AND no sales */}
+        {!loading && parts.length === 0 && sales.length === 0 ? (
+          <div className="text-center py-20">
             <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="h-8 w-8 text-muted-foreground/40" />
             </div>
-            <p className="text-sm font-medium text-muted-foreground">No sales data yet</p>
-            <p className="text-xs text-muted-foreground/50 mt-1">Start recording sales to see analytics</p>
+            <p className="text-sm font-semibold text-muted-foreground">No data yet</p>
+            <p className="text-xs text-muted-foreground/50 mt-1 max-w-[220px] mx-auto">
+              Add spare parts and record sales to see your analytics here
+            </p>
           </div>
+        ) : (
+          <>
+            {/* KPI Summary Cards */}
+            <div ref={kpiGridRef} className="grid grid-cols-2 gap-3">
+              <KPICard
+                title="Total Revenue"
+                value={summary?.totalSales || 0}
+                icon={<ShoppingCart className="h-5 w-5 text-primary" />}
+                isCurrency
+                loading={loading}
+                accentColor="hsl(37, 92%, 50%)"
+              />
+              <KPICard
+                title="Total Profit"
+                value={summary?.totalProfit || 0}
+                icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
+                isCurrency
+                loading={loading}
+                accentColor="hsl(152, 50%, 45%)"
+              />
+              <KPICard
+                title="Orders / Bills"
+                value={summary?.salesCount || 0}
+                icon={<Receipt className="h-5 w-5 text-blue-500" />}
+                loading={loading}
+                accentColor="hsl(210, 60%, 50%)"
+              />
+              <KPICard
+                title="Products Sold"
+                value={totalProductsSold}
+                icon={<Boxes className="h-5 w-5 text-violet-500" />}
+                loading={loading}
+                accentColor="hsl(280, 45%, 55%)"
+              />
+            </div>
+
+            {/* Month-over-Month Comparison — only when there are sales */}
+            {sales.length > 0 && <MonthComparison sales={sales} />}
+
+            {/* Quick Insights — only when there are actual sales */}
+            {summary && filteredSales.length > 0 && (
+              <InsightsPanel
+                salesGrowth={salesGrowth}
+                topProduct={topProduct}
+                lowestProduct={lowestProduct}
+                avgDailySales={avgDailySales}
+                profitMargin={summary.profitMargin}
+              />
+            )}
+
+            {/* Sales & Profit Trend Chart */}
+            {salesByDate.length > 0 && (
+              <div ref={salesTrendRef}>
+                <SalesTrendChart data={salesByDate} />
+              </div>
+            )}
+
+            {/* Product Performance Bar Chart */}
+            {productPerformance.length > 0 && (
+              <div ref={productPerfRef}>
+                <ProductPerformanceChart data={productPerformance} />
+              </div>
+            )}
+
+            {/* Top Sellers */}
+            {topParts.length > 0 && <TopSellingParts data={topParts} />}
+
+            {/* Inventory Distribution */}
+            {(inventoryByCategory.length > 0 || inventoryByBrand.length > 0) && (
+              <div ref={inventoryDistRef}>
+                <InventoryDistributionChart categoryData={inventoryByCategory} brandData={inventoryByBrand} />
+              </div>
+            )}
+
+            {/* Low Stock Risk */}
+            {lowStockItems.length > 0 && (
+              <div ref={lowStockChartRef}>
+                <LowStockChart data={lowStockItems} />
+              </div>
+            )}
+
+            {/* Sales Heatmap */}
+            {salesHeatmapData.length > 0 && (
+              <div ref={heatmapRef}>
+                <SalesHeatmap data={salesHeatmapData} />
+              </div>
+            )}
+
+            {/* No sales hint when parts exist but no sales */}
+            {parts.length > 0 && sales.length === 0 && !loading && (
+              <div className="text-center py-10">
+                <p className="text-xs text-muted-foreground/60">
+                  You have {parts.length} parts in inventory. Record a sale to unlock full analytics.
+                </p>
+              </div>
+            )}
+
+            {/* Export Buttons */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 px-1">
+                Export Reports
+              </h3>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
+                  onClick={handleExportPDF}
+                  disabled={isExporting !== null || loading}
+                >
+                  {isExporting === 'pdf' ? <Loader2 className="h-5 w-5 mb-1 animate-spin" /> : <FileText className="h-5 w-5 mb-1 text-red-500" />}
+                  <span className="text-[10px] font-medium">PDF</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
+                  onClick={handleExportExcel}
+                  disabled={isExporting !== null || loading}
+                >
+                  {isExporting === 'excel' ? <Loader2 className="h-5 w-5 mb-1 animate-spin" /> : <FileSpreadsheet className="h-5 w-5 mb-1 text-emerald-500" />}
+                  <span className="text-[10px] font-medium">Excel</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
+                  onClick={handleExportCSV}
+                  disabled={isExporting !== null || loading}
+                >
+                  {isExporting === 'csv' ? <Loader2 className="h-5 w-5 mb-1 animate-spin" /> : <FileDown className="h-5 w-5 mb-1 text-blue-500" />}
+                  <span className="text-[10px] font-medium">CSV</span>
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </div>
       </div>
