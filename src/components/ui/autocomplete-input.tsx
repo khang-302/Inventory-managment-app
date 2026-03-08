@@ -3,18 +3,21 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { getSuggestions, addEntry, type AutocompleteField } from '@/services/autocompleteService';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { AutocompleteEntry } from '@/types';
 
 interface AutocompleteInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   field: AutocompleteField;
   value: string;
   onChange: (value: string) => void;
+  /** Called when user selects a suggestion — provides the full entry for dependent autofill */
+  onEntrySelect?: (entry: AutocompleteEntry) => void;
   /** Whether to persist on blur (default true) */
   persistOnBlur?: boolean;
 }
 
 const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputProps>(
-  ({ field, value, onChange, persistOnBlur = true, className, ...props }, ref) => {
-    const [suggestions, setSuggestions] = useState<{ id: string; value: string }[]>([]);
+  ({ field, value, onChange, onEntrySelect, persistOnBlur = true, className, ...props }, ref) => {
+    const [suggestions, setSuggestions] = useState<AutocompleteEntry[]>([]);
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -41,10 +44,11 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
       debounceRef.current = setTimeout(() => fetchSuggestions(val), 150);
     };
 
-    const handleSelect = (val: string) => {
-      onChange(val);
+    const handleSelect = (entry: AutocompleteEntry) => {
+      onChange(entry.value);
       setOpen(false);
       setSuggestions([]);
+      onEntrySelect?.(entry);
     };
 
     const handleBlur = async () => {
@@ -65,7 +69,7 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
         setActiveIndex(prev => (prev <= 0 ? suggestions.length - 1 : prev - 1));
       } else if (e.key === 'Enter' && activeIndex >= 0) {
         e.preventDefault();
-        handleSelect(suggestions[activeIndex].value);
+        handleSelect(suggestions[activeIndex]);
       } else if (e.key === 'Escape') {
         setOpen(false);
       }
@@ -127,11 +131,14 @@ const AutocompleteInput = React.forwardRef<HTMLInputElement, AutocompleteInputPr
                   )}
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    handleSelect(s.value);
+                    handleSelect(s);
                   }}
                   onMouseEnter={() => setActiveIndex(i)}
                 >
-                  {highlightMatch(s.value, value)}
+                  <span>{highlightMatch(s.value, value)}</span>
+                  {s.linkedPhone && field === 'customerName' && (
+                    <span className="ml-2 text-xs text-muted-foreground">📞 {s.linkedPhone}</span>
+                  )}
                 </div>
               ))}
             </ScrollArea>

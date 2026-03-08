@@ -14,18 +14,25 @@ export async function getSuggestions(field: AutocompleteField, query: string): P
     .toArray();
 }
 
-export async function addEntry(field: AutocompleteField, value: string): Promise<void> {
+export async function addEntry(field: AutocompleteField, value: string, linkedPhone?: string): Promise<void> {
   const trimmed = value.trim();
   if (!trimmed) return;
   const existing = await db.autocompleteEntries
     .where('[field+value]')
     .equals([field, trimmed])
     .first();
-  if (existing) return;
+  if (existing) {
+    // Update linkedPhone if provided and different
+    if (field === 'customerName' && linkedPhone !== undefined && existing.linkedPhone !== linkedPhone) {
+      await db.autocompleteEntries.update(existing.id, { linkedPhone });
+    }
+    return;
+  }
   await db.autocompleteEntries.add({
     id: crypto.randomUUID(),
     field,
     value: trimmed,
+    linkedPhone: field === 'customerName' ? linkedPhone : undefined,
     createdAt: new Date(),
   });
 }
@@ -42,14 +49,16 @@ export async function clearAllEntries(field: AutocompleteField): Promise<void> {
   await db.autocompleteEntries.where('field').equals(field).delete();
 }
 
-/** Persist values after a successful sale/bill */
+/** Persist values after a successful sale/bill — links name ↔ phone */
 export async function persistFormValues(data: {
   customerName?: string;
   customerPhone?: string;
   brand?: string;
 }): Promise<void> {
   const promises: Promise<void>[] = [];
-  if (data.customerName) promises.push(addEntry('customerName', data.customerName));
+  if (data.customerName) {
+    promises.push(addEntry('customerName', data.customerName, data.customerPhone?.trim() || undefined));
+  }
   if (data.customerPhone) promises.push(addEntry('customerPhone', data.customerPhone));
   if (data.brand) promises.push(addEntry('brand', data.brand));
   await Promise.all(promises);

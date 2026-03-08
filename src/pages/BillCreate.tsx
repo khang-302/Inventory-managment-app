@@ -186,7 +186,18 @@ export default function BillCreate() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Buyer Name *</Label>
-                <AutocompleteInput field="customerName" value={buyerName} onChange={setBuyerName} placeholder="Customer name" className="text-sm" />
+                <AutocompleteInput
+                  field="customerName"
+                  value={buyerName}
+                  onChange={setBuyerName}
+                  onEntrySelect={(entry) => {
+                    if (entry.linkedPhone && !buyerPhone) {
+                      setBuyerPhone(entry.linkedPhone);
+                    }
+                  }}
+                  placeholder="Customer name"
+                  className="text-sm"
+                />
               </div>
               <div>
                 <Label className="text-xs">Phone</Label>

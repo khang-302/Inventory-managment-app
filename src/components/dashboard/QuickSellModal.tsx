@@ -188,7 +188,17 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="qs-buyer">Buyer Name</Label>
-          <AutocompleteInput field="customerName" value={buyerName} onChange={setBuyerName} placeholder="Optional" />
+          <AutocompleteInput
+            field="customerName"
+            value={buyerName}
+            onChange={setBuyerName}
+            onEntrySelect={(entry) => {
+              if (entry.linkedPhone && !buyerPhone) {
+                setBuyerPhone(entry.linkedPhone);
+              }
+            }}
+            placeholder="Optional"
+          />
         </div>
         <div>
           <Label htmlFor="qs-phone">Buyer Phone</Label>
