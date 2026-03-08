@@ -135,16 +135,20 @@ export default function Settings() {
 
   const syncItems = [
     {
-      icon: Cloud,
+      icon: CloudUpload,
       title: 'Google Drive Auto-Sync',
       description: 'Real-time backup in Excel, Sheets & JSON',
       path: '/settings/sync',
+      iconBg: 'bg-sky-500/10',
+      iconColor: 'text-sky-500',
     },
     {
-      icon: Database,
+      icon: HardDrive,
       title: 'Backup & Restore',
       description: 'Advanced backup and export operations',
       path: '/settings/backup',
+      iconBg: 'bg-emerald-500/10',
+      iconColor: 'text-emerald-500',
     },
   ];
 
