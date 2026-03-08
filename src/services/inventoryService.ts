@@ -90,6 +90,9 @@ export async function createPart(data: PartFormData): Promise<Part> {
     description: `Added new part: ${part.name} (SKU: ${part.sku})`,
     metadata: { quantity: part.quantity, buyingPrice: part.buyingPrice, sellingPrice: part.sellingPrice },
   });
+
+  // Fire notification (non-blocking)
+  import('@/services/notificationService').then(ns => ns.notifyPartAdded(part.name, part.sku)).catch(() => {});
   
   return part;
 }

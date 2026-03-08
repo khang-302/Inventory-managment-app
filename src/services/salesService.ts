@@ -175,6 +175,15 @@ export async function recordSale(data: SaleFormData): Promise<Sale | { error: st
       newStock: availableQuantity - requestedQuantity,
     },
   });
+
+  // Fire notifications (non-blocking)
+  import('@/services/notificationService').then(async (ns) => {
+    await ns.notifyPartSold(part.name, requestedQuantity, totalAmount);
+    const updatedPart = await db.parts.get(part.id);
+    if (updatedPart && updatedPart.quantity <= updatedPart.minStockLevel) {
+      await ns.notifyLowStock(updatedPart.name, updatedPart.quantity);
+    }
+  }).catch(() => {});
   
   return sale;
 }
