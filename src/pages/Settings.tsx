@@ -310,7 +310,8 @@ export default function Settings() {
         {/* App Info */}
         <div className="text-center pt-4 pb-8 text-muted-foreground">
           <p className="text-sm font-medium">{appName}</p>
-          <p className="text-xs">Inventory & Sales Manager v1.0.0</p>
+          <p className="text-xs">Inventory & Sales Manager</p>
+          <p className="text-xs mt-1 font-mono text-primary/70">v1.2.0</p>
         </div>
       </div>
     </AppLayout>
