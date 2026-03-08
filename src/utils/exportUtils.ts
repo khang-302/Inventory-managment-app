@@ -189,7 +189,7 @@ export async function exportReportToPDF(
       body: topPartsData,
       theme: 'striped',
       headStyles: { 
-        fillColor: [22, 101, 52],
+        fillColor: [15, 118, 110],
         textColor: 255
       },
       styles: { fontSize: 9 },
