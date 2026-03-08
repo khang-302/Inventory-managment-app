@@ -45,7 +45,7 @@ import {
   Grid3X3, 
   List,
   Table2,
-  Filter,
+  SlidersHorizontal,
   X,
   ArrowUp,
   ArrowDown,
