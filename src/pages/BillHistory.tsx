@@ -31,7 +31,7 @@ export default function BillHistory() {
   const [renderBill, setRenderBill] = useState<{
     settings: BillSettingsType; bill: Bill; items: BillItem[];
   } | null>(null);
-  const pendingAction = useRef<'image' | 'share' | null>(null);
+  const pendingAction = useRef<'image' | 'share' | 'whatsapp' | null>(null);
 
   const loadBills = async () => {
     setLoading(true);
