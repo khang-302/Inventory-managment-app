@@ -411,7 +411,8 @@ export default function AddEditPart() {
                       <img 
                         src={img} 
                         alt={`Part ${index + 1}`}
-                        className="h-full w-full object-cover rounded-md"
+                        className="h-full w-full object-cover rounded-md cursor-pointer"
+                        onClick={() => setPreviewIndex(index)}
                       />
                       <button
                         type="button"
