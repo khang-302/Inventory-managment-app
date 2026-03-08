@@ -42,8 +42,10 @@ export async function exportReportToPDF(
   lowStockItems?: { name: string; quantity: number; minStock: number }[],
   inventoryByCategory?: { name: string; value: number }[],
   inventoryByBrand?: { name: string; value: number }[],
-  visuals?: Array<{ title: string; dataUrl: string }>
+  visuals?: Array<{ title: string; dataUrl: string }>,
+  appName?: string
 ): Promise<void> {
+  const shopName = appName || 'Ameer Autos';
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
