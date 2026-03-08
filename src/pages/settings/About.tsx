@@ -198,7 +198,40 @@ export default function About() {
           </CardContent>
         </Card>
 
-        {/* Tech Stack */}
+        {/* FAQ */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">❓ Frequently Asked Questions</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Accordion type="single" collapsible className="w-full">
+              {[
+                { id: 'faq-1', cat: 'Offline', q: 'Does this app need internet?', a: 'No. The app works 100% offline. Internet is only needed if you choose to enable the optional Google Drive sync feature.' },
+                { id: 'faq-2', cat: 'Offline', q: 'What happens if my phone restarts unexpectedly?', a: 'Your data is safe. All writes to IndexedDB are crash-safe, so no data is lost even during unexpected shutdowns or restarts.' },
+                { id: 'faq-3', cat: 'Offline', q: 'Can I use this on multiple devices?', a: 'Data is stored locally per device. To transfer data, use Settings → Backup & Restore to export and import your database.' },
+                { id: 'faq-4', cat: 'Data', q: 'Where is my data stored?', a: "All data is stored locally in your browser's IndexedDB database. It is never sent to any external server or third-party service." },
+                { id: 'faq-5', cat: 'Data', q: 'Can I recover deleted items?', a: 'Yes. The app uses a soft-delete system — all deletions are archived and can be restored at any time.' },
+                { id: 'faq-6', cat: 'Data', q: 'How do I back up my data?', a: 'Go to Settings → Backup & Restore. You can export your entire database as JSON, Excel, or CSV and restore it later from any exported file.' },
+                { id: 'faq-7', cat: 'Cloud', q: 'Is Google Drive sync required?', a: 'No, it is completely optional. You provide your own Google Drive API key, and sync only happens when you explicitly enable it.' },
+                { id: 'faq-8', cat: 'Cloud', q: 'Is my API key safe?', a: 'Yes. Your API key is encrypted using AES-GCM with PBKDF2 key derivation before being stored locally. It never leaves your device.' },
+              ].map((faq) => (
+                <AccordionItem key={faq.id} value={faq.id}>
+                  <AccordionTrigger className="text-left text-sm gap-2 hover:no-underline">
+                    <span className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] shrink-0">{faq.cat}</Badge>
+                      <span>{faq.q}</span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">💻 Tech Stack</CardTitle>
