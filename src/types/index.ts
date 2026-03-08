@@ -101,6 +101,8 @@ export interface AutocompleteEntry {
   id: string;
   field: string;
   value: string;
+  /** For customerName entries, stores the linked phone number */
+  linkedPhone?: string;
   createdAt: Date;
 }
 

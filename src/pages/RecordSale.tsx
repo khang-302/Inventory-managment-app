@@ -340,7 +340,18 @@ export default function RecordSale() {
             <p className="text-xs font-medium text-muted-foreground">Customer Info (Optional)</p>
             <div>
               <Label className="text-xs">Customer Name</Label>
-              <AutocompleteInput field="customerName" placeholder="Enter name" value={customerName} onChange={setCustomerName} className="mt-1" />
+              <AutocompleteInput
+                field="customerName"
+                placeholder="Enter name"
+                value={customerName}
+                onChange={setCustomerName}
+                onEntrySelect={(entry) => {
+                  if (entry.linkedPhone && !customerPhone) {
+                    setCustomerPhone(entry.linkedPhone);
+                  }
+                }}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label className="text-xs">Phone Number</Label>
