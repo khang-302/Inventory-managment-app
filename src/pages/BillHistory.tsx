@@ -111,9 +111,43 @@ export default function BillHistory() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const shareViaWhatsApp = async (dataUrl: string, bill: Bill) => {
+    const text = `*Bill ${bill.billNumber}*\nCustomer: ${bill.buyerName}\nTotal: *Rs ${bill.finalTotal.toLocaleString()}*\nDate: ${new Date(bill.date).toLocaleDateString('en-PK')}`;
+    // On mobile, navigator.share with files will open WhatsApp as an option
+    if (navigator.share && navigator.canShare) {
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          // First download the image so user has it, then open WhatsApp
+          downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
+          // Open WhatsApp with text (user can manually attach the downloaded image)
+          setTimeout(() => {
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+          }, 500);
+          toast({ title: 'Image saved. Share it on WhatsApp!', description: 'Attach the downloaded image in the WhatsApp chat' });
+          return;
+        }
+      } catch { /* fallback */ }
+    }
+    // Fallback: download image + open WhatsApp with text
+    downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
+    setTimeout(() => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }, 500);
+    toast({ title: 'Image saved. Share it on WhatsApp!', description: 'Attach the downloaded image in the WhatsApp chat' });
+  };
+
   const handleShare = async (bill: Bill) => {
     const data = await prepareBillData(bill);
     pendingAction.current = 'share';
+    setRenderBill(data);
+  };
+
+  const handleWhatsApp = async (bill: Bill) => {
+    const data = await prepareBillData(bill);
+    pendingAction.current = 'whatsapp';
     setRenderBill(data);
   };
 
