@@ -349,6 +349,30 @@ export default function Reports() {
     <AppLayout>
       <Header title="Analytics" subtitle={formatDateRange(selectedRange)} />
 
+      <div
+        ref={scrollContainerRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative overflow-auto"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {/* Pull-to-refresh indicator */}
+        <div
+          className="flex items-center justify-center overflow-hidden transition-all duration-200"
+          style={{ height: pullDistance > 0 ? pullDistance : 0 }}
+        >
+          <div className="flex flex-col items-center gap-1">
+            <Loader2
+              className={`h-5 w-5 text-primary transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`}
+              style={{ transform: !isRefreshing ? `rotate(${pullDistance * 3}deg)` : undefined }}
+            />
+            <span className="text-[10px] text-muted-foreground font-medium">
+              {isRefreshing ? 'Refreshing…' : pullDistance >= PULL_THRESHOLD ? 'Release to refresh' : 'Pull to refresh'}
+            </span>
+          </div>
+        </div>
+
       <div className="p-4 space-y-5 pb-24">
         {/* Time Range Filter */}
         <TimeRangeSelector
