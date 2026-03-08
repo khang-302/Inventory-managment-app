@@ -1,7 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatCurrencyShort } from '@/utils/currency';
 import { TrendingUp, Eye, EyeOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import {
   ResponsiveContainer,
@@ -11,7 +10,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from 'recharts';
 
 interface SalesTrendData {
@@ -25,116 +23,109 @@ interface SalesTrendChartProps {
   title?: string;
 }
 
-// Consistent chart colors - Sales=Green, Profit=Blue
-const CHART_COLORS = {
-  sales: {
-    light: 'hsl(152, 45%, 42%)',
-    dark: 'hsl(152, 40%, 48%)',
-  },
-  profit: {
-    light: 'hsl(210, 65%, 50%)',
-    dark: 'hsl(210, 55%, 55%)',
-  },
-};
-
-export function SalesTrendChart({ data, title = "Revenue & Profit Trends" }: SalesTrendChartProps) {
+export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrendChartProps) {
   const [showSales, setShowSales] = useState(true);
   const [showProfit, setShowProfit] = useState(true);
 
   if (data.length === 0) return null;
 
-  // Check if we're in dark mode
   const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
-  const gridColor = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 88%)';
-  const textColor = isDark ? 'hsl(220, 10%, 55%)' : 'hsl(220, 10%, 46%)';
+  const gridColor = isDark ? 'hsl(220, 12%, 18%)' : 'hsl(220, 14%, 90%)';
+  const textColor = isDark ? 'hsl(220, 10%, 45%)' : 'hsl(220, 10%, 55%)';
   const tooltipBg = isDark ? 'hsl(220, 16%, 12%)' : 'hsl(0, 0%, 100%)';
-  const tooltipBorder = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 88%)';
+  const tooltipBorder = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 90%)';
+
+  const salesColor = isDark ? 'hsl(152, 50%, 48%)' : 'hsl(152, 55%, 42%)';
+  const profitColor = isDark ? 'hsl(210, 60%, 55%)' : 'hsl(210, 65%, 50%)';
 
   return (
-    <Card className="bg-card border-border/50 card-shadow animate-fade-in">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            {title}
-          </CardTitle>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs"
+    <Card className="bg-card border-border/30 shadow-sm overflow-hidden rounded-2xl">
+      <CardContent className="p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+            </div>
+            <h3 className="text-sm font-semibold">{title}</h3>
+          </div>
+          <div className="flex gap-1">
+            <button
               onClick={() => setShowSales(!showSales)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors"
+              style={{
+                backgroundColor: showSales ? `${salesColor}20` : 'transparent',
+                color: showSales ? salesColor : textColor,
+              }}
             >
-              {showSales ? <Eye className="h-3 w-3 mr-1" /> : <EyeOff className="h-3 w-3 mr-1" />}
-              Revenue
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs"
+              {showSales ? <Eye className="h-2.5 w-2.5" /> : <EyeOff className="h-2.5 w-2.5" />}
+              Rev
+            </button>
+            <button
               onClick={() => setShowProfit(!showProfit)}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors"
+              style={{
+                backgroundColor: showProfit ? `${profitColor}20` : 'transparent',
+                color: showProfit ? profitColor : textColor,
+              }}
             >
-              {showProfit ? <Eye className="h-3 w-3 mr-1" /> : <EyeOff className="h-3 w-3 mr-1" />}
+              {showProfit ? <Eye className="h-2.5 w-2.5" /> : <EyeOff className="h-2.5 w-2.5" />}
               Profit
-            </Button>
+            </button>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="h-64">
+
+        {/* Chart */}
+        <div className="h-56 -mx-2">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
+            <AreaChart data={data} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <defs>
-                {/* Sales gradient - Green (muted, soft) */}
-                <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={isDark ? CHART_COLORS.sales.dark : CHART_COLORS.sales.light} stopOpacity={0.3} />
-                  <stop offset="100%" stopColor={isDark ? CHART_COLORS.sales.dark : CHART_COLORS.sales.light} stopOpacity={0.02} />
+                <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={salesColor} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={salesColor} stopOpacity={0} />
                 </linearGradient>
-                {/* Profit gradient - Blue (muted, soft) */}
-                <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={isDark ? CHART_COLORS.profit.dark : CHART_COLORS.profit.light} stopOpacity={0.3} />
-                  <stop offset="100%" stopColor={isDark ? CHART_COLORS.profit.dark : CHART_COLORS.profit.light} stopOpacity={0.02} />
+                <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={profitColor} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={profitColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10, fill: textColor }}
-                axisLine={{ stroke: gridColor }}
-                tickLine={{ stroke: gridColor }}
+                tick={{ fontSize: 9, fill: textColor }}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 10, fill: textColor }}
-                axisLine={{ stroke: gridColor }}
-                tickLine={{ stroke: gridColor }}
-                tickFormatter={(v) => formatCurrencyShort(v)}
+                tick={{ fontSize: 9, fill: textColor }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => formatCurrencyShort(v).replace('Rs ', '')}
+                width={45}
               />
               <Tooltip
                 contentStyle={{
                   backgroundColor: tooltipBg,
                   border: `1px solid ${tooltipBorder}`,
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  padding: '8px 12px',
                 }}
                 formatter={(value: number, name: string) => [formatCurrency(value), name]}
-                labelStyle={{ color: textColor }}
-              />
-              <Legend 
-                wrapperStyle={{ fontSize: '11px', paddingTop: '12px' }}
-                iconType="circle"
+                labelStyle={{ color: textColor, fontSize: '10px', marginBottom: '4px' }}
               />
               {showSales && (
                 <Area
                   name="Revenue"
                   type="monotone"
                   dataKey="sales"
-                  stroke={isDark ? CHART_COLORS.sales.dark : CHART_COLORS.sales.light}
-                  strokeWidth={2}
-                  fill="url(#salesGradient)"
-                  isAnimationActive={true}
-                  animationDuration={800}
-                  animationEasing="ease-out"
+                  stroke={salesColor}
+                  strokeWidth={2.5}
+                  fill="url(#salesGrad)"
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 2, stroke: salesColor, fill: tooltipBg }}
                 />
               )}
               {showProfit && (
@@ -142,12 +133,11 @@ export function SalesTrendChart({ data, title = "Revenue & Profit Trends" }: Sal
                   name="Profit"
                   type="monotone"
                   dataKey="profit"
-                  stroke={isDark ? CHART_COLORS.profit.dark : CHART_COLORS.profit.light}
-                  strokeWidth={2}
-                  fill="url(#profitGradient)"
-                  isAnimationActive={true}
-                  animationDuration={1000}
-                  animationEasing="ease-out"
+                  stroke={profitColor}
+                  strokeWidth={2.5}
+                  fill="url(#profitGrad)"
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 2, stroke: profitColor, fill: tooltipBg }}
                 />
               )}
             </AreaChart>
