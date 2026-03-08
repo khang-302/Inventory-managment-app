@@ -31,6 +31,9 @@ import ActivityLogSettings from "./pages/settings/ActivityLogSettings";
 import AppLogo from "./pages/settings/AppLogo";
 import Branding from "./pages/settings/Branding";
 import TypographySettings from "./pages/settings/TypographySettings";
+import About from "./pages/settings/About";
+import PrivacyPolicy from "./pages/settings/PrivacyPolicy";
+import TermsConditions from "./pages/settings/TermsConditions";
 
 const queryClient = new QueryClient();
 
