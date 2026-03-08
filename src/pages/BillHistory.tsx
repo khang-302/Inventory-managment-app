@@ -9,7 +9,7 @@ import { Plus, Palette, MoreVertical, Image as ImageIcon, FileText, Share2, Tras
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
-import { captureBillAsImage, downloadDataUrl, getExtension, getMimeType } from '@/utils/billImageExport';
+import { captureBillAsImage, downloadDataUrl } from '@/utils/billImageExport';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import BillSearchFilter from '@/components/bill/BillSearchFilter';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
@@ -97,48 +97,33 @@ export default function BillHistory() {
     toast({ title: 'PDF downloaded' });
   };
 
-  const shareFile = async (dataUrl: string, bill: Bill, format: 'png' | 'pdf') => {
-    if (navigator.share) {
-      try {
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        const ext = format === 'pdf' ? 'pdf' : getExtension(format as 'png');
-        const mime = format === 'pdf' ? 'application/pdf' : getMimeType(format as 'png');
-        const file = new File([blob], `${bill.billNumber}.${ext}`, { type: mime });
-        await navigator.share({ title: `Bill ${bill.billNumber}`, text: `Bill for ${bill.buyerName} – Rs ${bill.finalTotal.toLocaleString()}`, files: [file] });
+  const shareFile = async (dataUrl: string, bill: Bill, _format: 'png' | 'pdf') => {
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
         return;
-      } catch { /* fallback */ }
-    }
-    const text = `Bill ${bill.billNumber}\nBuyer: ${bill.buyerName}\nTotal: Rs ${bill.finalTotal.toLocaleString()}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      }
+    } catch { /* fallback below */ }
+    downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
+    toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
   };
 
   const shareViaWhatsApp = async (dataUrl: string, bill: Bill) => {
-    const text = `*Bill ${bill.billNumber}*\nCustomer: ${bill.buyerName}\nTotal: *Rs ${bill.finalTotal.toLocaleString()}*\nDate: ${new Date(bill.date).toLocaleDateString('en-PK')}`;
-    // On mobile, navigator.share with files will open WhatsApp as an option
-    if (navigator.share && navigator.canShare) {
-      try {
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
-        if (navigator.canShare({ files: [file] })) {
-          // First download the image so user has it, then open WhatsApp
-          downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
-          // Open WhatsApp with text (user can manually attach the downloaded image)
-          setTimeout(() => {
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-          }, 500);
-          toast({ title: 'Image saved. Share it on WhatsApp!', description: 'Attach the downloaded image in the WhatsApp chat' });
-          return;
-        }
-      } catch { /* fallback */ }
-    }
-    // Fallback: download image + open WhatsApp with text
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+    } catch { /* fallback below */ }
+    // Fallback: download image only, no text link
     downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
-    setTimeout(() => {
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    }, 500);
-    toast({ title: 'Image saved. Share it on WhatsApp!', description: 'Attach the downloaded image in the WhatsApp chat' });
+    toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
   };
 
   const handleShare = async (bill: Bill) => {

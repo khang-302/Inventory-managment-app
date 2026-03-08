@@ -9,7 +9,7 @@ export async function captureBillAsImage(
   el: HTMLElement,
   format: ImageFormat = 'png',
 ): Promise<string> {
-  const options = { cacheBust: true, pixelRatio: 2 };
+  const options = { cacheBust: true, pixelRatio: 3 };
 
   switch (format) {
     case 'jpg':
