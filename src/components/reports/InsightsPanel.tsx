@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, Award, AlertCircle, BarChart3 } from 'lucide-react';
-import { formatCurrencyShort } from '@/utils/currency';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { cn } from '@/lib/utils';
 
 interface InsightsPanelProps {
