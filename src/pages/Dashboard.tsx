@@ -66,9 +66,9 @@ const ACTION_BAR_COLOR: Record<ActivityAction, string> = {
 
 // KPI accent colors using CSS variables
 const KPI_CONFIG = [
-  { key: 'totalParts', title: 'Total Parts', icon: Package, accent: 'hsl(var(--primary))', isCurrency: false },
-  { key: 'inventoryValue', title: 'Inventory Value', icon: Wallet, accent: 'hsl(210 80% 55%)', isCurrency: true },
-  { key: 'todaySales', title: "Today's Sales", icon: ShoppingCart, accent: 'hsl(142 70% 45%)', isCurrency: true },
+  { key: 'totalParts', title: 'Total Parts', icon: Package, accent: 'hsl(var(--primary))', isCurrency: false, isWarning: false },
+  { key: 'inventoryValue', title: 'Inventory Value', icon: Wallet, accent: 'hsl(210 80% 55%)', isCurrency: true, isWarning: false },
+  { key: 'todaySales', title: "Today's Sales", icon: ShoppingCart, accent: 'hsl(142 70% 45%)', isCurrency: true, isWarning: false },
   { key: 'lowStockCount', title: 'Low Stock', icon: AlertTriangle, accent: 'hsl(var(--destructive))', isCurrency: false, isWarning: true },
 ] as const;
 
