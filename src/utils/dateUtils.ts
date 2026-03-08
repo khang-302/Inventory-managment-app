@@ -82,22 +82,27 @@ export const getDateRanges = (): DateRange[] => {
       endDate: endOfDay(today),
     },
     {
-      label: 'This Week',
+      label: '3 Days',
+      startDate: startOfDay(subDays(today, 2)),
+      endDate: endOfDay(today),
+    },
+    {
+      label: 'Week',
       startDate: startOfWeek(today, { weekStartsOn: 1 }),
       endDate: endOfWeek(today, { weekStartsOn: 1 }),
     },
     {
-      label: 'Last 2 Weeks',
+      label: '2 Weeks',
       startDate: startOfDay(subWeeks(today, 2)),
       endDate: endOfDay(today),
     },
     {
-      label: 'Last 3 Weeks',
+      label: '3 Weeks',
       startDate: startOfDay(subWeeks(today, 3)),
       endDate: endOfDay(today),
     },
     {
-      label: 'This Month',
+      label: 'Month',
       startDate: startOfMonth(today),
       endDate: endOfMonth(today),
     },
@@ -107,17 +112,22 @@ export const getDateRanges = (): DateRange[] => {
       endDate: endOfMonth(subMonths(today, 1)),
     },
     {
-      label: 'Last 3 Months',
+      label: '2 Months',
+      startDate: startOfMonth(subMonths(today, 1)),
+      endDate: endOfDay(today),
+    },
+    {
+      label: '3 Months',
       startDate: startOfMonth(subMonths(today, 2)),
       endDate: endOfDay(today),
     },
     {
-      label: 'Last 6 Months',
+      label: '6 Months',
       startDate: startOfMonth(subMonths(today, 5)),
       endDate: endOfDay(today),
     },
     {
-      label: 'This Year',
+      label: '1 Year',
       startDate: startOfYear(today),
       endDate: endOfYear(today),
     },
