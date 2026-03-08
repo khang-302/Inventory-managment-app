@@ -178,9 +178,9 @@ export default function Settings() {
     : syncItems;
 
   const legalItems = [
-    { icon: Info, title: 'About', description: 'App info, features & tech stack', path: '/settings/about' },
-    { icon: Shield, title: 'Privacy Policy', description: 'How your data is handled', path: '/settings/privacy' },
-    { icon: FileText, title: 'Terms & Conditions', description: 'Usage terms and limitations', path: '/settings/terms' },
+    { icon: BadgeInfo, title: 'About', description: 'App info, features & tech stack', path: '/settings/about', iconBg: 'bg-slate-500/10', iconColor: 'text-slate-500' },
+    { icon: ShieldCheck, title: 'Privacy Policy', description: 'How your data is handled', path: '/settings/privacy', iconBg: 'bg-green-500/10', iconColor: 'text-green-500' },
+    { icon: ScrollText, title: 'Terms & Conditions', description: 'Usage terms and limitations', path: '/settings/terms', iconBg: 'bg-rose-500/10', iconColor: 'text-rose-500' },
   ];
 
   const filteredLegal = search
