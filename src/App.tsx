@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import { AdvancedThemeProvider } from "@/contexts/ThemeContext";
 import { TypographyProvider } from "@/contexts/TypographyContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import AddEditPart from "./pages/AddEditPart";
