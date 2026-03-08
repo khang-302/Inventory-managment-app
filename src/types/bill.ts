@@ -1,5 +1,7 @@
 // Bill Generator Type Definitions
 
+export type WatermarkStyle = 'text' | 'logo' | 'border-frame' | 'diagonal-lines';
+
 export interface PaymentInfo {
   bankName: string;
   accountTitle: string;
@@ -28,6 +30,7 @@ export interface BillSettings {
   showTerms: boolean;
   termsConditions: string[];
   watermarkEnabled: boolean;
+  watermarkStyle: WatermarkStyle;
   watermarkText: string;
   watermarkOpacity: number;
   updatedAt: Date;

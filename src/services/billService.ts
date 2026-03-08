@@ -29,6 +29,7 @@ const DEFAULT_SETTINGS: Omit<BillSettings, 'id' | 'updatedAt'> = {
   showTerms: false,
   termsConditions: ['Payment due within 7 days', 'No refund after installation', 'Warranty only on manufacturing fault'],
   watermarkEnabled: false,
+  watermarkStyle: 'text' as WatermarkStyle,
   watermarkText: '',
   watermarkOpacity: 0.05,
 };
