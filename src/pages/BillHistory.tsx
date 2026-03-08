@@ -11,6 +11,7 @@ import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
 import { captureBillAsImage, downloadDataUrl, getExtension, getMimeType } from '@/utils/billImageExport';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
+import BillSearchFilter from '@/components/bill/BillSearchFilter';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -24,6 +25,7 @@ export default function BillHistory() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [bills, setBills] = useState<Bill[]>([]);
+  const [filteredBills, setFilteredBills] = useState<Bill[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
