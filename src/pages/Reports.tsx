@@ -55,6 +55,44 @@ export default function Reports() {
   const [inventoryValue, setInventoryValue] = useState<{ cost: number; retail: number }>({ cost: 0, retail: 0 });
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Pull-to-refresh state
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const PULL_THRESHOLD = 80;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (scrollContainerRef.current && scrollContainerRef.current.scrollTop === 0) {
+      touchStartY.current = e.touches[0].clientY;
+    } else {
+      touchStartY.current = 0;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartY.current || isRefreshing) return;
+    const distance = Math.max(0, e.touches[0].clientY - touchStartY.current);
+    // Apply dampening
+    setPullDistance(Math.min(distance * 0.5, 120));
+  }, [isRefreshing]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+      setIsRefreshing(true);
+      setPullDistance(PULL_THRESHOLD * 0.6);
+      setRefreshKey(k => k + 1);
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }, 800);
+    } else {
+      setPullDistance(0);
+    }
+    touchStartY.current = 0;
+  }, [pullDistance, isRefreshing]);
 
   // Refs for PDF capture
   const kpiGridRef = useRef<HTMLDivElement | null>(null);
@@ -97,7 +135,7 @@ export default function Reports() {
       }
     };
     fetchData();
-  }, [selectedRange.startDate.getTime(), selectedRange.endDate.getTime(), selectedRange.label]);
+  }, [selectedRange.startDate.getTime(), selectedRange.endDate.getTime(), selectedRange.label, refreshKey]);
 
   const captureVisibleSections = useCallback(async (): Promise<CapturedSection[]> => {
     const candidates = [
@@ -311,6 +349,30 @@ export default function Reports() {
     <AppLayout>
       <Header title="Analytics" subtitle={formatDateRange(selectedRange)} />
 
+      <div
+        ref={scrollContainerRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative overflow-auto"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {/* Pull-to-refresh indicator */}
+        <div
+          className="flex items-center justify-center overflow-hidden transition-all duration-200"
+          style={{ height: pullDistance > 0 ? pullDistance : 0 }}
+        >
+          <div className="flex flex-col items-center gap-1">
+            <Loader2
+              className={`h-5 w-5 text-primary transition-transform duration-200 ${isRefreshing ? 'animate-spin' : ''}`}
+              style={{ transform: !isRefreshing ? `rotate(${pullDistance * 3}deg)` : undefined }}
+            />
+            <span className="text-[10px] text-muted-foreground font-medium">
+              {isRefreshing ? 'Refreshing…' : pullDistance >= PULL_THRESHOLD ? 'Release to refresh' : 'Pull to refresh'}
+            </span>
+          </div>
+        </div>
+
       <div className="p-4 space-y-5 pb-24">
         {/* Time Range Filter */}
         <TimeRangeSelector
@@ -448,6 +510,7 @@ export default function Reports() {
             <p className="text-xs text-muted-foreground/50 mt-1">Start recording sales to see analytics</p>
           </div>
         )}
+      </div>
       </div>
     </AppLayout>
   );
