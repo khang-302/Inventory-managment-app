@@ -85,9 +85,23 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
         createdAt: new Date(),
       };
 
-      await db.sales.add(sale);
-
-      await logActivity({
+      // Wrap sale + activity log in a transaction for atomicity
+      await db.transaction('rw', [db.sales, db.activityLogs], async () => {
+        await db.sales.add(sale);
+        await logActivity({
+          action: 'sale',
+          entityType: 'sale',
+          entityId: sale.id,
+          description: `Quick Sell – ${sale.partName} sold | Profit: Rs ${calculations.profit.toLocaleString()}`,
+          metadata: {
+            saleType: 'quick_sell',
+            partName: sale.partName,
+            quantity: sale.quantity,
+            totalAmount: sale.totalAmount,
+            profit: sale.profit,
+          },
+        });
+      });
         action: 'sale',
         entityType: 'sale',
         entityId: sale.id,

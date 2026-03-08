@@ -338,13 +338,15 @@ export async function deleteSale(id: string): Promise<boolean> {
   // Restore stock and delete sale atomically
   await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
     await db.sales.delete(id);
-    // Restore stock quantity
-    const part = await db.parts.get(sale.partId);
-    if (part) {
-      await db.parts.update(sale.partId, {
-        quantity: part.quantity + sale.quantity,
-        updatedAt: new Date(),
-      });
+    // Only restore stock for inventory-linked sales (QuickSell has partId='')
+    if (sale.partId && sale.partId.trim() !== '') {
+      const part = await db.parts.get(sale.partId);
+      if (part) {
+        await db.parts.update(sale.partId, {
+          quantity: part.quantity + sale.quantity,
+          updatedAt: new Date(),
+        });
+      }
     }
   });
   
