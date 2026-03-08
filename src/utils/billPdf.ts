@@ -2,11 +2,13 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { BillSettings, Bill, BillItem } from '@/types/bill';
 
-// Exact colors from reference: #1B3D3D, #C9A020, #CC2E2E
-const TEAL: [number, number, number] = [27, 61, 61];
-const TEAL_INNER: [number, number, number] = [20, 46, 46];
-const GOLD: [number, number, number] = [201, 160, 32];
-const RED_PILL: [number, number, number] = [204, 46, 46];
+// Color palette: Yellow / Orange / Gray / Black / White
+const DARK: [number, number, number] = [26, 26, 26];
+const ORANGE: [number, number, number] = [232, 130, 12];
+const YELLOW: [number, number, number] = [245, 166, 35];
+const WHITE: [number, number, number] = [255, 255, 255];
+const ACCENT_BG: [number, number, number] = [255, 248, 237];
+const MED_GRAY: [number, number, number] = [85, 85, 85];
 
 function parseLogoDataUrl(dataUrl: string): { data: string; format: string } | null {
   if (!dataUrl || !dataUrl.startsWith('data:image/')) return null;
@@ -16,47 +18,86 @@ function parseLogoDataUrl(dataUrl: string): { data: string; format: string } | n
   return { data: dataUrl, format };
 }
 
+// Draw simple geometric icons instead of emoji/font icons
+function drawLocationIcon(doc: jsPDF, cx: number, cy: number) {
+  // Pin shape: triangle + circle
+  doc.setFillColor(...WHITE);
+  // Circle head
+  doc.circle(cx, cy - 1.5, 2.5, 'F');
+  // Inner dot
+  doc.setFillColor(...ORANGE);
+  doc.circle(cx, cy - 1.5, 1, 'F');
+  // Triangle point
+  doc.setFillColor(...WHITE);
+  doc.triangle(cx - 2, cy - 0.5, cx + 2, cy - 0.5, cx, cy + 3.5, 'F');
+}
+
+function drawPhoneIcon(doc: jsPDF, cx: number, cy: number) {
+  // Simple phone rectangle
+  doc.setFillColor(...WHITE);
+  doc.roundedRect(cx - 2, cy - 3, 4, 6, 0.8, 0.8, 'F');
+  // Screen
+  doc.setFillColor(...ORANGE);
+  doc.rect(cx - 1.3, cy - 2, 2.6, 3.5, 'F');
+  // Home button dot
+  doc.setFillColor(...WHITE);
+  doc.circle(cx, cy + 2, 0.4, 'F');
+}
+
+function drawGlobeIcon(doc: jsPDF, cx: number, cy: number) {
+  // Circle outline
+  doc.setDrawColor(...WHITE);
+  doc.setLineWidth(0.6);
+  doc.setFillColor(...ORANGE);
+  doc.circle(cx, cy, 3, 'FD');
+  // Horizontal lines
+  doc.setLineWidth(0.3);
+  doc.line(cx - 3, cy, cx + 3, cy);
+  doc.line(cx - 2.2, cy - 1.5, cx + 2.2, cy - 1.5);
+  doc.line(cx - 2.2, cy + 1.5, cx + 2.2, cy + 1.5);
+  // Vertical ellipse
+  doc.setFillColor(...ORANGE);
+  doc.ellipse(cx, cy, 1.5, 3, 'S');
+}
+
 export function generateBillPdf(
   settings: BillSettings,
   bill: Bill,
   items: BillItem[],
 ): jsPDF {
   const doc = new jsPDF('p', 'mm', 'a4');
-  const pw = doc.internal.pageSize.getWidth(); // 210
-  const ph = doc.internal.pageSize.getHeight(); // 297
-  const mx = 15; // horizontal margin for body content
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  const mx = 15;
   let y = 0;
 
   const initials = settings.shopName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   // ═══════════════════════════════════════
-  // HEADER BANNER — tall teal bar with logo + shop name
+  // HEADER — dark background with logo + shop name
   // ═══════════════════════════════════════
   const headerH = 38;
-  doc.setFillColor(...TEAL);
+  doc.setFillColor(...DARK);
   doc.rect(0, 0, pw, headerH, 'F');
 
-  // Logo circle (centered vertically in header)
-  const logoD = 24; // diameter in mm (~90px at 96dpi ≈ 24mm)
+  // Logo circle
+  const logoD = 24;
   const logoR = logoD / 2;
   const logoX = mx + logoR + 2;
   const logoY = headerH / 2;
   let logoRendered = false;
 
+  // White circle background for logo
+  doc.setFillColor(...WHITE);
+  doc.setDrawColor(...YELLOW);
+  doc.setLineWidth(1);
+  doc.circle(logoX, logoY, logoR, 'FD');
+
   if (settings.logoPath) {
     const parsed = parseLogoDataUrl(settings.logoPath);
     if (parsed) {
       try {
-        // Outer gold ring
-        doc.setDrawColor(...GOLD);
-        doc.setLineWidth(1.2);
-        doc.setFillColor(...TEAL);
-        doc.circle(logoX, logoY, logoR, 'FD');
-        // Inner gold ring
-        doc.setLineWidth(0.8);
-        doc.circle(logoX, logoY, logoR - 2, 'S');
-        // Clip-like: draw image inside
-        const imgSize = (logoR - 2) * 1.8;
+        const imgSize = (logoR - 1) * 1.8;
         doc.addImage(parsed.data, parsed.format, logoX - imgSize / 2, logoY - imgSize / 2, imgSize, imgSize);
         logoRendered = true;
       } catch (e) {
@@ -66,113 +107,99 @@ export function generateBillPdf(
   }
 
   if (!logoRendered) {
-    // Outer gold ring
-    doc.setDrawColor(...GOLD);
-    doc.setLineWidth(1.2);
-    doc.setFillColor(...TEAL);
-    doc.circle(logoX, logoY, logoR, 'FD');
-    // Inner circle
-    doc.setLineWidth(0.8);
-    doc.setFillColor(...TEAL_INNER);
-    doc.circle(logoX, logoY, logoR - 2, 'FD');
-    // Initials
+    // Orange circle with initials
+    doc.setFillColor(...ORANGE);
+    doc.circle(logoX, logoY, logoR - 2, 'F');
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...GOLD);
-    doc.text(initials, logoX, logoY + 1, { align: 'center' });
-    // Small bottom text
-    doc.setFontSize(4);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(255, 255, 255);
-    doc.text('⚙ AUTO PARTS ⚙', logoX, logoY + 5, { align: 'center' });
+    doc.setTextColor(...WHITE);
+    doc.text(initials, logoX, logoY + 1.5, { align: 'center' });
   }
 
-  // Shop name — large bold
+  // Shop name
   const textX = logoX + logoR + 8;
-  doc.setFontSize(26);
+  doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text(settings.shopName, textX, headerH / 2 - 2);
+  doc.setTextColor(...WHITE);
+  doc.text(settings.shopName, textX, headerH / 2 - 1);
 
   // Tagline
   if (settings.tagline) {
-    doc.setFontSize(13);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(208, 208, 208);
-    doc.text(settings.tagline, textX, headerH / 2 + 6);
+    doc.setTextColor(...YELLOW);
+    doc.text(settings.tagline, textX, headerH / 2 + 7);
   }
 
   y = headerH;
 
   // ═══════════════════════════════════════
-  // GOLD "INVOICE FROM" BANNER
+  // ORANGE "INVOICE FROM" BANNER
   // ═══════════════════════════════════════
-  const bannerH = 10;
-  doc.setFillColor(...GOLD);
+  const bannerH = 9;
+  doc.setFillColor(...ORANGE);
   doc.rect(0, y, pw, bannerH, 'F');
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...TEAL);
-  doc.text('Invoice From :', mx, y + 6.5);
+  doc.setTextColor(...WHITE);
+  doc.text('Invoice From :', mx, y + 6);
   doc.setFont('helvetica', 'bold');
-  doc.text(settings.shopName.toUpperCase(), mx + 30, y + 6.5);
+  doc.text(settings.shopName.toUpperCase(), mx + 28, y + 6);
   y += bannerH;
 
   // ═══════════════════════════════════════
-  // INVOICE BODY — padded area
+  // INVOICE BODY
   // ═══════════════════════════════════════
-  const bodyMx = mx; // body margin matches
   y += 5;
+  const bodyMx = mx;
+  const blockW = pw - bodyMx * 2;
 
   // ── Invoice To Block ──
-  const blockW = pw - bodyMx * 2;
-  const blockHeaderH = 10;
-
-  // Border around entire block
-  doc.setDrawColor(204, 204, 204);
-  doc.setLineWidth(0.4);
+  const blockHeaderH = 9;
   const blockTopY = y;
 
-  // Teal header bar
-  doc.setFillColor(...TEAL);
+  // Dark header bar
+  doc.setFillColor(...DARK);
   doc.rect(bodyMx, y, blockW, blockHeaderH, 'F');
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text('Invoice To :', bodyMx + 5, y + 7);
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Invoice No :', pw - bodyMx - 52, y + 7);
   doc.setFont('helvetica', 'bold');
-  doc.text(bill.billNumber, pw - bodyMx - 5, y + 7, { align: 'right' });
+  doc.setTextColor(...WHITE);
+  doc.text('Invoice To :', bodyMx + 5, y + 6.5);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 200, 200);
+  doc.text('Invoice No :', pw - bodyMx - 50, y + 6.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...YELLOW);
+  doc.text(bill.billNumber, pw - bodyMx - 5, y + 6.5, { align: 'right' });
   y += blockHeaderH;
 
-  // Body area with border
+  // Body area with warm bg
   const bodyBoxH = 18;
+  doc.setFillColor(...ACCENT_BG);
+  doc.rect(bodyMx, y, blockW, bodyBoxH, 'F');
   doc.setDrawColor(204, 204, 204);
   doc.setLineWidth(0.4);
-  doc.rect(bodyMx, y, blockW, bodyBoxH, 'S');
-  // Also draw top border to close the block
   doc.rect(bodyMx, blockTopY, blockW, blockHeaderH + bodyBoxH, 'S');
 
   // Buyer name
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(26, 26, 26);
+  doc.setTextColor(...DARK);
   doc.text(bill.buyerName.toUpperCase(), bodyMx + 5, y + 7);
 
   // Buyer phone
   if (bill.buyerPhone) {
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(51, 51, 51);
+    doc.setTextColor(...MED_GRAY);
     doc.text(`Phone: ${bill.buyerPhone}`, bodyMx + 5, y + 13);
   }
 
-  // Date right
-  doc.setFontSize(10);
+  // Date
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 51, 51);
+  doc.setTextColor(...MED_GRAY);
   doc.text(`Date : ${new Date(bill.date).toLocaleDateString('en-PK')}`, pw - bodyMx - 5, y + 7, { align: 'right' });
 
   y += bodyBoxH + 5;
@@ -194,27 +221,30 @@ export function generateBillPdf(
     ]),
     margin: { left: bodyMx, right: bodyMx },
     styles: {
-      fontSize: 10,
+      fontSize: 9.5,
       cellPadding: 3.5,
       textColor: [34, 34, 34],
       lineColor: [221, 221, 221],
       lineWidth: 0.2,
     },
     headStyles: {
-      fillColor: TEAL,
+      fillColor: DARK,
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
-      fontSize: 10,
+      fontSize: 9.5,
+    },
+    alternateRowStyles: {
+      fillColor: [250, 250, 250],
     },
     columnStyles: {
       0: { halign: 'center', cellWidth: 12 },
       1: { halign: 'left', cellWidth: 42 },
       2: { halign: 'center', cellWidth: 28 },
-      3: { halign: 'center', cellWidth: 30 },
+      3: { halign: 'center', cellWidth: 28 },
       4: { halign: 'center', cellWidth: 16 },
       5: { halign: 'center', cellWidth: 26 },
-      6: { halign: 'center', cellWidth: 26 },
+      6: { halign: 'center', cellWidth: 28 },
     },
     theme: 'grid',
     tableLineColor: [221, 221, 221],
@@ -222,63 +252,61 @@ export function generateBillPdf(
   });
 
   // ═══════════════════════════════════════
-  // TOTALS (right-aligned)
+  // TOTALS
   // ═══════════════════════════════════════
-  y = (doc as any).lastAutoTable.finalY + 4;
+  y = (doc as any).lastAutoTable.finalY + 5;
 
-  // Subtotal row
+  // Subtotal
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(51, 51, 51);
+  doc.setTextColor(...MED_GRAY);
   doc.text('Subtotal :', pw - bodyMx - 55, y + 4);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(26, 26, 26);
+  doc.setTextColor(...DARK);
   doc.text(`Rs ${bill.subtotal.toLocaleString()}`, pw - bodyMx, y + 4, { align: 'right' });
 
-  // Divider line
   y += 9;
   doc.setDrawColor(204, 204, 204);
   doc.setLineWidth(0.3);
   doc.line(pw - bodyMx - 80, y, pw - bodyMx, y);
 
-  // Discount row
+  // Discount
   if (bill.discount > 0) {
     y += 3;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(51, 51, 51);
-    doc.text('Discount', pw - bodyMx - 55, y + 4);
+    doc.setTextColor(...MED_GRAY);
+    doc.text('Discount :', pw - bodyMx - 55, y + 4);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(26, 26, 26);
+    doc.setTextColor(...DARK);
     doc.text(`${bill.discount.toLocaleString()}`, pw - bodyMx, y + 4, { align: 'right' });
     y += 9;
   }
 
   // ═══════════════════════════════════════
-  // GRAND TOTAL BAR — gold left, teal right
+  // GRAND TOTAL BAR — yellow left, dark right
   // ═══════════════════════════════════════
   y += 4;
-  const gtBarH = 16;
+  const gtBarH = 14;
   const gtRightW = 110;
   const gtLeftW = pw - gtRightW;
 
-  // Gold left section
-  doc.setFillColor(...GOLD);
+  doc.setFillColor(...YELLOW);
   doc.rect(0, y, gtLeftW, gtBarH, 'F');
 
-  // Teal right section
-  doc.setFillColor(...TEAL);
+  doc.setFillColor(...DARK);
   doc.rect(gtLeftW, y, gtRightW, gtBarH, 'F');
 
-  // Grand total text
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(...YELLOW);
   doc.text('GRAND TOTAL :', gtLeftW + 5, y + gtBarH / 2 + 1.5);
-  doc.setFontSize(16);
+
+  doc.setFontSize(15);
   doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...WHITE);
   doc.text(`Rs ${bill.finalTotal.toLocaleString()}`, pw - 8, y + gtBarH / 2 + 1.5, { align: 'right' });
 
   y += gtBarH;
@@ -298,15 +326,21 @@ export function generateBillPdf(
 
     // Terms & Conditions (left)
     if (showTerms && terms && terms.length > 0) {
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(26, 26, 26);
+      doc.setTextColor(...DARK);
       doc.text('TERMS & CONDITIONS', sectionMx, y + 4);
 
-      doc.setFontSize(9);
+      // Orange underline
+      const titleW = doc.getTextWidth('TERMS & CONDITIONS');
+      doc.setDrawColor(...ORANGE);
+      doc.setLineWidth(0.8);
+      doc.line(sectionMx, y + 6, sectionMx + titleW, y + 6);
+
+      doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(51, 51, 51);
-      let ty = y + 12;
+      let ty = y + 13;
       terms.forEach(t => {
         if (ty < ph - 55) {
           const lines = doc.splitTextToSize(`• ${t}`, colW - 4);
@@ -316,12 +350,11 @@ export function generateBillPdf(
       });
     }
 
-    // Payment Information (right) — dashed border box
+    // Payment Information (right)
     if (showPayment && paymentInfo) {
       const px = showTerms ? sectionMx + colW + 8 : sectionMx;
       const py = y;
 
-      // Calculate dynamic height
       const paymentLines: string[] = [];
       if (paymentInfo.bankName) paymentLines.push(`• Bank Name: ${paymentInfo.bankName}`);
       if (paymentInfo.accountTitle) paymentLines.push(`• Account Name: ${paymentInfo.accountTitle}`);
@@ -332,21 +365,31 @@ export function generateBillPdf(
 
       const boxH = 12 + paymentLines.length * 5 + 6;
 
-      // Dashed border
-      doc.setDrawColor(153, 153, 153);
-      doc.setLineWidth(0.5);
+      // Dashed orange border
+      doc.setDrawColor(...ORANGE);
+      doc.setLineWidth(0.6);
+      doc.setLineDashPattern([2, 2], 0);
+      doc.roundedRect(px, py - 2, colW, boxH, 2, 2, 'S');
+      doc.setLineDashPattern([], 0);
+
+      // Warm background
+      doc.setFillColor(...ACCENT_BG);
+      doc.roundedRect(px + 0.3, py - 1.7, colW - 0.6, boxH - 0.6, 1.5, 1.5, 'F');
+
+      // Re-draw border on top
+      doc.setDrawColor(...ORANGE);
       doc.setLineDashPattern([2, 2], 0);
       doc.roundedRect(px, py - 2, colW, boxH, 2, 2, 'S');
       doc.setLineDashPattern([], 0);
 
       // Title
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(26, 26, 26);
+      doc.setTextColor(...DARK);
       doc.text('PAYMENT INFORMATION', px + 5, py + 6);
 
       // Lines
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(51, 51, 51);
       let pl = py + 14;
@@ -358,58 +401,55 @@ export function generateBillPdf(
   }
 
   // ═══════════════════════════════════════
-  // FOOTER — teal bar with 3 red pill icon columns
+  // FOOTER — dark bar with geometric icons
   // ═══════════════════════════════════════
   const footerH = 30;
   const fy = ph - footerH;
   const thirdW = pw / 3;
 
-  doc.setFillColor(...TEAL);
+  doc.setFillColor(...DARK);
   doc.rect(0, fy, pw, footerH, 'F');
 
-  // Red pill dimensions
+  // Orange pill dimensions
   const pillW = 18;
   const pillH = 10;
   const pillR = 5;
-  const pillY = fy + 4;
+  const pillY = fy + 3;
 
-  // Helper: draw red pill with icon symbol
-  const drawPill = (cx: number, icon: string) => {
-    doc.setFillColor(...RED_PILL);
+  const drawPill = (cx: number) => {
+    doc.setFillColor(...ORANGE);
     doc.roundedRect(cx - pillW / 2, pillY, pillW, pillH, pillR, pillR, 'F');
-    // Icon symbol in pill
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text(icon, cx, pillY + pillH / 2 + 1, { align: 'center' });
   };
 
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(200, 200, 200);
 
   // Column 1: Location
   const col1X = thirdW * 0.5;
-  drawPill(col1X, '📍');
+  drawPill(col1X);
+  drawLocationIcon(doc, col1X, pillY + pillH / 2);
   const addr = settings.address || 'Shop Address';
   const addrLines = doc.splitTextToSize(addr, thirdW - 12);
-  doc.text(addrLines, col1X, fy + 18, { align: 'center' });
+  doc.text(addrLines, col1X, fy + 17, { align: 'center' });
 
   // Column 2: Phone
   const col2X = thirdW * 1.5;
-  drawPill(col2X, '📞');
+  drawPill(col2X);
+  drawPhoneIcon(doc, col2X, pillY + pillH / 2);
   const phoneLines: string[] = [];
   if (settings.phone1) phoneLines.push(settings.phone1);
   if (settings.phone2) phoneLines.push(settings.phone2);
   if (phoneLines.length === 0) phoneLines.push('Contact');
-  doc.text(phoneLines, col2X, fy + 18, { align: 'center' });
+  doc.text(phoneLines, col2X, fy + 17, { align: 'center' });
 
   // Column 3: Social / Website
   const col3X = thirdW * 2.5;
-  drawPill(col3X, '🌐');
+  drawPill(col3X);
+  drawGlobeIcon(doc, col3X, pillY + pillH / 2);
   const socialText = settings.socialMedia || settings.website || 'Website Coming Soon';
   const socialLines = doc.splitTextToSize(socialText, thirdW - 12);
-  doc.text(socialLines, col3X, fy + 18, { align: 'center' });
+  doc.text(socialLines, col3X, fy + 17, { align: 'center' });
 
   return doc;
 }

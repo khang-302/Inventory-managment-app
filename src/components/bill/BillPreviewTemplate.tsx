@@ -7,17 +7,34 @@ interface BillPreviewTemplateProps {
   items: BillItem[];
 }
 
-/* ── Exact color palette from reference design ── */
-const TEAL = '#1B3D3D';
-const TEAL_INNER = '#142E2E';
-const GOLD = '#C9A020';
-const RED_PILL = '#CC2E2E';
-const WHITE = '#ffffff';
-const TEXT_DARK = '#1a1a1a';
-const TEXT_MED = '#333333';
-const TEXT_LIGHT = '#444444';
+/* ── Color palette: Yellow / Orange / Gray / Black / White ── */
+const ORANGE = '#E8820C';
+const YELLOW = '#F5A623';
+const DARK = '#1a1a1a';
+const DARK_GRAY = '#333333';
+const MED_GRAY = '#555555';
+const LIGHT_GRAY = '#e5e5e5';
 const BORDER = '#cccccc';
-const BORDER_LIGHT = '#dddddd';
+const WHITE = '#ffffff';
+const ACCENT_BG = '#FFF8ED'; // warm white for sections
+
+const LocationIcon = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#fff"/>
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.47 11.47 0 003.59.57 1 1 0 011 1V20a1 1 0 01-1 1C9.61 21 3 14.39 3 6.5a1 1 0 011-1h3.5a1 1 0 011 1 11.47 11.47 0 00.57 3.59 1 1 0 01-.25 1.01l-2.2 2.19z" fill="#fff"/>
+  </svg>
+);
+
+const GlobeIcon = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" fill="#fff"/>
+  </svg>
+);
 
 const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>(
   ({ settings, bill, items }, ref) => {
@@ -35,77 +52,67 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           width: '794px',
           minHeight: '1123px',
           background: WHITE,
-          color: TEXT_DARK,
-          fontFamily: "'Poppins', 'Segoe UI', Helvetica, Arial, sans-serif",
+          color: DARK,
+          fontFamily: "'Segoe UI', Helvetica, Arial, sans-serif",
           fontSize: '14px',
           lineHeight: '1.5',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
         }}
       >
         {/* ═══ HEADER ═══ */}
         <div style={{
-          backgroundColor: TEAL,
-          padding: '22px 28px',
+          background: `linear-gradient(135deg, ${DARK} 0%, #2a2a2a 100%)`,
+          padding: '24px 32px',
           display: 'flex',
           alignItems: 'center',
-          gap: '20px',
+          gap: '22px',
         }}>
           {/* Logo Circle */}
-          {settings.logoPath ? (
-            <div style={{
-              width: '90px', height: '90px', borderRadius: '50%',
-              border: `4px solid ${GOLD}`, background: TEAL,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, overflow: 'hidden',
-            }}>
+          <div style={{
+            width: '88px', height: '88px', borderRadius: '50%',
+            border: `3px solid ${YELLOW}`,
+            background: WHITE,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, overflow: 'hidden',
+          }}>
+            {settings.logoPath ? (
               <img
                 src={settings.logoPath}
                 alt="Logo"
                 style={{
-                  width: '78px', height: '78px', objectFit: 'cover',
-                  borderRadius: '50%', border: `3px solid ${GOLD}`,
+                  width: '76px', height: '76px', objectFit: 'cover',
+                  borderRadius: '50%',
                 }}
                 crossOrigin="anonymous"
               />
-            </div>
-          ) : (
-            <div style={{
-              width: '90px', height: '90px', borderRadius: '50%',
-              border: `4px solid ${GOLD}`, background: TEAL,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
+            ) : (
               <div style={{
-                width: '78px', height: '78px', borderRadius: '50%',
-                background: TEAL_INNER, border: `3px solid ${GOLD}`,
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: '2px',
+                width: '76px', height: '76px', borderRadius: '50%',
+                background: ORANGE,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: GOLD, letterSpacing: '0.5px' }}>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: WHITE, letterSpacing: '1px' }}>
                   {initials}
-                </div>
-                <div style={{ fontSize: '6px', fontWeight: 600, color: WHITE, letterSpacing: '0.3px' }}>
-                  ⚙ AUTO PARTS ⚙
-                </div>
+                </span>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Company Name + Subtitle */}
+          {/* Shop Name + Tagline */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{
-              fontSize: '40px', fontWeight: 800, color: WHITE,
-              lineHeight: '1.1', letterSpacing: '0.5px',
+              fontSize: '36px', fontWeight: 800, color: WHITE,
+              lineHeight: '1.15', letterSpacing: '0.5px',
             }}>
               {settings.shopName}
             </div>
             {settings.tagline && (
               <div style={{
-                fontSize: '20px', fontWeight: 400, color: '#d0d0d0',
-                marginTop: '2px', letterSpacing: '0.3px',
+                fontSize: '16px', fontWeight: 400, color: YELLOW,
+                marginTop: '4px', letterSpacing: '0.5px',
               }}>
                 {settings.tagline}
               </div>
@@ -113,57 +120,56 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           </div>
         </div>
 
-        {/* ═══ GOLD INVOICE FROM BANNER ═══ */}
+        {/* ═══ ORANGE "INVOICE FROM" BANNER ═══ */}
         <div style={{
-          backgroundColor: GOLD,
-          padding: '10px 28px',
+          backgroundColor: ORANGE,
+          padding: '9px 32px',
         }}>
-          <p style={{ fontSize: '16px', fontWeight: 500, color: TEAL, margin: 0 }}>
-            Invoice From : <strong style={{ fontWeight: 800, color: TEAL }}>{settings.shopName.toUpperCase()}</strong>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: WHITE, margin: 0 }}>
+            Invoice From : <strong style={{ fontWeight: 800 }}>{settings.shopName.toUpperCase()}</strong>
           </p>
         </div>
 
         {/* ═══ INVOICE BODY ═══ */}
-        <div style={{ padding: '18px 28px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '18px 32px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
           {/* ── Invoice To Block ── */}
           <div style={{
             border: `1.5px solid ${BORDER}`,
-            borderRadius: '4px',
+            borderRadius: '6px',
             overflow: 'hidden',
-            marginBottom: '14px',
+            marginBottom: '16px',
           }}>
-            {/* Header bar */}
             <div style={{
-              backgroundColor: TEAL,
+              backgroundColor: DARK,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: '10px 16px',
             }}>
-              <span style={{ fontSize: '16px', fontWeight: 700, color: WHITE }}>Invoice To :</span>
-              <span style={{ fontSize: '15px', fontWeight: 400, color: WHITE }}>
-                Invoice No : <strong style={{ fontWeight: 700 }}>{bill.billNumber}</strong>
+              <span style={{ fontSize: '15px', fontWeight: 700, color: WHITE }}>Invoice To :</span>
+              <span style={{ fontSize: '14px', fontWeight: 400, color: '#ccc' }}>
+                Invoice No : <strong style={{ fontWeight: 700, color: YELLOW }}>{bill.billNumber}</strong>
               </span>
             </div>
-            {/* Body */}
             <div style={{
               padding: '12px 16px 14px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
+              background: ACCENT_BG,
             }}>
               <div>
-                <div style={{ fontSize: '17px', fontWeight: 700, color: TEXT_DARK, marginBottom: '4px' }}>
+                <div style={{ fontSize: '17px', fontWeight: 700, color: DARK, marginBottom: '3px' }}>
                   {bill.buyerName.toUpperCase()}
                 </div>
                 {bill.buyerPhone && (
-                  <div style={{ fontSize: '14px', fontWeight: 400, color: TEXT_MED }}>
+                  <div style={{ fontSize: '13px', fontWeight: 400, color: MED_GRAY }}>
                     Phone: {bill.buyerPhone}
                   </div>
                 )}
               </div>
-              <div style={{ fontSize: '15px', fontWeight: 400, color: TEXT_MED, textAlign: 'right' }}>
+              <div style={{ fontSize: '14px', fontWeight: 400, color: MED_GRAY, textAlign: 'right' }}>
                 Date : {new Date(bill.date).toLocaleDateString('en-PK')}
               </div>
             </div>
@@ -172,11 +178,11 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           {/* ── ITEMS TABLE ── */}
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6px' }}>
             <thead>
-              <tr style={{ backgroundColor: TEAL }}>
+              <tr style={{ backgroundColor: DARK }}>
                 <th style={{ ...thStyle, width: '40px' }}>#</th>
                 <th style={{ ...thStyle, width: '160px', textAlign: 'left' }}>Part Name</th>
-                <th style={{ ...thStyle, width: '105px' }}>Code</th>
-                <th style={{ ...thStyle, width: '110px' }}>Brand</th>
+                <th style={{ ...thStyle, width: '100px' }}>Code</th>
+                <th style={{ ...thStyle, width: '100px' }}>Brand</th>
                 <th style={{ ...thStyle, width: '55px' }}>QTY</th>
                 <th style={{ ...thStyle, width: '100px' }}>Price (RS)</th>
                 <th style={{ ...thStyle, width: '100px' }}>Total (RS)</th>
@@ -184,46 +190,46 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
             </thead>
             <tbody>
               {items.map((item, i) => (
-                <tr key={item.id} style={{ borderBottom: `1px solid ${BORDER_LIGHT}`, background: WHITE }}>
-                  <td style={{ ...tdStyle, color: TEXT_LIGHT }}>{i + 1}</td>
-                  <td style={{ ...tdStyle, textAlign: 'left' }}>{item.partName}</td>
+                <tr key={item.id} style={{ borderBottom: `1px solid ${LIGHT_GRAY}`, background: i % 2 === 0 ? WHITE : '#FAFAFA' }}>
+                  <td style={{ ...tdStyle, color: MED_GRAY }}>{i + 1}</td>
+                  <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 600 }}>{item.partName}</td>
                   <td style={tdStyle}>{item.partCode || '-'}</td>
                   <td style={tdStyle}>{item.brand || '-'}</td>
-                  <td style={{ ...tdStyle, fontWeight: 500 }}>{item.quantity}</td>
+                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.quantity}</td>
                   <td style={tdStyle}>{item.price.toLocaleString()}</td>
-                  <td style={{ ...tdStyle, fontWeight: 500 }}>{item.total.toLocaleString()}</td>
+                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.total.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* ── TOTALS ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '6px 4px 0', gap: '6px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '8px 4px 0', gap: '6px' }}>
             <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
-              <span style={{ fontSize: '14px', fontWeight: 600, color: TEXT_MED, textAlign: 'right', minWidth: '100px' }}>Subtotal :</span>
-              <span style={{ fontSize: '15px', fontWeight: 700, color: TEXT_DARK, textAlign: 'right', minWidth: '90px' }}>Rs {bill.subtotal.toLocaleString()}</span>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: MED_GRAY, minWidth: '100px', textAlign: 'right' }}>Subtotal :</span>
+              <span style={{ fontSize: '15px', fontWeight: 700, color: DARK, minWidth: '90px', textAlign: 'right' }}>Rs {bill.subtotal.toLocaleString()}</span>
             </div>
             <div style={{ width: '240px', height: '1px', background: BORDER }} />
             {bill.discount > 0 && (
               <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', fontWeight: 600, color: TEXT_MED, textAlign: 'right', minWidth: '100px' }}>Discount</span>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: TEXT_DARK, textAlign: 'right', minWidth: '90px' }}>{bill.discount.toLocaleString()}</span>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: MED_GRAY, minWidth: '100px', textAlign: 'right' }}>Discount :</span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: DARK, minWidth: '90px', textAlign: 'right' }}>{bill.discount.toLocaleString()}</span>
               </div>
             )}
           </div>
 
           {/* ── GRAND TOTAL BAR ── */}
           <div style={{
-            display: 'flex', marginTop: '10px', width: '100%',
-            borderRadius: '2px', overflow: 'hidden',
+            display: 'flex', marginTop: '12px', width: '100%',
+            borderRadius: '4px', overflow: 'hidden',
           }}>
-            <div style={{ backgroundColor: GOLD, flex: 1, minHeight: '52px' }} />
+            <div style={{ backgroundColor: YELLOW, flex: 1, minHeight: '52px' }} />
             <div style={{
-              backgroundColor: TEAL,
+              backgroundColor: DARK,
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '0 20px', minWidth: '320px', gap: '20px',
+              padding: '0 24px', minWidth: '340px', gap: '20px',
             }}>
-              <span style={{ fontSize: '18px', fontWeight: 800, color: WHITE, letterSpacing: '0.5px' }}>GRAND TOTAL :</span>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: YELLOW, letterSpacing: '0.5px' }}>GRAND TOTAL :</span>
               <span style={{ fontSize: '22px', fontWeight: 800, color: WHITE, letterSpacing: '0.5px' }}>Rs {bill.finalTotal.toLocaleString()}</span>
             </div>
           </div>
@@ -233,30 +239,31 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
 
         {/* ═══ TERMS & PAYMENT ═══ */}
         {(showTerms || showPayment) && (
-          <div style={{ display: 'flex', gap: '24px', padding: '24px 28px 20px' }}>
+          <div style={{ display: 'flex', gap: '24px', padding: '20px 32px 18px' }}>
             {showTerms && terms && terms.length > 0 && (
               <div style={{ flex: 1 }}>
                 <div style={{
-                  fontSize: '16px', fontWeight: 800, color: TEXT_DARK,
-                  marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.3px',
+                  fontSize: '15px', fontWeight: 800, color: DARK,
+                  marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px',
+                  borderBottom: `2px solid ${ORANGE}`, paddingBottom: '6px', display: 'inline-block',
                 }}>
                   Terms & Conditions
                 </div>
                 <ul style={{ listStyle: 'disc', paddingLeft: '18px', margin: 0 }}>
                   {terms.map((t, i) => (
-                    <li key={i} style={{ fontSize: '13px', color: TEXT_MED, lineHeight: '1.7', fontWeight: 400 }}>{t}</li>
+                    <li key={i} style={{ fontSize: '12.5px', color: DARK_GRAY, lineHeight: '1.8', fontWeight: 400 }}>{t}</li>
                   ))}
                 </ul>
               </div>
             )}
             {showPayment && paymentInfo && (
               <div style={{
-                flex: 1, border: '2px dashed #999999',
-                borderRadius: '6px', padding: '14px 18px',
+                flex: 1, border: `2px dashed ${ORANGE}`,
+                borderRadius: '8px', padding: '14px 18px', background: ACCENT_BG,
               }}>
                 <div style={{
-                  fontSize: '16px', fontWeight: 800, color: TEXT_DARK,
-                  marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.3px',
+                  fontSize: '15px', fontWeight: 800, color: DARK,
+                  marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px',
                 }}>
                   Payment Information
                 </div>
@@ -275,25 +282,23 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
 
         {/* ═══ FOOTER ═══ */}
         <div style={{
-          backgroundColor: TEAL,
-          padding: '18px 28px 20px',
+          backgroundColor: DARK,
+          padding: '20px 32px',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'flex-start',
-          gap: '20px',
+          gap: '16px',
         }}>
           {/* Location */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', flex: 1 }}>
             <div style={{
-              backgroundColor: RED_PILL, borderRadius: '50px',
-              width: '64px', height: '36px',
+              backgroundColor: ORANGE, borderRadius: '50px',
+              width: '60px', height: '34px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#fff"/>
-              </svg>
+              <LocationIcon />
             </div>
-            <div style={{ fontSize: '12.5px', color: WHITE, textAlign: 'center', lineHeight: '1.7', fontWeight: 400 }}>
+            <div style={{ fontSize: '12px', color: '#ccc', textAlign: 'center', lineHeight: '1.7' }}>
               {settings.address || 'Shop Address'}
             </div>
           </div>
@@ -301,33 +306,29 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
           {/* Phone */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', flex: 1 }}>
             <div style={{
-              backgroundColor: RED_PILL, borderRadius: '50px',
-              width: '64px', height: '36px',
+              backgroundColor: ORANGE, borderRadius: '50px',
+              width: '60px', height: '34px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.47 11.47 0 003.59.57 1 1 0 011 1V20a1 1 0 01-1 1C9.61 21 3 14.39 3 6.5a1 1 0 011-1h3.5a1 1 0 011 1 11.47 11.47 0 00.57 3.59 1 1 0 01-.25 1.01l-2.2 2.19z" fill="#fff"/>
-              </svg>
+              <PhoneIcon />
             </div>
-            <div style={{ fontSize: '12.5px', color: WHITE, textAlign: 'center', lineHeight: '1.7', fontWeight: 400 }}>
+            <div style={{ fontSize: '12px', color: '#ccc', textAlign: 'center', lineHeight: '1.7' }}>
               {settings.phone1 && <div>{settings.phone1}</div>}
               {settings.phone2 && <div>{settings.phone2}</div>}
               {!settings.phone1 && !settings.phone2 && 'Contact'}
             </div>
           </div>
 
-          {/* Social / Website */}
+          {/* Social */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', flex: 1 }}>
             <div style={{
-              backgroundColor: RED_PILL, borderRadius: '50px',
-              width: '64px', height: '36px',
+              backgroundColor: ORANGE, borderRadius: '50px',
+              width: '60px', height: '34px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm-1 17.93V18a1 1 0 00-1-1H8l-4.88-4.88A8.01 8.01 0 014.07 7h1.43l3 3V11a1 1 0 001 1h4a1 1 0 001-1V9.59l2.41-2.41A7.96 7.96 0 0120 12c0 4.06-3.05 7.44-7 7.93z" fill="#fff"/>
-              </svg>
+              <GlobeIcon />
             </div>
-            <div style={{ fontSize: '12.5px', color: WHITE, textAlign: 'center', lineHeight: '1.7', fontWeight: 400 }}>
+            <div style={{ fontSize: '12px', color: '#ccc', textAlign: 'center', lineHeight: '1.7' }}>
               {settings.socialMedia || settings.website || 'Website Coming Soon'}
             </div>
           </div>
@@ -339,23 +340,23 @@ const BillPreviewTemplate = forwardRef<HTMLDivElement, BillPreviewTemplateProps>
 
 const thStyle: React.CSSProperties = {
   color: '#ffffff',
-  fontSize: '14px',
+  fontSize: '13px',
   fontWeight: 700,
-  padding: '12px 10px',
+  padding: '11px 10px',
   textAlign: 'center',
   border: 'none',
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: '11px 10px',
-  fontSize: '14px',
+  padding: '10px 10px',
+  fontSize: '13px',
   color: '#222222',
   textAlign: 'center',
   verticalAlign: 'middle',
 };
 
 const paymentLiStyle: React.CSSProperties = {
-  fontSize: '13px',
+  fontSize: '12.5px',
   color: '#333333',
   lineHeight: '1.8',
   fontWeight: 400,
