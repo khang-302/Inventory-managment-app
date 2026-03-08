@@ -202,7 +202,8 @@ export default function BackupRestore() {
           entityType: 'backup',
           description: 'Restored from backup'
         });
-        toast.success('Backup restored successfully! Please refresh the app.');
+        toast.success('Backup restored! Reloading...');
+        setTimeout(() => window.location.reload(), 800);
       } else {
         toast.error(result.message);
       }
