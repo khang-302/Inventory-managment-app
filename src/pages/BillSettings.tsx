@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
 import type { BillSettings } from '@/types/bill';
 import {
