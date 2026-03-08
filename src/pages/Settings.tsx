@@ -49,7 +49,9 @@ function SettingItem({
   description, 
   onClick, 
   rightElement,
-  showChevron = true 
+  showChevron = true,
+  iconBg,
+  iconColor,
 }: SettingItemProps) {
   return (
     <div
