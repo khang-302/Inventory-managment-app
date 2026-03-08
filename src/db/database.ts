@@ -9,6 +9,7 @@ import type {
   BackupRecord,
   AutocompleteEntry 
 } from '@/types';
+import type { AppNotification, NotificationTemplate } from '@/types/notification';
 
 // Ameer Autos Database - Dexie.js (IndexedDB) Setup
 export class AmeerAutosDB extends Dexie {
@@ -20,6 +21,8 @@ export class AmeerAutosDB extends Dexie {
   settings!: Table<AppSettings>;
   backupRecords!: Table<BackupRecord>;
   autocompleteEntries!: Table<AutocompleteEntry>;
+  notifications!: Table<AppNotification>;
+  notificationTemplates!: Table<NotificationTemplate>;
 
   constructor() {
     super('AmeerAutosDB');
