@@ -24,7 +24,7 @@ import {
   Upload, 
   RefreshCw,
   Activity,
-  Filter
+  SlidersHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ActivityAction } from '@/types';
