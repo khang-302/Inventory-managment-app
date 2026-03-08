@@ -45,7 +45,7 @@ import { startOfDay, endOfDay, subMonths } from 'date-fns';
 
 export default function Reports() {
   const dateRanges = useMemo(() => getDateRanges(), []);
-  const [selectedRangeIndex, setSelectedRangeIndex] = useState(4);
+  const [selectedRangeIndex, setSelectedRangeIndex] = useState(5);
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
   const [summary, setSummary] = useState<ReportSummary | null>(null);
