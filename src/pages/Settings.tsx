@@ -56,8 +56,8 @@ function SettingItem({
   return (
     <div
       className={cn(
-        'flex items-center gap-3 p-4 transition-colors',
-        onClick && 'cursor-pointer hover:bg-muted/50'
+        'flex items-center gap-3 p-4 transition-all duration-150',
+        onClick && 'cursor-pointer hover:bg-muted/50 active:scale-[0.98]'
       )}
       onClick={onClick}
     >
