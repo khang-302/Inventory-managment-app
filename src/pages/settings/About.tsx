@@ -186,6 +186,44 @@ export default function About() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Version History */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base">Version History</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-0">
+            {changelog.map((release, idx) => (
+              <div key={release.version} className="relative">
+                {idx < changelog.length - 1 && (
+                  <div className="absolute left-[18px] top-8 bottom-0 w-px bg-border" />
+                )}
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 z-10">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="default" className="text-[11px]">v{release.version}</Badge>
+                      <span className="text-xs text-muted-foreground">{release.date}</span>
+                    </div>
+                    <ul className="mt-1.5 space-y-1">
+                      {release.changes.map((change) => (
+                        <li key={change} className="text-xs text-muted-foreground flex gap-1.5">
+                          <span className="text-primary mt-0.5">•</span>
+                          {change}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
