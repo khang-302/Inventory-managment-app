@@ -78,6 +78,8 @@ const App = () => (
               <Route path="/settings/privacy" element={<PrivacyPolicy />} />
               <Route path="/settings/terms" element={<TermsConditions />} />
               <Route path="/settings/autocomplete" element={<AutocompleteSettings />} />
+              <Route path="/settings/crash-logs" element={<CrashLogs />} />
+              <Route path="/settings/report-problem" element={<ReportProblem />} />
               <Route path="/bills" element={<BillHistory />} />
               <Route path="/bills/create" element={<BillCreate />} />
               <Route path="/bills/edit/:id" element={<BillCreate />} />
