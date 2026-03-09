@@ -53,6 +53,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ErrorBoundary>
+            <GlobalErrorHandler />
+            <CrashRecoveryPrompt />
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/inventory" element={<Inventory />} />
