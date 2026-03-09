@@ -38,6 +38,8 @@ import About from "./pages/settings/About";
 import PrivacyPolicy from "./pages/settings/PrivacyPolicy";
 import TermsConditions from "./pages/settings/TermsConditions";
 import AutocompleteSettings from "./pages/settings/AutocompleteSettings";
+import CrashLogs from "./pages/settings/CrashLogs";
+import ReportProblem from "./pages/settings/ReportProblem";
 
 const queryClient = new QueryClient();
 
