@@ -7,6 +7,8 @@ import { AppProvider } from "@/contexts/AppContext";
 import { AdvancedThemeProvider } from "@/contexts/ThemeContext";
 import { TypographyProvider } from "@/contexts/TypographyContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CrashRecoveryPrompt } from "@/components/CrashRecoveryPrompt";
+import { GlobalErrorHandler } from "@/components/GlobalErrorHandler";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import AddEditPart from "./pages/AddEditPart";
@@ -36,6 +38,8 @@ import About from "./pages/settings/About";
 import PrivacyPolicy from "./pages/settings/PrivacyPolicy";
 import TermsConditions from "./pages/settings/TermsConditions";
 import AutocompleteSettings from "./pages/settings/AutocompleteSettings";
+import CrashLogs from "./pages/settings/CrashLogs";
+import ReportProblem from "./pages/settings/ReportProblem";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +53,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ErrorBoundary>
+            <GlobalErrorHandler />
+            <CrashRecoveryPrompt />
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/inventory" element={<Inventory />} />
@@ -72,6 +78,8 @@ const App = () => (
               <Route path="/settings/privacy" element={<PrivacyPolicy />} />
               <Route path="/settings/terms" element={<TermsConditions />} />
               <Route path="/settings/autocomplete" element={<AutocompleteSettings />} />
+              <Route path="/settings/crash-logs" element={<CrashLogs />} />
+              <Route path="/settings/report-problem" element={<ReportProblem />} />
               <Route path="/bills" element={<BillHistory />} />
               <Route path="/bills/create" element={<BillCreate />} />
               <Route path="/bills/edit/:id" element={<BillCreate />} />
