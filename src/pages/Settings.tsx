@@ -343,36 +343,62 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Activity & Logs */}
-        {(!search || 'activity log backup sync'.includes(search.toLowerCase())) && (
+        {(!search || 'activity log backup sync error crash'.includes(search.toLowerCase())) && (
           <div className="space-y-1.5 animate-fade-in opacity-0" style={{ animationDelay: '240ms', animationFillMode: 'forwards' }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Activity & Logs</p>
             <Card className="bg-card overflow-hidden">
-              <CardContent className="p-0">
+              <CardContent className="p-0 divide-y divide-border">
                 <SettingItem
                   icon={Activity}
                   title="Activity Log"
                   description="View all app activities"
                   onClick={() => navigate('/settings/activity-log')}
                 />
-                <div className="flex gap-2 px-4 pb-4">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => navigate('/settings/backup')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Backup
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => navigate('/settings/sync')}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sync
-                  </Button>
-                </div>
+                <SettingItem
+                  icon={Bug}
+                  title="Error Logs"
+                  description="View crash reports and send diagnostics"
+                  onClick={() => navigate('/settings/crash-logs')}
+                  iconBg="bg-destructive/10"
+                  iconColor="text-destructive"
+                />
+              </CardContent>
+            </Card>
+            <div className="flex gap-2 px-1 pt-1">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => navigate('/settings/backup')}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Backup
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => navigate('/settings/sync')}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Sync
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Help & Support */}
+        {(!search || 'help support report problem bug'.includes(search.toLowerCase())) && (
+          <div className="space-y-1.5 animate-fade-in opacity-0" style={{ animationDelay: '270ms', animationFillMode: 'forwards' }}>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">Help & Support</p>
+            <Card className="bg-card overflow-hidden">
+              <CardContent className="p-0">
+                <SettingItem
+                  icon={MessageSquareWarning}
+                  title="Report a Problem"
+                  description="Send bug report to developer"
+                  onClick={() => navigate('/settings/report-problem')}
+                  iconBg="bg-orange-500/10"
+                  iconColor="text-orange-500"
+                />
               </CardContent>
             </Card>
           </div>
