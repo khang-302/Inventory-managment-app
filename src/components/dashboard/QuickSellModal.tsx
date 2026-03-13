@@ -59,7 +59,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
     setPartName(''); setPartNumber(''); setBrand('');
     setQuantity(''); setPurchasePrice(''); setSellingPrice('');
     setBuyerName(''); setBuyerPhone(''); setNotes('');
-    setErrors({});
+    setErrors({}); setAutoGenerateBill(false);
   };
 
   const validate = (): boolean => {
