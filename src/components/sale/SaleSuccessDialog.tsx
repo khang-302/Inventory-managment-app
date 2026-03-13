@@ -9,7 +9,7 @@ import { getBillSettings, getBillItems, getBillById } from '@/services/billServi
 import { captureBillAsImage } from '@/utils/billImageExport';
 import { saveImageToGallery, shareViaWhatsAppNative } from '@/utils/nativeShare';
 import { useState, useRef } from 'react';
-import { BillPreviewTemplate } from '@/components/bill/BillPreviewTemplate';
+import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import type { BillSettings as BillSettingsType } from '@/types/bill';
 import type { Bill, BillItem } from '@/types/bill';
 
