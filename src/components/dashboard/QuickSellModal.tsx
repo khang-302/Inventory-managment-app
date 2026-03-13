@@ -6,16 +6,19 @@ import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useApp } from '@/contexts/AppContext';
 import { db } from '@/db/database';
 import { logActivity } from '@/services/activityLogService';
+import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency } from '@/utils/currency';
 import { toSafeNumber, toSafeQuantity, calculateTotalSafe, calculateProfitSafe } from '@/utils/safeNumber';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, FileText } from 'lucide-react';
 import { persistFormValues } from '@/services/autocompleteService';
+import { SaleSuccessDialog } from '@/components/sale/SaleSuccessDialog';
 
 interface QuickSellModalProps {
   open: boolean;
