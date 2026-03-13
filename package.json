@@ -14,6 +14,7 @@
     "postinstall": "node -e \"const fs=require('fs');const f='node_modules/dexie/dist/dexie.d.ts';if(fs.existsSync(f)){let c=fs.readFileSync(f,'utf8');c=c.replace('export declare module Dexie','export declare namespace Dexie');fs.writeFileSync(f,c)}\""
   },
   "dependencies": {
+    "@capacitor/filesystem": "^8.1.2",
     "@capacitor/share": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
     "@hookform/resolvers": "^3.10.0",
