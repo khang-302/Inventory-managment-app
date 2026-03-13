@@ -383,6 +383,29 @@ export default function BillSettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Auto Generate Bill Default */}
+        <Card className="bg-card">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Auto Generate Bill</p>
+                  <p className="text-xs text-muted-foreground">Enable by default when recording sales</p>
+                </div>
+              </div>
+              <Switch
+                checked={autoBillDefault}
+                onCheckedChange={async (checked) => {
+                  setAutoBillDefault(checked);
+                  await updateSetting('autoGenerateBill', checked);
+                  toast({ title: checked ? 'Auto bill enabled by default' : 'Auto bill disabled by default' });
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="flex gap-2">
           <Button className="flex-1 gap-2" onClick={handleSave}>
             <Save className="h-4 w-4" /> Save Settings
