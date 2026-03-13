@@ -9,7 +9,8 @@ import { FilePlus2, SwatchBook, MoreVertical, Camera, FileText, Share2, Trash2, 
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
-import { captureBillAsImage, downloadDataUrl } from '@/utils/billImageExport';
+import { captureBillAsImage } from '@/utils/billImageExport';
+import { saveImageToGallery, savePdfToDevice, shareViaWhatsAppNative, saveFile } from '@/utils/nativeShare';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import BillSearchFilter from '@/components/bill/BillSearchFilter';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
