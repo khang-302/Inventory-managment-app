@@ -88,33 +88,34 @@ async function webShare(file: File, title?: string): Promise<boolean> {
 // Save image to Gallery (Pictures/AIM Bills/)
 // ---------------------------------------------------------------------------
 
+export type SaveResult = {
+  method: 'shared' | 'downloaded';
+  path?: string;
+};
+
 export async function saveImageToGallery(
   dataUrl: string,
   filename: string,
-): Promise<'shared' | 'downloaded'> {
+): Promise<SaveResult> {
   if (isNativePlatform()) {
     try {
       const base64Data = dataUrlToBase64(dataUrl);
-      // Save to Pictures/AIM Bills/ — recursive creates folder automatically
+      const savePath = `AIM Bills/${filename}`;
       await Filesystem.writeFile({
-        path: `AIM Bills/${filename}`,
+        path: savePath,
         data: base64Data,
         directory: Directory.ExternalStorage,
         recursive: true,
       });
-      // Trigger media scan so the image appears in gallery immediately
-      // Writing to ExternalStorage/Pictures makes it discoverable, but we
-      // also try saving to the general external path which Android indexes.
-      return 'downloaded';
+      return { method: 'downloaded', path: `Gallery → AIM Bills/${filename}` };
     } catch (err) {
       console.error('Native image save failed, trying fallback:', err);
     }
   }
 
-  // Web fallback
   const blob = dataUrlToBlob(dataUrl);
   webDownload(blob, filename);
-  return 'downloaded';
+  return { method: 'downloaded' };
 }
 
 // ---------------------------------------------------------------------------
