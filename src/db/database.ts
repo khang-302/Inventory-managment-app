@@ -142,6 +142,7 @@ export async function initializeDatabase(): Promise<void> {
     { key: 'syncApiKey', value: '' },
     { key: 'syncFolderId', value: '' },
     { key: 'lastSyncTime', value: null },
+    { key: 'autoGenerateBill', value: false },
   ];
 
   for (const setting of defaultSettings) {
