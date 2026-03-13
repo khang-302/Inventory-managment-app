@@ -1,6 +1,7 @@
 import { ReactNode, useState, useCallback } from 'react';
 import { BottomNav } from './BottomNav';
 import { SidebarNav, SidebarTrigger } from './SidebarNav';
+import { useBackNavigation } from '@/hooks/useBackNavigation';
 import { cn } from '@/lib/utils';
 import { useAppSafe } from '@/contexts/AppContext';
 
