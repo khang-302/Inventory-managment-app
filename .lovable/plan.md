@@ -1,691 +1,230 @@
+# Fix: Global Android Safe Area Handling
 
-# Ameer Autos - Inventory & Sales Manager
-## Complete Implementation Plan
+## Root Cause
+
+The application layout does not properly respect Android system safe areas.
+
+Two main issues cause this:
+
+1. The viewport meta tag does not include `viewport-fit=cover`, so Android WebView does not expose safe area inset values. As a result, CSS variables such as `env(safe-area-inset-top)` and `env(safe-area-inset-bottom)` resolve to `0px`.
+2. The app does not control the Android status bar overlay using the Capacitor StatusBar plugin. This causes WebView content to render behind the system status bar and navigation bar without proper padding.
+
+Because of this, UI elements across the app overlap with:
+
+- Android status bar
+- navigation bar
+- gesture navigation area
+- device cutouts / camera holes
+
+This issue affects **all pages globally**, including headers, notifications, dialogs, settings screens, and bottom actions.
+
+The correct fix must be implemented at the **root layout level**, not screen by screen.
 
 ---
 
-## Project Overview
+# Required Changes
 
-A production-ready, offline-first inventory management application for an auto parts business in Pakistan. The app will be mobile-first, optimized for Samsung Galaxy A16, with a dark AMOLED theme, and support complete offline functionality with optional cloud sync.
+## 1. Update `index.html`
 
----
+Enable safe area reporting from Android WebView by adding `viewport-fit=cover`.
 
-## Architecture Overview
-
-```text
-+------------------------------------------+
-|            Ameer Autos App               |
-+------------------------------------------+
-|                                          |
-|  +----------------+  +----------------+  |
-|  |   UI Layer     |  |  State Mgmt   |  |
-|  |  (React +      |  |  (React       |  |
-|  |   Tailwind)    |  |   Context)    |  |
-|  +-------+--------+  +-------+-------+  |
-|          |                   |          |
-|          v                   v          |
-|  +--------------------------------------+|
-|  |        Service Layer                 ||
-|  |  - InventoryService                  ||
-|  |  - SalesService                      ||
-|  |  - ReportService                     ||
-|  |  - ExportService                     ||
-|  |  - BackupService                     ||
-|  +------------------+-------------------+|
-|                     |                    |
-|                     v                    |
-|  +--------------------------------------+|
-|  |      Dexie.js (IndexedDB)            ||
-|  |  Local-First Database                ||
-|  +--------------------------------------+|
-|                     |                    |
-|                     v (optional)         |
-|  +--------------------------------------+|
-|  |     Google Drive Sync (Optional)     ||
-|  +--------------------------------------+|
-+------------------------------------------+
+```
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 ```
 
----
-
-## Technology Stack
-
-| Layer | Technology |
-|-------|------------|
-| UI Framework | React 18 + TypeScript |
-| Styling | Tailwind CSS (Dark AMOLED Theme) |
-| Components | shadcn/ui (existing) |
-| Charts | Recharts (already installed) |
-| Local Database | Dexie.js (IndexedDB wrapper) |
-| PDF Export | jsPDF + jspdf-autotable |
-| Excel Export | xlsx (SheetJS) |
-| Form Validation | React Hook Form + Zod (installed) |
-| Routing | React Router DOM (installed) |
-| Date Handling | date-fns (installed) |
+This allows CSS environment variables to return the correct system inset values.
 
 ---
 
-## New Dependencies Required
+# 2. Install Capacitor Status Bar Plugin
 
-```json
-{
-  "dexie": "^4.0.0",
-  "dexie-react-hooks": "^1.1.0",
-  "jspdf": "^2.5.0",
-  "jspdf-autotable": "^3.8.0",
-  "xlsx": "^0.18.0",
-  "uuid": "^9.0.0",
-  "@types/uuid": "^9.0.0",
-  "file-saver": "^2.0.5",
-  "@types/file-saver": "^2.0.0"
-}
+Install:
+
+```
+@capacitor/status-bar
 ```
 
+This plugin allows the application to properly control how the WebView interacts with the Android system status bar.
+
 ---
 
-## Project Structure
+# 3. Initialize StatusBar in `src/main.tsx`
 
-```text
-src/
-├── components/
-│   ├── ui/                    # Existing shadcn components
-│   ├── layout/
-│   │   ├── AppLayout.tsx      # Main app wrapper
-│   │   ├── BottomNav.tsx      # Bottom navigation bar
-│   │   └── Header.tsx         # Page headers
-│   ├── dashboard/
-│   │   ├── SummaryCard.tsx
-│   │   ├── QuickActions.tsx
-│   │   ├── RecentActivity.tsx
-│   │   └── LowStockAlert.tsx
-│   ├── inventory/
-│   │   ├── PartsList.tsx
-│   │   ├── PartCard.tsx
-│   │   ├── PartForm.tsx
-│   │   ├── SearchBar.tsx
-│   │   ├── FilterPanel.tsx
-│   │   └── ImageUploader.tsx
-│   ├── reports/
-│   │   ├── ReportCharts.tsx
-│   │   ├── DateRangePicker.tsx
-│   │   ├── ExportButtons.tsx
-│   │   └── SalesChart.tsx
-│   └── settings/
-│       ├── SettingsList.tsx
-│       ├── ThemeSettings.tsx
-│       ├── SyncSettings.tsx
-│       └── BackupSettings.tsx
-├── db/
-│   ├── database.ts            # Dexie database setup
-│   ├── models.ts              # TypeScript interfaces
-│   └── migrations.ts          # Schema migrations
-├── services/
-│   ├── inventoryService.ts
-│   ├── salesService.ts
-│   ├── categoryService.ts
-│   ├── brandService.ts
-│   ├── reportService.ts
-│   ├── exportService.ts
-│   ├── backupService.ts
-│   └── activityLogService.ts
-├── hooks/
-│   ├── useInventory.ts
-│   ├── useSales.ts
-│   ├── useReports.ts
-│   ├── useSettings.ts
-│   └── useActivityLog.ts
-├── contexts/
-│   ├── AppContext.tsx         # Global app state
-│   └── SettingsContext.tsx    # Settings state
-├── pages/
-│   ├── Dashboard.tsx
-│   ├── Inventory.tsx
-│   ├── AddEditPart.tsx
-│   ├── PartDetails.tsx
-│   ├── Reports.tsx
-│   ├── Settings.tsx
-│   ├── ActivityLog.tsx
-│   └── RecordSale.tsx
-├── utils/
-│   ├── currency.ts            # Rs formatting
-│   ├── dateUtils.ts
-│   ├── validators.ts
-│   └── constants.ts
-└── types/
-    └── index.ts               # All TypeScript types
+On application boot:
+
+- Import `StatusBar` and `Style` from `@capacitor/status-bar`
+- Detect native platform
+- Enable overlay mode
+
+Example logic:
+
+```
+StatusBar.setOverlaysWebView({ overlay: true })
 ```
 
+This allows the WebView to render edge-to-edge while the app manages safe area padding itself.
+
+Also apply status bar style matching the current app theme.
+
 ---
 
-## Database Schema (Dexie.js / IndexedDB)
+# 4. Strengthen Global Safe Area CSS
 
-### Data Models
+Update `src/index.css` to ensure the application globally respects Android safe areas.
 
-```typescript
-// Parts Table
-interface Part {
-  id: string;                 // UUID
-  name: string;
-  sku: string;
-  brandId: string;
-  categoryId: string;
-  unitType: 'piece' | 'set' | 'pair' | 'box' | 'custom';
-  customUnit?: string;
-  quantity: number;
-  minStockLevel: number;
-  buyingPrice: number;        // In Rs (Pakistani Rupees)
-  sellingPrice: number;       // In Rs
-  location: string;
-  notes: string;
-  images: string[];           // Base64 or blob URLs
-  createdAt: Date;
-  updatedAt: Date;
-}
+Add global safe area handling at the root level.
 
-// Brands Table
-interface Brand {
-  id: string;
-  name: string;
-  createdAt: Date;
-}
+Example logic:
 
-// Categories Table
-interface Category {
-  id: string;
-  name: string;
-  createdAt: Date;
-}
-
-// Sales Table
-interface Sale {
-  id: string;
-  partId: string;
-  partName: string;           // Denormalized for reports
-  quantity: number;
-  unitPrice: number;          // Rs
-  totalAmount: number;        // Rs
-  buyingPrice: number;        // For profit calculation
-  profit: number;             // Rs
-  customerName?: string;
-  customerPhone?: string;
-  notes?: string;
-  createdAt: Date;
-}
-
-// Activity Log Table
-interface ActivityLog {
-  id: string;
-  action: 'create' | 'update' | 'delete' | 'sale' | 'backup' | 'restore' | 'sync';
-  entityType: 'part' | 'sale' | 'brand' | 'category' | 'settings' | 'backup';
-  entityId?: string;
-  description: string;
-  metadata?: object;
-  createdAt: Date;
-}
-
-// App Settings Table
-interface AppSettings {
-  id: string;
-  key: string;
-  value: any;
-  updatedAt: Date;
-}
-
-// Backup Records Table
-interface BackupRecord {
-  id: string;
-  type: 'local' | 'gdrive';
-  filename: string;
-  size: number;
-  format: 'json' | 'csv' | 'xlsx';
-  createdAt: Date;
+```
+#root {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
 }
 ```
 
-### Database Indexes
+Using `max()` ensures compatibility with Android gesture navigation areas where additional bottom space is required.
 
-```typescript
-class AmeerAutosDB extends Dexie {
-  parts!: Table<Part>;
-  brands!: Table<Brand>;
-  categories!: Table<Category>;
-  sales!: Table<Sale>;
-  activityLogs!: Table<ActivityLog>;
-  settings!: Table<AppSettings>;
-  backupRecords!: Table<BackupRecord>;
+Create reusable utility classes:
 
-  constructor() {
-    super('AmeerAutosDB');
-    this.version(1).stores({
-      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt',
-      brands: 'id, name',
-      categories: 'id, name',
-      sales: 'id, partId, createdAt',
-      activityLogs: 'id, action, entityType, createdAt',
-      settings: 'id, key',
-      backupRecords: 'id, type, createdAt'
-    });
-  }
-}
 ```
+.safe-area-top
+.safe-area-bottom
+.safe-area-all
+```
+
+These should apply:
+
+- top inset
+- bottom inset
+- left/right inset
+- gesture-safe spacing
 
 ---
 
-## Screen Implementations
+# 5. Update `AppLayout.tsx`
 
-### 1. Dashboard Page
+Modify the main layout wrapper so **all pages inherit safe area protection automatically**.
 
-**Features:**
-- Business summary cards (Total inventory value, Today's sales, Monthly profit, Low stock count)
-- Quick action buttons (Add Part, Record Sale, Export, Backup)
-- Recent activity list (last 10 activities)
-- Low stock alerts panel
+The root layout should:
 
-**Summary Cards Data:**
-- Total Parts: Count of all parts
-- Inventory Value: Sum of (quantity * buyingPrice) in Rs
-- Today's Sales: Sum of sales amounts today in Rs
-- Today's Profit: Sum of profits today in Rs
-- Low Stock Items: Count where quantity <= minStockLevel
+- apply `safe-area-top`
+- apply `safe-area-bottom` when bottom navigation is hidden
+- ensure scrollable content containers include safe area padding
 
-### 2. Inventory Page
+This guarantees that:
 
-**Features:**
-- Search bar (search by name, SKU)
-- Filter panel (brand, category, stock status)
-- Toggle between list/grid view
-- Part cards with:
-  - Image thumbnail
-  - Name, SKU
-  - Stock quantity (highlighted if low)
-  - Selling price in Rs
-- Floating action button to add new part
-- Swipe actions for edit/delete
-- Pull-to-refresh for data reload
-
-**Stock Status Filters:**
-- All
-- In Stock (quantity > minStockLevel)
-- Low Stock (quantity <= minStockLevel and > 0)
-- Out of Stock (quantity = 0)
-
-### 3. Add/Edit Part Page
-
-**Form Fields:**
-- Part Name (required, validated)
-- SKU (required, unique validation)
-- Brand (dropdown with "Add New" option)
-- Category (dropdown with "Add New" option)
-- Unit Type (piece, set, pair, box, custom)
-- Quantity (number, min 0)
-- Minimum Stock Level (for alerts)
-- Buying Price (Rs, required)
-- Selling Price (Rs, required)
-- Location (text)
-- Notes (textarea)
-- Images (up to 5, camera capture + gallery)
-
-**Validation Rules:**
-- Name: 3-100 characters
-- SKU: 2-50 characters, unique
-- Prices: Positive numbers only
-- Quantity: Non-negative integers
-
-### 4. Reports & Analytics Page
-
-**Time Range Options:**
-- Today
-- This Week (1 week)
-- Last 2 Weeks
-- Last 3 Weeks
-- This Month
-- Previous Month
-- Last 3 Months
-- Last 6 Months
-- This Year
-- Custom Date Range
-
-**Charts & Metrics (using Recharts):**
-- Sales Over Time (Line Chart)
-- Profit Over Time (Area Chart)
-- Top Selling Parts (Bar Chart)
-- Sales by Category (Pie Chart)
-- Stock Value by Category (Bar Chart)
-- Low Stock Summary (Table)
-
-**Summary Metrics:**
-- Total Sales (Rs)
-- Total Profit (Rs)
-- Profit Margin (%)
-- Items Sold (count)
-- Average Sale Value (Rs)
-
-**Export Options:**
-- PDF Report (jsPDF)
-- Excel Spreadsheet (xlsx)
-- CSV File
-
-### 5. Settings Page
-
-**Layout (exactly as specified):**
-
-```text
-+----------------------------------+
-|  < Settings                      |
-+----------------------------------+
-|  [Search settings...]            |
-+----------------------------------+
-|                                  |
-|  > Language & Localization       |
-|                                  |
-|  > Theme & Appearance            |
-|                                  |
-|  > Navigation Layout             |
-|                                  |
-+----------------------------------+
-|                                  |
-|  > Google Drive Auto-Sync        |
-|    Real-time backup in Excel,    |
-|    Sheets & JSON                 |
-|                                  |
-|  > Backup & Restore              |
-|    Advanced backup and export    |
-|    operations                    |
-|                                  |
-+----------------------------------+
-|                                  |
-|  Notifications          [Toggle] |
-|                                  |
-+----------------------------------+
-|                                  |
-|  > Activity Log                  |
-|    [Backup]  [Sync]              |
-|                                  |
-+----------------------------------+
-```
-
-**Sub-pages:**
-- Language & Localization: Currency format, date format
-- Theme & Appearance: Dark/Light/AMOLED mode
-- Navigation Layout: Bottom nav preferences
-- Google Drive Auto-Sync: API key setup, sync toggle
-- Backup & Restore: Manual backup, restore, export all data
+- headers never overlap the status bar
+- bottom content never hides behind navigation bars
 
 ---
 
-## Dark AMOLED Theme
+# 6. Handle Bottom Navigation Layout
 
-**Color Palette (CSS Variables):**
+When bottom navigation is visible, content must account for:
 
-```css
-:root {
-  /* AMOLED Dark Theme - True blacks for power saving */
-  --background: 0 0% 0%;           /* Pure black #000000 */
-  --foreground: 0 0% 98%;          /* Near white */
+- navigation bar height
+- safe area inset
+
+Scrollable page containers must use bottom padding equal to:
+
+```
+bottom navigation height + safe-area-inset-bottom
+```
+
+This prevents content from appearing behind the navigation bar.
+
+---
+
+# 7. Update Dialogs, Sheets, and Drawers
+
+Overlay components must also respect safe areas.
+
+Update the following components:
+
+- `src/components/ui/dialog.tsx`
+- `src/components/ui/sheet.tsx`
+- `src/components/ui/drawer.tsx`
+
+Ensure content containers apply:
+
+```
+safe-area-top
+safe-area-bottom
+```
+
+This prevents dialog headers and close buttons from appearing behind the system status bar.
+
+---
+
+# 8. Scroll Container Protection
+
+Scrollable layouts must include safe area padding.
+
+This applies to:
+
+- settings pages
+- forms
+- list views
+- report pages
+- inventory lists
+- bill history pages
+
+Bottom padding should ensure that the final list item or action button remains fully visible above the navigation bar.
+
+---
+
+# How the Final System Works
+
+1. `viewport-fit=cover` allows Android WebView to report real safe area values.
+2. `StatusBar.setOverlaysWebView({ overlay: true })` enables edge-to-edge rendering.
+3. CSS `env(safe-area-inset-*)` values provide correct system bar heights.
+4. Global padding at the root layout ensures every screen respects safe areas automatically.
+5. Dialogs, sheets, drawers, and scroll containers inherit the same safe area protection.
+
+---
+
+# Expected Result
+
+After implementation:
+
+• No UI elements overlap the Android status bar  
   
-  --card: 0 0% 4%;                 /* Very dark gray */
-  --card-foreground: 0 0% 98%;
+• No buttons appear behind the navigation bar  
   
-  --primary: 142 76% 36%;          /* Green accent (professional) */
-  --primary-foreground: 0 0% 100%;
+• Bottom elements remain fully tappable  
   
-  --secondary: 0 0% 10%;           /* Dark gray */
-  --secondary-foreground: 0 0% 98%;
+• Dialogs and notification panels render correctly  
   
-  --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 65%;
-  
-  --accent: 142 76% 36%;           /* Green accent */
-  --accent-foreground: 0 0% 100%;
-  
-  --destructive: 0 84% 60%;        /* Red for warnings/delete */
-  --destructive-foreground: 0 0% 100%;
-  
-  --warning: 38 92% 50%;           /* Orange for low stock */
-  --success: 142 76% 36%;          /* Green for success states */
-  
-  --border: 0 0% 15%;
-  --input: 0 0% 10%;
-  --ring: 142 76% 36%;
-}
+• All pages respect Android safe areas automatically
+
+The fix works globally across the entire application.
+
+---
+
+# Required Testing
+
+Test the final APK on real Android devices including:
+
+- **Samsung Galaxy A16**
+- devices using gesture navigation
+- devices using classic navigation buttons
+
+Verify that:
+
+- notification close buttons remain accessible
+- settings buttons are not hidden
+- bottom actions remain tappable
+- dialogs respect safe areas
+
+---
+
+# Post Implementation Step
+
+After pulling the changes, run:
+
+```
+npx cap sync
 ```
 
----
-
-## Currency Formatting
-
-**Currency Utility (Rs/₨):**
-
-```typescript
-// src/utils/currency.ts
-export const formatCurrency = (amount: number): string => {
-  return `Rs ${amount.toLocaleString('en-PK')}`;
-};
-
-export const formatCurrencyShort = (amount: number): string => {
-  if (amount >= 10000000) {
-    return `Rs ${(amount / 10000000).toFixed(2)} Cr`;
-  }
-  if (amount >= 100000) {
-    return `Rs ${(amount / 100000).toFixed(2)} Lac`;
-  }
-  return formatCurrency(amount);
-};
-
-export const parseCurrency = (value: string): number => {
-  return parseFloat(value.replace(/[^0-9.-]+/g, '')) || 0;
-};
-```
-
----
-
-## Export Services
-
-### PDF Export (jsPDF)
-
-```typescript
-// Features:
-- Professional header with business name
-- Report title and date range
-- Summary statistics table
-- Detailed transaction tables
-- Charts rendered as images (html2canvas)
-- Footer with page numbers
-- All amounts in Rs format
-```
-
-### Excel Export (xlsx)
-
-```typescript
-// Features:
-- Multiple sheets (Summary, Sales, Inventory)
-- Formatted headers
-- Currency columns formatted with Rs
-- Date columns properly formatted
-- Auto-fit column widths
-```
-
-### CSV Export
-
-```typescript
-// Features:
-- Standard CSV format
-- Header row with column names
-- Currency values with Rs prefix
-- UTF-8 encoding for special characters
-```
-
----
-
-## Offline-First Implementation
-
-**Strategy:**
-
-1. **All data stored in IndexedDB first**
-   - Every CRUD operation writes to local database
-   - UI reads from local database only
-   - No network requests required for basic operations
-
-2. **Image Storage**
-   - Images stored as base64 in IndexedDB
-   - Compressed before storage (max 500KB per image)
-   - Thumbnail generated for list views
-
-3. **Backup/Restore**
-   - Full database export to JSON file
-   - Download to device storage
-   - Restore from JSON file upload
-
-4. **Optional Google Drive Sync (User Controlled)**
-   - Disabled by default
-   - User must provide API credentials
-   - Background sync when enabled
-   - Conflict resolution: Local wins (latest timestamp)
-
----
-
-## Activity Logging
-
-**Logged Actions:**
-- Part created/updated/deleted
-- Sale recorded
-- Stock adjusted
-- Backup created/restored
-- Settings changed
-- Sync performed
-
-**Log Entry Format:**
-```typescript
-{
-  id: "uuid",
-  action: "sale",
-  entityType: "part",
-  entityId: "part-uuid",
-  description: "Sold 2x Brake Pad (SKU: BP-001) for Rs 2,400",
-  metadata: {
-    quantity: 2,
-    amount: 2400,
-    previousStock: 10,
-    newStock: 8
-  },
-  createdAt: new Date()
-}
-```
-
----
-
-## Implementation Phases
-
-### Phase 1: Foundation (Core Setup)
-1. Update theme to AMOLED dark
-2. Set up Dexie.js database with all tables
-3. Create TypeScript interfaces for all models
-4. Create currency utility functions
-5. Set up app layout with bottom navigation
-6. Create basic routing structure
-
-### Phase 2: Inventory Management
-1. Build inventory list page with search/filter
-2. Create add/edit part form with validation
-3. Implement image capture and storage
-4. Add brand and category management
-5. Implement part deletion with confirmation
-6. Add low stock highlighting
-
-### Phase 3: Sales & Stock
-1. Create sale recording form
-2. Implement automatic stock deduction
-3. Add profit calculation logic
-4. Build sales history view
-5. Implement activity logging
-
-### Phase 4: Reports & Analytics
-1. Build date range picker component
-2. Create summary statistics calculations
-3. Implement charts (Sales, Profit, Categories)
-4. Build report generation logic
-5. Implement PDF export
-6. Implement Excel export
-7. Implement CSV export
-
-### Phase 5: Settings & Backup
-1. Build settings page with all sections
-2. Implement theme switching
-3. Create backup/restore functionality
-4. Build activity log view
-5. Add Google Drive sync setup (optional feature)
-
-### Phase 6: Polish & Optimization
-1. Add loading states and skeletons
-2. Implement empty states
-3. Add confirmation dialogs
-4. Optimize for performance
-5. Test on Galaxy A16 viewport
-6. Final touch-friendly spacing adjustments
-
----
-
-## Mobile-First Design Guidelines
-
-**Touch Targets:**
-- Minimum 44x44px for all interactive elements
-- 8-16px spacing between touch targets
-
-**Typography:**
-- Base font size: 16px
-- Headers: 20-24px
-- Touch-friendly line height: 1.5
-
-**Layout:**
-- Full-width cards on mobile
-- Bottom navigation: 56px height
-- Safe area padding for notches
-- Swipe gestures for common actions
-
-**Performance:**
-- Virtualized lists for large datasets
-- Lazy loading for images
-- Debounced search inputs
-- Skeleton loaders during data fetch
-
----
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/db/database.ts` | Dexie database setup |
-| `src/db/models.ts` | TypeScript interfaces |
-| `src/utils/currency.ts` | Currency formatting |
-| `src/utils/dateUtils.ts` | Date helpers |
-| `src/contexts/AppContext.tsx` | Global state |
-| `src/components/layout/AppLayout.tsx` | Main layout |
-| `src/components/layout/BottomNav.tsx` | Navigation |
-| `src/pages/Dashboard.tsx` | Dashboard page |
-| `src/pages/Inventory.tsx` | Inventory list |
-| `src/pages/AddEditPart.tsx` | Part form |
-| `src/pages/Reports.tsx` | Reports page |
-| `src/pages/Settings.tsx` | Settings page |
-| `src/services/inventoryService.ts` | Inventory CRUD |
-| `src/services/salesService.ts` | Sales operations |
-| `src/services/exportService.ts` | PDF/Excel/CSV |
-| `src/services/backupService.ts` | Backup/Restore |
-| + 25 more component and service files |
-
----
-
-## Summary
-
-This plan delivers a complete, production-ready inventory management app with:
-
-- True offline-first architecture using IndexedDB (Dexie.js)
-- Professional AMOLED dark theme optimized for Samsung Galaxy A16
-- Pakistan Rupee (Rs) currency throughout
-- Full CRUD for inventory, brands, categories
-- Sales recording with automatic stock and profit calculations
-- Comprehensive reports with real chart visualizations
-- Offline PDF, Excel, and CSV exports
-- Complete backup and restore functionality
-- Optional Google Drive sync (user-controlled)
-- Activity logging for audit trail
-- Touch-friendly, mobile-first design
+Then rebuild the Android APK and test on real devices.
