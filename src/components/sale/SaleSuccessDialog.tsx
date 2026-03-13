@@ -29,7 +29,7 @@ export function SaleSuccessDialog({ open, billId, billNumber, onClose }: SaleSuc
 
   const handleViewBill = () => {
     onClose();
-    navigate(`/bills/create?id=${billId}`);
+    navigate(`/bills/edit/${billId}`);
   };
 
   const handleShare = async () => {
