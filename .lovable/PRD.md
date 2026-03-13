@@ -722,7 +722,270 @@ The Settings page is organized into categorized sections with a searchable inter
 
 ---
 
-## 11. Future Scalability
+## 11. Error Handling & Crash Recovery
+
+### 11.1 Three-Layer Error Capture
+
+The app uses a layered defense against unhandled errors:
+
+| Layer | Component | Catches |
+|-------|-----------|---------|
+| **1. ErrorBoundary** | `ErrorBoundary` (React class component) | React render errors (component tree crashes). Wraps the entire `<Routes>` tree. Displays a fallback UI with "Try Again", "Reload App", and "Send Error Report" buttons. |
+| **2. GlobalErrorHandler** | `GlobalErrorHandler` (invisible component) | `window.error` events (unhandled exceptions) and `unhandledrejection` events (unhandled Promise rejections). Runs as an effect-only component mounted at the app root. |
+| **3. Service-Level** | `crashReportService.ts` | Direct calls from any service or component via `saveCrashReport(error, context)`. |
+
+### 11.2 Crash Report Data Model
+
+```
+CrashReport {
+  id: string (UUID)
+  errorCode: string          // Format: ERR-YYYYMMDD-NNN (e.g., ERR-20260313-042)
+  errorType: string          // Error class name (TypeError, RangeError, etc.)
+  errorMessage: string
+  stackTrace: string
+  currentScreen: string      // window.location.pathname at crash time
+  lastAction: string         // Context hint (e.g., "UI Render Error", "Unhandled Promise Rejection")
+  appVersion: string
+  deviceModel: string        // Extracted from navigator.userAgent
+  screenResolution: string   // e.g., "412x915"
+  isRead: boolean
+  createdAt: Date
+}
+```
+
+### 11.3 Storage & Rotation
+
+- Crash reports are stored in the `crashReports` IndexedDB table (schema v7).
+- A **rotating log** with a maximum of **50 entries** (`MAX_CRASH_LOGS`). When exceeded, the oldest reports are bulk-deleted.
+- Reports can be viewed in **Settings → Error Logs** (`/settings/crash-logs`), marked as read, or individually deleted.
+
+### 11.4 Crash Recovery Flow
+
+```
+App crashes (render error / unhandled exception)
+        ↓
+ErrorBoundary.componentDidCatch() / GlobalErrorHandler event listener
+        ↓
+saveCrashReport() → writes to IndexedDB
+        ↓
+markLastCrashPending(reportId) → sets localStorage flag
+        ↓
+User reopens or reloads app
+        ↓
+CrashRecoveryPrompt checks localStorage for pending crash
+        ↓
+Dialog appears with 3 options:
+  • "Send Error Report" → opens mailto: link with pre-filled report
+  • "View Error Details" → navigates to /settings/crash-logs
+  • "Ignore" → clears the pending flag
+```
+
+### 11.5 Error Reporting
+
+Reports are emailed to `zeeshankhan25102006@gmail.com` via `mailto:` links. The email body includes: error code, date/time, device model, screen resolution, app version, current screen, stack trace, and optional user notes.
+
+A separate **"Report a Problem"** page (`/settings/report-problem`) allows users to manually describe bugs, which generates a similar email with device diagnostics.
+
+---
+
+## 12. Demo Data System
+
+### 12.1 Purpose
+
+The app ships with **100 realistic heavy machinery spare parts** as demo data, allowing new users to explore features immediately without entering real data.
+
+### 12.2 Demo Data Contents
+
+- **100 parts** defined in `src/data/demoParts.ts` with realistic names, SKUs, prices (PKR), quantities, and locations.
+- **10 categories:** Engine Parts, Hydraulic Parts, Electrical Components, Filters, Bearings, Belts, Cooling System, Fuel System, Transmission, Brakes.
+- **15 brands:** CAT, Komatsu, Hitachi, Volvo, John Deere, Cummins, FP Diesel, ITR, Highgasket, Bosch, Denso, Parker, SKF, Gates, Donaldson.
+- All demo parts are marked with `isDemo: true` for selective cleanup.
+
+### 12.3 Lifecycle
+
+```
+First app launch
+    ↓
+AppContext.initializeApp() seeds demo parts via demoSeedService
+    ↓
+Parts appear in inventory with isDemo=true flag
+    ↓
+clearAllDemoData() runs on startup:
+  1. Checks getSetting('demoDataCleared')
+  2. If false → deletes all parts where isDemo === true
+  3. Sets demoDataCleared = true (prevents re-seeding)
+    ↓
+After backup restore → demoDataCleared is set automatically
+  to prevent demo data from reappearing
+```
+
+### 12.4 Key Behaviors
+
+- Demo data is **only seeded once** on first launch.
+- The `demoDataCleared` setting flag ensures demo data is never re-created after being cleared.
+- Backup imports automatically set `demoDataCleared = true` to prevent conflicts with user data.
+
+---
+
+## 13. Advanced Theme System
+
+### 13.1 Architecture
+
+The theme system is managed by `AdvancedThemeProvider` (`src/contexts/ThemeContext.tsx`) which wraps the entire app and applies CSS custom properties to the document root.
+
+```
+AdvancedThemeProvider
+  ├── Loads persisted theme from IndexedDB (selectedTheme, themeCustomConfig)
+  ├── Applies CSS class: 'dark' | 'light' | 'theme-colorful-light' | 'theme-colorful-dark'
+  ├── Sets 35+ CSS custom properties on document.documentElement
+  └── Exposes context: useAdvancedTheme()
+```
+
+### 13.2 Theme Presets
+
+| ID | Name | Category | Description |
+|----|------|----------|-------------|
+| `industrial-dark` | Industrial Dark | Dark | Professional dark mode with amber/gold accents for workshop use |
+| `factory-light` | Factory Light | Light | Clean light theme with blue tones |
+| `colorful-light` | Colorful Light | Light | Vibrant light theme |
+| `colorful-dark` | Colorful Dark | Dark | Rich dark theme with vivid accents |
+
+### 13.3 Color Token System
+
+Each theme defines **35 HSL color tokens** organized into groups:
+
+- **Core:** primary, secondary, accent (+ foreground variants)
+- **Background:** background, foreground, card, popover (+ foreground variants)
+- **Semantic:** destructive, warning, success, info (+ foreground variants)
+- **UI:** muted, border, input, ring
+- **Chart:** chartPrimary, chartSecondary, chartAccent, chartSuccess, chartWarning, chartNeutral
+- **Sidebar:** sidebarBackground, sidebarForeground, sidebarPrimary, sidebarAccent, sidebarBorder (+ foreground variants)
+
+### 13.4 Custom Color Overrides
+
+Users can enable **custom theme mode** to override individual color tokens:
+
+1. Select a base preset theme.
+2. Enable "Custom Colors" toggle.
+3. Modify any of the 35 color tokens via a color picker.
+4. Overridden colors are merged on top of the base preset: `{ ...basePresetColors, ...customColors }`.
+5. `resetCustomColors()` clears all overrides and section overrides.
+
+### 13.5 Section Overrides
+
+Individual app sections can have their own color overrides:
+
+| Section Key | Affects |
+|-------------|---------|
+| `dashboard` | Dashboard page |
+| `inventory` | Inventory pages |
+| `reports` | Reports page |
+| `settings` | Settings pages |
+
+Each section override can customize: `background`, `foreground`, `card`, `cardForeground`, `primary`, `accent`, `border`.
+
+### 13.6 Persistence
+
+- `selectedTheme` → stored as a setting key in IndexedDB.
+- `themeCustomConfig` → stored as a JSON setting containing `enabled`, `baseTheme`, `colors`, and `sectionOverrides`.
+- Theme is loaded asynchronously on app mount with a loading state to prevent flicker.
+
+### 13.7 Contrast Validation
+
+The type system includes `ContrastResult` and `ColorValidation` interfaces for verifying WCAG AA/AAA contrast ratios between color pairs.
+
+---
+
+## 14. Autocomplete Service
+
+### 14.1 Purpose
+
+The autocomplete service (`src/services/autocompleteService.ts`) provides smart, persistent form value suggestions. When users enter customer names, phone numbers, brands, or categories, previously entered values appear as suggestions — reducing data entry time and typos.
+
+### 14.2 Supported Fields
+
+| Field | Usage | Special Behavior |
+|-------|-------|-----------------|
+| `customerName` | Sale & Bill forms | Stores a `linkedPhone` — selecting a name auto-fills the phone field |
+| `customerPhone` | Sale & Bill forms | Standard suggestions |
+| `brand` | Part forms | Standard suggestions |
+| `category` | Part forms | Standard suggestions |
+
+### 14.3 Data Model
+
+```
+AutocompleteEntry {
+  id: string (UUID)
+  field: 'customerName' | 'customerPhone' | 'brand' | 'category'
+  value: string
+  linkedPhone?: string    // Only for customerName entries
+  createdAt: Date
+}
+```
+
+Stored in `autocompleteEntries` table with a compound index `[field+value]` for fast duplicate detection.
+
+### 14.4 Core Operations
+
+| Function | Behavior |
+|----------|----------|
+| `getSuggestions(field, query)` | Returns up to 10 entries matching prefix (case-insensitive) |
+| `addEntry(field, value, linkedPhone?)` | Adds if not duplicate; updates `linkedPhone` for existing `customerName` entries |
+| `persistFormValues(data)` | Batch-persists customer name (with linked phone), phone, and brand after a successful sale or bill |
+| `updateEntry(id, updates)` | Update value or linkedPhone |
+| `removeEntry(id)` | Delete single entry |
+| `clearAllEntries(field)` | Bulk delete all entries for a field |
+
+### 14.5 Import/Export
+
+- `exportAutocompleteData()` → JSON string with versioned format (`ameer-autos-autocomplete`).
+- `importAutocompleteData(json)` → Merges entries, skipping duplicates. Returns `{ added, skipped }`.
+
+### 14.6 UI Integration
+
+- **`AutocompleteInput` component** (`src/components/ui/autocomplete-input.tsx`) provides a dropdown of suggestions as the user types.
+- **Settings page** (`/settings/autocomplete`) allows viewing, editing, and bulk-clearing saved entries per field.
+
+---
+
+## 15. Safe Number Utilities
+
+### 15.1 Purpose
+
+The `safeNumber.ts` module (`src/utils/safeNumber.ts`) prevents **NaN propagation** throughout the application. Since the app handles user-entered prices, quantities, and calculations, any `undefined`, `null`, or non-numeric value could cascade NaN through profit calculations, inventory values, and reports.
+
+### 15.2 Core Functions
+
+| Function | Input | Output | Use Case |
+|----------|-------|--------|----------|
+| `toSafeNumber(value, fallback=0)` | `unknown` | `number` | General-purpose conversion; returns fallback for null/undefined/NaN/Infinity |
+| `toSafeInt(value, fallback=0)` | `unknown` | `number` (floored) | Integer conversion |
+| `toSafePositive(value, fallback=0)` | `unknown` | `number ≥ 0` | Non-negative numbers (prices) |
+| `toSafeQuantity(value, fallback=0)` | `unknown` | `integer ≥ 0` | Non-negative integers (stock quantities) |
+| `safeAdd(...values)` | `unknown[]` | `number` | Sum with NaN protection |
+| `safeMultiply(a, b)` | `unknown, unknown` | `number` | Product with NaN protection |
+| `safeDivide(num, denom, fallback=0)` | `unknown, unknown` | `number` | Division with zero-division protection |
+
+### 15.3 Business Logic Functions
+
+| Function | Purpose |
+|----------|---------|
+| `calculateProfitSafe(buyingPrice, sellingPrice, quantity)` | `(sell - buy) × qty` with safe conversion |
+| `calculateTotalSafe(quantity, price)` | `qty × price` with safe conversion |
+| `sanitizePartData(data)` | Cleans quantity, minStockLevel, buyingPrice, sellingPrice before storage |
+| `sanitizeSaleData(data)` | Cleans quantity, unitPrice, totalAmount, buyingPrice, profit before storage |
+
+### 15.4 Usage Pattern
+
+All service-layer calculations (`inventoryService`, `salesService`) use safe number helpers instead of raw arithmetic. This ensures that:
+- Form inputs with empty strings don't produce NaN.
+- Database records with missing fields default to 0.
+- Division-based metrics (profit margin, averages) never produce Infinity.
+- Quantities are always non-negative integers.
+
+---
+
+## 16. Future Scalability
 
 ### 11.1 Cloud Sync
 The architecture is prepared for cloud integration:
