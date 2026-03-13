@@ -25,6 +25,7 @@ export default function BillSettingsPage() {
   const [settings, setSettings] = useState<BillSettings | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [autoBillDefault, setAutoBillDefault] = useState(false);
 
   // Dummy bill data for live preview
   const previewBill = useMemo<Bill>(() => ({
