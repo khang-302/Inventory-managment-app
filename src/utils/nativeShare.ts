@@ -1,11 +1,26 @@
 /**
- * Native sharing & file saving utilities.
- * Works in both browser and Capacitor WebView environments.
+ * Native file saving & sharing utilities.
+ * Uses Capacitor plugins on Android APK, Web APIs as fallback.
  */
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
-/**
- * Convert a data URL to a Blob.
- */
+// ---------------------------------------------------------------------------
+// Platform detection
+// ---------------------------------------------------------------------------
+
+function isNativePlatform(): boolean {
+  return !!(window as any).Capacitor?.isNativePlatform?.();
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+export function dataUrlToBase64(dataUrl: string): string {
+  return dataUrl.split(',')[1] || '';
+}
+
 export function dataUrlToBlob(dataUrl: string): Blob {
   const [header, base64] = dataUrl.split(',');
   const mime = header.match(/:(.*?);/)?.[1] || 'application/octet-stream';
@@ -17,55 +32,28 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
-/**
- * Create a File from a data URL.
- */
 export function dataUrlToFile(dataUrl: string, filename: string, mimeType: string): File {
   const blob = dataUrlToBlob(dataUrl);
   return new File([blob], filename, { type: mimeType });
 }
 
-/**
- * Try to share a file using Web Share API.
- * Returns true if share succeeded, false if unavailable.
- */
-export async function shareFileNative(file: File, title?: string): Promise<boolean> {
-  try {
-    if (navigator.share && navigator.canShare?.({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: title || file.name,
-      });
-      return true;
-    }
-  } catch (err: any) {
-    // User cancelled share — not an error
-    if (err?.name === 'AbortError') return true;
-    console.warn('Web Share API failed:', err);
-  }
-  return false;
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      resolve(result.split(',')[1] || '');
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
-/**
- * Download/save a file using the best available method.
- * In Capacitor WebView, <a download> doesn't work, so we try:
- * 1. Web Share API (opens system share sheet — user can save to Files, Gallery, etc.)
- * 2. window.open with blob URL (some WebViews support this)
- * 3. Traditional anchor download as last resort
- */
-export async function saveFile(
-  dataOrBlob: string | Blob,
-  filename: string,
-  mimeType: string,
-): Promise<'shared' | 'downloaded'> {
-  const blob = typeof dataOrBlob === 'string' ? dataUrlToBlob(dataOrBlob) : dataOrBlob;
-  const file = new File([blob], filename, { type: mimeType });
+// ---------------------------------------------------------------------------
+// Web fallback: download via anchor tag
+// ---------------------------------------------------------------------------
 
-  // Try Web Share API first (works great in Capacitor)
-  const shared = await shareFileNative(file);
-  if (shared) return 'shared';
-
-  // Fallback: blob URL download
+function webDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -73,57 +61,225 @@ export async function saveFile(
   link.style.display = 'none';
   document.body.appendChild(link);
   link.click();
-  
-  // Clean up after a delay
   setTimeout(() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }, 5000);
-
-  return 'downloaded';
 }
 
-/**
- * Save an image (data URL) with a proper filename.
- * Uses share sheet on mobile so user can save to Gallery.
- */
+// ---------------------------------------------------------------------------
+// Web fallback: share via Web Share API
+// ---------------------------------------------------------------------------
+
+async function webShare(file: File, title?: string): Promise<boolean> {
+  try {
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: title || file.name });
+      return true;
+    }
+  } catch (err: any) {
+    if (err?.name === 'AbortError') return true;
+    console.warn('Web Share API failed:', err);
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// Save image to Gallery (Pictures/AIM Bills/)
+// ---------------------------------------------------------------------------
+
 export async function saveImageToGallery(
   dataUrl: string,
   filename: string,
 ): Promise<'shared' | 'downloaded'> {
-  return saveFile(dataUrl, filename, 'image/png');
+  if (isNativePlatform()) {
+    try {
+      const base64Data = dataUrlToBase64(dataUrl);
+      // Save to Pictures/AIM Bills/ — recursive creates folder automatically
+      await Filesystem.writeFile({
+        path: `AIM Bills/${filename}`,
+        data: base64Data,
+        directory: Directory.ExternalStorage,
+        recursive: true,
+      });
+      // Trigger media scan so the image appears in gallery immediately
+      // Writing to ExternalStorage/Pictures makes it discoverable, but we
+      // also try saving to the general external path which Android indexes.
+      return 'downloaded';
+    } catch (err) {
+      console.error('Native image save failed, trying fallback:', err);
+    }
+  }
+
+  // Web fallback
+  const blob = dataUrlToBlob(dataUrl);
+  webDownload(blob, filename);
+  return 'downloaded';
 }
 
-/**
- * Save a PDF blob with a proper filename.
- * Uses share sheet on mobile so user can save to Files/Documents.
- */
+// ---------------------------------------------------------------------------
+// Save PDF to Documents/AIM Bills/
+// ---------------------------------------------------------------------------
+
 export async function savePdfToDevice(
   pdfBlob: Blob,
   filename: string,
 ): Promise<'shared' | 'downloaded'> {
-  return saveFile(pdfBlob, filename, 'application/pdf');
+  if (isNativePlatform()) {
+    try {
+      const base64Data = await blobToBase64(pdfBlob);
+      await Filesystem.writeFile({
+        path: `AIM Bills/${filename}`,
+        data: base64Data,
+        directory: Directory.Documents,
+        recursive: true,
+      });
+      return 'downloaded';
+    } catch (err) {
+      console.error('Native PDF save failed, trying fallback:', err);
+    }
+  }
+
+  // Web fallback
+  webDownload(pdfBlob, filename);
+  return 'downloaded';
 }
 
-/**
- * Share an image via WhatsApp specifically.
- * Tries Web Share API first, then falls back to saving the file.
- */
+// ---------------------------------------------------------------------------
+// Share a file via native share intent
+// ---------------------------------------------------------------------------
+
+export async function saveFile(
+  dataOrBlob: string | Blob,
+  filename: string,
+  mimeType: string,
+): Promise<'shared' | 'downloaded'> {
+  const blob = typeof dataOrBlob === 'string' ? dataUrlToBlob(dataOrBlob) : dataOrBlob;
+
+  if (isNativePlatform()) {
+    try {
+      const base64Data = await blobToBase64(blob);
+      // Write temp file for sharing
+      const writeResult = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+
+      // Get the native URI for sharing
+      const fileUri = writeResult.uri;
+
+      await Share.share({
+        title: filename,
+        url: fileUri,
+        dialogTitle: 'Share Bill',
+      });
+
+      // Clean up temp file after a delay
+      setTimeout(async () => {
+        try {
+          await Filesystem.deleteFile({ path: filename, directory: Directory.Cache });
+        } catch { /* ignore cleanup errors */ }
+      }, 10000);
+
+      return 'shared';
+    } catch (err: any) {
+      if (err?.message?.includes('cancel') || err?.message?.includes('Cancel')) {
+        return 'shared'; // User cancelled — not an error
+      }
+      console.error('Native share failed, trying fallback:', err);
+    }
+  }
+
+  // Web fallback
+  const file = new File([blob], filename, { type: mimeType });
+  const shared = await webShare(file, filename);
+  if (shared) return 'shared';
+
+  webDownload(blob, filename);
+  return 'downloaded';
+}
+
+// ---------------------------------------------------------------------------
+// Share via WhatsApp (native intent)
+// ---------------------------------------------------------------------------
+
 export async function shareViaWhatsAppNative(
   dataUrl: string,
   filename: string,
 ): Promise<'shared' | 'fallback'> {
-  const file = dataUrlToFile(dataUrl, filename, 'image/png');
+  if (isNativePlatform()) {
+    try {
+      const base64Data = dataUrlToBase64(dataUrl);
 
-  // Web Share API — opens the system share sheet, user picks WhatsApp
-  const shared = await shareFileNative(file, filename);
+      const writeResult = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+
+      const fileUri = writeResult.uri;
+
+      // Native share — Android will show share sheet; user picks WhatsApp
+      await Share.share({
+        title: filename,
+        url: fileUri,
+        dialogTitle: 'Share via WhatsApp',
+      });
+
+      // Clean up temp file
+      setTimeout(async () => {
+        try {
+          await Filesystem.deleteFile({ path: filename, directory: Directory.Cache });
+        } catch { /* ignore */ }
+      }, 10000);
+
+      return 'shared';
+    } catch (err: any) {
+      if (err?.message?.includes('cancel') || err?.message?.includes('Cancel')) {
+        return 'shared';
+      }
+      console.error('Native WhatsApp share failed:', err);
+    }
+  }
+
+  // Web fallback: try Web Share API then WhatsApp deep link
+  const file = dataUrlToFile(dataUrl, filename, 'image/png');
+  const shared = await webShare(file, filename);
   if (shared) return 'shared';
 
-  // Fallback: try whatsapp:// deep link (text only, no image)
   try {
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Bill: ${filename}`)}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(`Bill: ${filename}`)}`, '_blank');
   } catch { /* ignore */ }
 
   return 'fallback';
+}
+
+// ---------------------------------------------------------------------------
+// Legacy export for compatibility
+// ---------------------------------------------------------------------------
+
+export async function shareFileNative(file: File, title?: string): Promise<boolean> {
+  if (isNativePlatform()) {
+    try {
+      const base64Data = await blobToBase64(file);
+      const writeResult = await Filesystem.writeFile({
+        path: file.name,
+        data: base64Data,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+      await Share.share({ title: title || file.name, url: writeResult.uri });
+      setTimeout(async () => {
+        try { await Filesystem.deleteFile({ path: file.name, directory: Directory.Cache }); } catch {}
+      }, 10000);
+      return true;
+    } catch (err: any) {
+      if (err?.message?.includes('cancel')) return true;
+      console.warn('Native share failed:', err);
+    }
+  }
+  return webShare(file, title);
 }
