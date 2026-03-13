@@ -68,6 +68,7 @@ interface AppContextType {
   setAppName: (name: string) => Promise<void>;
 }
 
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
