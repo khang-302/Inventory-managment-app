@@ -73,7 +73,10 @@ export default function BillSettingsPage() {
     return () => { el.removeEventListener('touchmove', onTouchMove); el.removeEventListener('touchend', onTouchEnd); };
   }, [showPreview]);
 
-  useEffect(() => { getBillSettings().then(setSettings); }, []);
+  useEffect(() => {
+    getBillSettings().then(setSettings);
+    getSetting<boolean>('autoGenerateBill').then(v => setAutoBillDefault(v ?? false));
+  }, []);
 
   const handleSave = async () => {
     if (!settings) return;
