@@ -6,16 +6,19 @@ import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useApp } from '@/contexts/AppContext';
 import { db } from '@/db/database';
 import { logActivity } from '@/services/activityLogService';
+import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency } from '@/utils/currency';
 import { toSafeNumber, toSafeQuantity, calculateTotalSafe, calculateProfitSafe } from '@/utils/safeNumber';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, FileText } from 'lucide-react';
 import { persistFormValues } from '@/services/autocompleteService';
+import { SaleSuccessDialog } from '@/components/sale/SaleSuccessDialog';
 
 interface QuickSellModalProps {
   open: boolean;
@@ -37,6 +40,10 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [autoGenerateBill, setAutoGenerateBill] = useState(false);
+  const [createdBillId, setCreatedBillId] = useState('');
+  const [createdBillNumber, setCreatedBillNumber] = useState('');
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const calculations = useMemo(() => {
     const qty = toSafeQuantity(Number(quantity), 0);
@@ -52,7 +59,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
     setPartName(''); setPartNumber(''); setBrand('');
     setQuantity(''); setPurchasePrice(''); setSellingPrice('');
     setBuyerName(''); setBuyerPhone(''); setNotes('');
-    setErrors({});
+    setErrors({}); setAutoGenerateBill(false);
   };
 
   const validate = (): boolean => {
@@ -110,9 +117,37 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
       });
 
       await refreshStats();
-      toast.success('Quick sale recorded successfully!');
-      resetForm();
-      onOpenChange(false);
+
+      if (autoGenerateBill) {
+        try {
+          const billResult = await createBillFromSale({
+            buyerName: buyerName.trim(),
+            buyerPhone: buyerPhone.trim(),
+            items: [{
+              partName: partName.trim(),
+              partCode: partNumber.trim() || 'QS-' + Date.now(),
+              brand: brand.trim(),
+              quantity: calculations.qty,
+              price: calculations.sell,
+            }],
+            notes: notes.trim(),
+          });
+          setCreatedBillId(billResult.billId);
+          setCreatedBillNumber(billResult.billNumber);
+          resetForm();
+          onOpenChange(false);
+          setShowSuccessDialog(true);
+        } catch (err) {
+          console.error('Bill generation failed:', err);
+          toast.error('Sale recorded but bill generation failed');
+          resetForm();
+          onOpenChange(false);
+        }
+      } else {
+        toast.success('Quick sale recorded successfully!');
+        resetForm();
+        onOpenChange(false);
+      }
     } catch (error) {
       console.error('QuickSell error:', error);
       toast.error('Failed to record sale');
@@ -214,6 +249,19 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
         <Textarea id="qs-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes..." rows={2} />
       </div>
 
+      {/* Auto Generate Bill Toggle */}
+      <div className="flex items-center justify-between rounded-lg border border-border p-3">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <Label htmlFor="qs-auto-bill" className="text-sm font-medium cursor-pointer">Auto Generate Bill</Label>
+        </div>
+        <Switch
+          id="qs-auto-bill"
+          checked={autoGenerateBill}
+          onCheckedChange={setAutoGenerateBill}
+        />
+      </div>
+
       {/* Actions */}
       <div className="flex gap-3 pt-2">
         <Button variant="outline" className="flex-1" onClick={() => { resetForm(); onOpenChange(false); }} disabled={isSubmitting}>
@@ -226,29 +274,44 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
     </div>
   );
 
+  const successDialog = (
+    <SaleSuccessDialog
+      open={showSuccessDialog}
+      billId={createdBillId}
+      billNumber={createdBillNumber}
+      onClose={() => setShowSuccessDialog(false)}
+    />
+  );
+
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader>
-            <DrawerTitle>⚡ Quick Sell</DrawerTitle>
-          </DrawerHeader>
-          <div className="overflow-y-auto px-4 pb-6">
-            {formContent}
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <>
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader>
+              <DrawerTitle>⚡ Quick Sell</DrawerTitle>
+            </DrawerHeader>
+            <div className="overflow-y-auto px-4 pb-6">
+              {formContent}
+            </div>
+          </DrawerContent>
+        </Drawer>
+        {successDialog}
+      </>
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>⚡ Quick Sell</DialogTitle>
-        </DialogHeader>
-        {formContent}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>⚡ Quick Sell</DialogTitle>
+          </DialogHeader>
+          {formContent}
+        </DialogContent>
+      </Dialog>
+      {successDialog}
+    </>
   );
 }

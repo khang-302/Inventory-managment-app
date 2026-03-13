@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { db } from '@/db/database';
 import { recordMultiSale } from '@/services/salesService';
+import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency, calculateProfit } from '@/utils/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -20,9 +22,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Package, Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react';
+import { Loader2, Package, Plus, Pencil, Trash2, ShoppingBag, FileText } from 'lucide-react';
 import { persistFormValues } from '@/services/autocompleteService';
 import { cn } from '@/lib/utils';
+import { SaleSuccessDialog } from '@/components/sale/SaleSuccessDialog';
 
 interface CartItem {
   id: string;
@@ -42,6 +45,10 @@ export default function RecordSale() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [notes, setNotes] = useState('');
+  const [autoGenerateBill, setAutoGenerateBill] = useState(false);
+  const [createdBillId, setCreatedBillId] = useState('');
+  const [createdBillNumber, setCreatedBillNumber] = useState('');
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   // Add item form state
   const [selectedPartId, setSelectedPartId] = useState('');
@@ -175,14 +182,43 @@ export default function RecordSale() {
       }
 
       await persistFormValues({ customerName: customerName.trim(), customerPhone: customerPhone.trim() });
-      toast.success(`Sale completed • ${cart.length} item(s)`);
-      navigate('/');
+
+      if (autoGenerateBill) {
+        try {
+          const billResult = await createBillFromSale({
+            buyerName: customerName.trim(),
+            buyerPhone: customerPhone.trim(),
+            items: cart.map(c => ({
+              partName: c.partName,
+              partCode: c.partSku,
+              quantity: c.quantity,
+              price: c.unitPrice,
+            })),
+            notes: notes.trim(),
+          });
+          setCreatedBillId(billResult.billId);
+          setCreatedBillNumber(billResult.billNumber);
+          setShowSuccessDialog(true);
+        } catch (err) {
+          console.error('Bill generation failed:', err);
+          toast.error('Sale recorded but bill generation failed');
+          navigate('/');
+        }
+      } else {
+        toast.success(`Sale completed • ${cart.length} item(s)`);
+        navigate('/');
+      }
     } catch (error) {
       console.error('Failed to complete sale:', error);
       toast.error('Failed to complete sale');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccessDialog(false);
+    navigate('/');
   };
 
   return (
@@ -361,6 +397,19 @@ export default function RecordSale() {
               <Label className="text-xs">Notes</Label>
               <Textarea placeholder="Sale notes..." className="min-h-[60px] mt-1" value={notes} onChange={e => setNotes(e.target.value)} />
             </div>
+
+            {/* Auto Generate Bill Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-border p-3 mt-2">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <Label htmlFor="auto-bill-toggle" className="text-sm font-medium cursor-pointer">Auto Generate Bill</Label>
+              </div>
+              <Switch
+                id="auto-bill-toggle"
+                checked={autoGenerateBill}
+                onCheckedChange={setAutoGenerateBill}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -376,6 +425,13 @@ export default function RecordSale() {
           Complete Sale • {formatCurrency(grandTotal)}
         </Button>
       </div>
+
+      <SaleSuccessDialog
+        open={showSuccessDialog}
+        billId={createdBillId}
+        billNumber={createdBillNumber}
+        onClose={handleSuccessClose}
+      />
     </AppLayout>
   );
 }
