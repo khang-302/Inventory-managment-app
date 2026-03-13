@@ -249,6 +249,19 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
         <Textarea id="qs-notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes..." rows={2} />
       </div>
 
+      {/* Auto Generate Bill Toggle */}
+      <div className="flex items-center justify-between rounded-lg border border-border p-3">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <Label htmlFor="qs-auto-bill" className="text-sm font-medium cursor-pointer">Auto Generate Bill</Label>
+        </div>
+        <Switch
+          id="qs-auto-bill"
+          checked={autoGenerateBill}
+          onCheckedChange={setAutoGenerateBill}
+        />
+      </div>
+
       {/* Actions */}
       <div className="flex gap-3 pt-2">
         <Button variant="outline" className="flex-1" onClick={() => { resetForm(); onOpenChange(false); }} disabled={isSubmitting}>
