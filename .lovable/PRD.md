@@ -18,7 +18,12 @@
 8. [Bill Generation System](#8-bill-generation-system)
 9. [Android Integration](#9-android-integration)
 10. [Settings System](#10-settings-system)
-11. [Future Scalability](#11-future-scalability)
+11. [Error Handling & Crash Recovery](#11-error-handling--crash-recovery)
+12. [Demo Data System](#12-demo-data-system)
+13. [Advanced Theme System](#13-advanced-theme-system)
+14. [Autocomplete Service](#14-autocomplete-service)
+15. [Safe Number Utilities](#15-safe-number-utilities)
+16. [Future Scalability](#16-future-scalability)
 
 ---
 
