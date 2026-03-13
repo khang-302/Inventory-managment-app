@@ -35,7 +35,7 @@ export function AppLayout({ children, hideNav = false, className, showMenuButton
 
       <main className={cn(
         'flex-1 overflow-auto animate-fade-in',
-        !hideNav && !useSidebar && 'pb-16' // Add padding for bottom nav only
+        !hideNav && !useSidebar && 'pb-20' // bottom nav height + safe area
       )}>
         {children}
       </main>
