@@ -105,35 +105,6 @@ export default function BillHistory() {
     toast({ title: result === 'shared' ? 'PDF ready to save' : 'PDF saved' });
   };
 
-  const shareFile = async (dataUrl: string, bill: Bill, _format: 'png' | 'pdf') => {
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-    } catch { /* fallback below */ }
-    downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
-    toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
-  };
-
-  const shareViaWhatsApp = async (dataUrl: string, bill: Bill) => {
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-    } catch { /* fallback below */ }
-    // Fallback: download image only, no text link
-    downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
-    toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
-  };
-
   const handleShare = async (bill: Bill) => {
     const data = await prepareBillData(bill);
     pendingAction.current = 'share';
