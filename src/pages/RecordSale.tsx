@@ -397,6 +397,19 @@ export default function RecordSale() {
               <Label className="text-xs">Notes</Label>
               <Textarea placeholder="Sale notes..." className="min-h-[60px] mt-1" value={notes} onChange={e => setNotes(e.target.value)} />
             </div>
+
+            {/* Auto Generate Bill Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-border p-3 mt-2">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <Label htmlFor="auto-bill-toggle" className="text-sm font-medium cursor-pointer">Auto Generate Bill</Label>
+              </div>
+              <Switch
+                id="auto-bill-toggle"
+                checked={autoGenerateBill}
+                onCheckedChange={setAutoGenerateBill}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
