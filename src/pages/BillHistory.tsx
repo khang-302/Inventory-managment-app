@@ -60,13 +60,18 @@ export default function BillHistory() {
       try {
         const dataUrl = await captureBillAsImage(previewRef.current, 'png');
         if (!dataUrl || dataUrl.length < 1000) throw new Error('Blank image');
+        const filename = `AIM_Bill_${billData.bill.billNumber}.png`;
         if (action === 'image') {
-          downloadDataUrl(dataUrl, `${billData.bill.billNumber}.png`);
-          toast({ title: 'Image downloaded' });
+          const result = await saveImageToGallery(dataUrl, filename);
+          toast({ title: result === 'shared' ? 'Bill image ready to save' : 'Image saved' });
         } else if (action === 'share') {
-          await shareFile(dataUrl, billData.bill, 'png');
+          const result = await saveFile(dataUrl, filename, 'image/png');
+          toast({ title: result === 'shared' ? 'Shared successfully' : 'Image saved — attach it manually in your app' });
         } else if (action === 'whatsapp') {
-          await shareViaWhatsApp(dataUrl, billData.bill);
+          const result = await shareViaWhatsAppNative(dataUrl, filename);
+          if (result === 'fallback') {
+            toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
+          }
         }
       } catch (err) {
         console.error('Image export error:', err);
