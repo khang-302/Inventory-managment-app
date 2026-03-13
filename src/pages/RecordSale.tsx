@@ -45,6 +45,10 @@ export default function RecordSale() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [notes, setNotes] = useState('');
+  const [autoGenerateBill, setAutoGenerateBill] = useState(false);
+  const [createdBillId, setCreatedBillId] = useState('');
+  const [createdBillNumber, setCreatedBillNumber] = useState('');
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   // Add item form state
   const [selectedPartId, setSelectedPartId] = useState('');
