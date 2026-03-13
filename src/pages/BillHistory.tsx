@@ -105,7 +105,10 @@ export default function BillHistory() {
     const pdfBlob = pdf.output('blob');
     const filename = `AIM_Bill_${data.bill.billNumber}.pdf`;
     const result = await savePdfToDevice(pdfBlob, filename);
-    toast({ title: result === 'shared' ? 'PDF ready to save' : 'PDF saved' });
+    toast({
+      title: '✅ PDF saved',
+      description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+    });
   };
 
   const handleShare = async (bill: Bill) => {
