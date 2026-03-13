@@ -425,6 +425,13 @@ export default function RecordSale() {
           Complete Sale • {formatCurrency(grandTotal)}
         </Button>
       </div>
+
+      <SaleSuccessDialog
+        open={showSuccessDialog}
+        billId={createdBillId}
+        billNumber={createdBillNumber}
+        onClose={handleSuccessClose}
+      />
     </AppLayout>
   );
 }
