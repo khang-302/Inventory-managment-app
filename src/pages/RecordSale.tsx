@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { db } from '@/db/database';
 import { recordMultiSale } from '@/services/salesService';
+import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency, calculateProfit } from '@/utils/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -20,9 +22,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Package, Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react';
+import { Loader2, Package, Plus, Pencil, Trash2, ShoppingBag, FileText } from 'lucide-react';
 import { persistFormValues } from '@/services/autocompleteService';
 import { cn } from '@/lib/utils';
+import { SaleSuccessDialog } from '@/components/sale/SaleSuccessDialog';
 
 interface CartItem {
   id: string;
