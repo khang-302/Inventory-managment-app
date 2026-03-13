@@ -9,7 +9,8 @@ import { FilePlus2, SwatchBook, MoreVertical, Camera, FileText, Share2, Trash2, 
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
-import { captureBillAsImage, downloadDataUrl } from '@/utils/billImageExport';
+import { captureBillAsImage } from '@/utils/billImageExport';
+import { saveImageToGallery, savePdfToDevice, shareViaWhatsAppNative, saveFile } from '@/utils/nativeShare';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import BillSearchFilter from '@/components/bill/BillSearchFilter';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
@@ -59,13 +60,18 @@ export default function BillHistory() {
       try {
         const dataUrl = await captureBillAsImage(previewRef.current, 'png');
         if (!dataUrl || dataUrl.length < 1000) throw new Error('Blank image');
+        const filename = `AIM_Bill_${billData.bill.billNumber}.png`;
         if (action === 'image') {
-          downloadDataUrl(dataUrl, `${billData.bill.billNumber}.png`);
-          toast({ title: 'Image downloaded' });
+          const result = await saveImageToGallery(dataUrl, filename);
+          toast({ title: result === 'shared' ? 'Bill image ready to save' : 'Image saved' });
         } else if (action === 'share') {
-          await shareFile(dataUrl, billData.bill, 'png');
+          const result = await saveFile(dataUrl, filename, 'image/png');
+          toast({ title: result === 'shared' ? 'Shared successfully' : 'Image saved — attach it manually in your app' });
         } else if (action === 'whatsapp') {
-          await shareViaWhatsApp(dataUrl, billData.bill);
+          const result = await shareViaWhatsAppNative(dataUrl, filename);
+          if (result === 'fallback') {
+            toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
+          }
         }
       } catch (err) {
         console.error('Image export error:', err);
@@ -93,37 +99,10 @@ export default function BillHistory() {
   const handleExportPdf = async (bill: Bill) => {
     const data = await prepareBillData(bill);
     const pdf = generateBillPdf(data.settings, data.bill, data.items);
-    pdf.save(`${data.bill.billNumber}.pdf`);
-    toast({ title: 'PDF downloaded' });
-  };
-
-  const shareFile = async (dataUrl: string, bill: Bill, _format: 'png' | 'pdf') => {
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-    } catch { /* fallback below */ }
-    downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
-    toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
-  };
-
-  const shareViaWhatsApp = async (dataUrl: string, bill: Bill) => {
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `${bill.billNumber}.png`, { type: 'image/png' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-    } catch { /* fallback below */ }
-    // Fallback: download image only, no text link
-    downloadDataUrl(dataUrl, `${bill.billNumber}.png`);
-    toast({ title: 'Image saved', description: 'Open WhatsApp and attach the downloaded image manually.' });
+    const pdfBlob = pdf.output('blob');
+    const filename = `AIM_Bill_${data.bill.billNumber}.pdf`;
+    const result = await savePdfToDevice(pdfBlob, filename);
+    toast({ title: result === 'shared' ? 'PDF ready to save' : 'PDF saved' });
   };
 
   const handleShare = async (bill: Bill) => {

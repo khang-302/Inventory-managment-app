@@ -1,6 +1,7 @@
 import { ReactNode, useState, useCallback } from 'react';
 import { BottomNav } from './BottomNav';
 import { SidebarNav, SidebarTrigger } from './SidebarNav';
+import { useBackNavigation } from '@/hooks/useBackNavigation';
 import { cn } from '@/lib/utils';
 import { useAppSafe } from '@/contexts/AppContext';
 
@@ -16,6 +17,9 @@ export function AppLayout({ children, hideNav = false, className, showMenuButton
   const navigationLayout = app?.navigationLayout ?? 'bottom';
   const isInitialized = app?.isInitialized ?? false;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Handle Android hardware back button & gesture back navigation
+  useBackNavigation();
 
   const openSidebar = useCallback(() => setSidebarOpen(true), []);
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
