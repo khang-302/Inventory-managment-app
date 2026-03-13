@@ -992,34 +992,34 @@ All service-layer calculations (`inventoryService`, `salesService`) use safe num
 
 ## 16. Future Scalability
 
-### 11.1 Cloud Sync
+### 16.1 Cloud Sync
 The architecture is prepared for cloud integration:
 - Google Drive sync is partially implemented (settings stored, manual sync simulated).
 - TanStack React Query is installed for future API data fetching.
 - The service layer can be extended to sync with a remote database.
 
-### 11.2 Multi-Language Support
+### 16.2 Multi-Language Support
 - Language setting infrastructure exists (`language` key in settings, Language options: English, Urdu).
 - UI strings can be extracted to i18n resource files.
 
-### 11.3 Multi-User / Multi-Shop
+### 16.3 Multi-User / Multi-Shop
 - The app name is customizable, suggesting future white-labeling.
 - Database structure supports a single-tenant model but could be extended with shop/tenant IDs.
 
-### 11.4 Barcode/QR Scanning
+### 16.4 Barcode/QR Scanning
 - SKU field exists on all parts — integrating a camera-based barcode scanner would enable rapid stock lookup and sale recording.
 
-### 11.5 Supplier Management
+### 16.5 Supplier Management
 - The Brand model could be extended to include supplier contact information, order history, and reorder points.
 
-### 11.6 Online Payments
+### 16.6 Online Payments
 - Payment info fields exist on bills (bank accounts, EasyPaisa, JazzCash). Integration with payment gateways could enable invoice-to-payment flows.
 
-### 11.7 Advanced Reporting
+### 16.7 Advanced Reporting
 - Current reports are client-side computed. Moving to server-side aggregation would improve performance with large datasets.
 - Custom report builder with drag-and-drop chart configuration.
 
-### 11.8 PWA Installation
+### 16.8 PWA Installation
 - The app can be enhanced as a Progressive Web App with service worker for true offline capability on web browsers, complementing the Capacitor native build.
 
 ---
