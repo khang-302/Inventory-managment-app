@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useApp } from '@/contexts/AppContext';
-import { db } from '@/db/database';
+import { db, getSetting } from '@/db/database';
 import { logActivity } from '@/services/activityLogService';
 import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency } from '@/utils/currency';
