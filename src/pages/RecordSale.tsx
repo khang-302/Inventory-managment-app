@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
-import { db } from '@/db/database';
+import { db, getSetting } from '@/db/database';
 import { recordMultiSale } from '@/services/salesService';
 import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency, calculateProfit } from '@/utils/currency';
