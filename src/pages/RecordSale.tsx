@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
-import { db } from '@/db/database';
+import { db, getSetting } from '@/db/database';
 import { recordMultiSale } from '@/services/salesService';
 import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency, calculateProfit } from '@/utils/currency';
@@ -46,6 +46,10 @@ export default function RecordSale() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [autoGenerateBill, setAutoGenerateBill] = useState(false);
+
+  useEffect(() => {
+    getSetting<boolean>('autoGenerateBill').then(v => { if (v) setAutoGenerateBill(true); });
+  }, []);
   const [createdBillId, setCreatedBillId] = useState('');
   const [createdBillNumber, setCreatedBillNumber] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);

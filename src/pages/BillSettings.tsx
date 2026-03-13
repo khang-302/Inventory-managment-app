@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { getSetting, updateSetting } from '@/db/database';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw as ResetZoom, Palette } from 'lucide-react';
+import { Save, RotateCcw, Plus, Trash2, CreditCard, ScrollText, Store, Globe, Droplets, Type, Image, Frame, StretchHorizontal, Eye, EyeOff, ZoomIn, ZoomOut, RotateCcw as ResetZoom, Palette, FileText } from 'lucide-react';
 import { getBillSettings, updateBillSettings, resetBillCounter } from '@/services/billService';
 import type { BillSettings, WatermarkStyle, Bill, BillItem, BillColorThemeId } from '@/types/bill';
 import { BILL_COLOR_THEMES } from '@/utils/billColorThemes';
@@ -24,6 +25,7 @@ export default function BillSettingsPage() {
   const [settings, setSettings] = useState<BillSettings | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [autoBillDefault, setAutoBillDefault] = useState(false);
 
   // Dummy bill data for live preview
   const previewBill = useMemo<Bill>(() => ({
@@ -71,7 +73,10 @@ export default function BillSettingsPage() {
     return () => { el.removeEventListener('touchmove', onTouchMove); el.removeEventListener('touchend', onTouchEnd); };
   }, [showPreview]);
 
-  useEffect(() => { getBillSettings().then(setSettings); }, []);
+  useEffect(() => {
+    getBillSettings().then(setSettings);
+    getSetting<boolean>('autoGenerateBill').then(v => setAutoBillDefault(v ?? false));
+  }, []);
 
   const handleSave = async () => {
     if (!settings) return;
@@ -374,6 +379,29 @@ export default function BillSettingsPage() {
               <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setShowResetDialog(true)}>
                 <RotateCcw className="h-3 w-3" /> Reset
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Auto Generate Bill Default */}
+        <Card className="bg-card">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Auto Generate Bill</p>
+                  <p className="text-xs text-muted-foreground">Enable by default when recording sales</p>
+                </div>
+              </div>
+              <Switch
+                checked={autoBillDefault}
+                onCheckedChange={async (checked) => {
+                  setAutoBillDefault(checked);
+                  await updateSetting('autoGenerateBill', checked);
+                  toast({ title: checked ? 'Auto bill enabled by default' : 'Auto bill disabled by default' });
+                }}
+              />
             </div>
           </CardContent>
         </Card>

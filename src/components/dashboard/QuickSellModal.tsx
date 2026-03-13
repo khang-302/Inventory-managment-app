@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useApp } from '@/contexts/AppContext';
-import { db } from '@/db/database';
+import { db, getSetting } from '@/db/database';
 import { logActivity } from '@/services/activityLogService';
 import { createBillFromSale } from '@/services/saleBillService';
 import { formatCurrency } from '@/utils/currency';
@@ -41,6 +41,12 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [autoGenerateBill, setAutoGenerateBill] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      getSetting<boolean>('autoGenerateBill').then(v => { if (v) setAutoGenerateBill(true); });
+    }
+  }, [open]);
   const [createdBillId, setCreatedBillId] = useState('');
   const [createdBillNumber, setCreatedBillNumber] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
