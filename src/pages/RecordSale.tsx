@@ -182,14 +182,43 @@ export default function RecordSale() {
       }
 
       await persistFormValues({ customerName: customerName.trim(), customerPhone: customerPhone.trim() });
-      toast.success(`Sale completed • ${cart.length} item(s)`);
-      navigate('/');
+
+      if (autoGenerateBill) {
+        try {
+          const billResult = await createBillFromSale({
+            buyerName: customerName.trim(),
+            buyerPhone: customerPhone.trim(),
+            items: cart.map(c => ({
+              partName: c.partName,
+              partCode: c.partSku,
+              quantity: c.quantity,
+              price: c.unitPrice,
+            })),
+            notes: notes.trim(),
+          });
+          setCreatedBillId(billResult.billId);
+          setCreatedBillNumber(billResult.billNumber);
+          setShowSuccessDialog(true);
+        } catch (err) {
+          console.error('Bill generation failed:', err);
+          toast.error('Sale recorded but bill generation failed');
+          navigate('/');
+        }
+      } else {
+        toast.success(`Sale completed • ${cart.length} item(s)`);
+        navigate('/');
+      }
     } catch (error) {
       console.error('Failed to complete sale:', error);
       toast.error('Failed to complete sale');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccessDialog(false);
+    navigate('/');
   };
 
   return (
