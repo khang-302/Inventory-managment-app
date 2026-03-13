@@ -117,9 +117,37 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
       });
 
       await refreshStats();
-      toast.success('Quick sale recorded successfully!');
-      resetForm();
-      onOpenChange(false);
+
+      if (autoGenerateBill) {
+        try {
+          const billResult = await createBillFromSale({
+            buyerName: buyerName.trim(),
+            buyerPhone: buyerPhone.trim(),
+            items: [{
+              partName: partName.trim(),
+              partCode: partNumber.trim() || 'QS-' + Date.now(),
+              brand: brand.trim(),
+              quantity: calculations.qty,
+              price: calculations.sell,
+            }],
+            notes: notes.trim(),
+          });
+          setCreatedBillId(billResult.billId);
+          setCreatedBillNumber(billResult.billNumber);
+          resetForm();
+          onOpenChange(false);
+          setShowSuccessDialog(true);
+        } catch (err) {
+          console.error('Bill generation failed:', err);
+          toast.error('Sale recorded but bill generation failed');
+          resetForm();
+          onOpenChange(false);
+        }
+      } else {
+        toast.success('Quick sale recorded successfully!');
+        resetForm();
+        onOpenChange(false);
+      }
     } catch (error) {
       console.error('QuickSell error:', error);
       toast.error('Failed to record sale');
