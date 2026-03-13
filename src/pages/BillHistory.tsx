@@ -63,7 +63,10 @@ export default function BillHistory() {
         const filename = `AIM_Bill_${billData.bill.billNumber}.png`;
         if (action === 'image') {
           const result = await saveImageToGallery(dataUrl, filename);
-          toast({ title: result === 'shared' ? 'Bill image ready to save' : 'Image saved' });
+          toast({
+            title: '✅ Image saved',
+            description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+          });
         } else if (action === 'share') {
           const result = await saveFile(dataUrl, filename, 'image/png');
           toast({ title: result === 'shared' ? 'Shared successfully' : 'Image saved — attach it manually in your app' });
