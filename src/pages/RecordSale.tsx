@@ -46,6 +46,10 @@ export default function RecordSale() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [autoGenerateBill, setAutoGenerateBill] = useState(false);
+
+  useEffect(() => {
+    getSetting<boolean>('autoGenerateBill').then(v => { if (v) setAutoGenerateBill(true); });
+  }, []);
   const [createdBillId, setCreatedBillId] = useState('');
   const [createdBillNumber, setCreatedBillNumber] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);

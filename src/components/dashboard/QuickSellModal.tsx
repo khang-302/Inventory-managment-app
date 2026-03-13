@@ -41,6 +41,12 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [autoGenerateBill, setAutoGenerateBill] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      getSetting<boolean>('autoGenerateBill').then(v => { if (v) setAutoGenerateBill(true); });
+    }
+  }, [open]);
   const [createdBillId, setCreatedBillId] = useState('');
   const [createdBillNumber, setCreatedBillNumber] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
