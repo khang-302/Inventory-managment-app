@@ -68,8 +68,8 @@ export default function BillHistory() {
             description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
           });
         } else if (action === 'share') {
-          const result = await saveFile(dataUrl, filename, 'image/png');
-          toast({ title: result === 'shared' ? 'Shared successfully' : 'Image saved — attach it manually in your app' });
+          await saveFile(dataUrl, filename, 'image/png');
+          toast({ title: '📤 Share sheet opened' });
         } else if (action === 'whatsapp') {
           const result = await shareViaWhatsAppNative(dataUrl, filename);
           if (result === 'fallback') {
