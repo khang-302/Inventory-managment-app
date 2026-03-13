@@ -298,5 +298,13 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
         {formContent}
       </DialogContent>
     </Dialog>
+
+    <SaleSuccessDialog
+      open={showSuccessDialog}
+      billId={createdBillId}
+      billNumber={createdBillNumber}
+      onClose={() => setShowSuccessDialog(false)}
+    />
+    </>
   );
 }
