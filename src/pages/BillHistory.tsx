@@ -10,7 +10,7 @@ import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/servic
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
 import { captureBillAsImage } from '@/utils/billImageExport';
-import { saveImageToGallery, savePdfToDevice, shareViaWhatsAppNative, saveFile } from '@/utils/nativeShare';
+import { saveImageToGallery, savePdfToDevice, shareViaWhatsAppNative, saveFile, type SaveResult } from '@/utils/nativeShare';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import BillSearchFilter from '@/components/bill/BillSearchFilter';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
@@ -63,10 +63,13 @@ export default function BillHistory() {
         const filename = `AIM_Bill_${billData.bill.billNumber}.png`;
         if (action === 'image') {
           const result = await saveImageToGallery(dataUrl, filename);
-          toast({ title: result === 'shared' ? 'Bill image ready to save' : 'Image saved' });
+          toast({
+            title: '✅ Image saved',
+            description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+          });
         } else if (action === 'share') {
-          const result = await saveFile(dataUrl, filename, 'image/png');
-          toast({ title: result === 'shared' ? 'Shared successfully' : 'Image saved — attach it manually in your app' });
+          await saveFile(dataUrl, filename, 'image/png');
+          toast({ title: '📤 Share sheet opened' });
         } else if (action === 'whatsapp') {
           const result = await shareViaWhatsAppNative(dataUrl, filename);
           if (result === 'fallback') {
@@ -102,7 +105,10 @@ export default function BillHistory() {
     const pdfBlob = pdf.output('blob');
     const filename = `AIM_Bill_${data.bill.billNumber}.pdf`;
     const result = await savePdfToDevice(pdfBlob, filename);
-    toast({ title: result === 'shared' ? 'PDF ready to save' : 'PDF saved' });
+    toast({
+      title: '✅ PDF saved',
+      description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+    });
   };
 
   const handleShare = async (bill: Bill) => {
