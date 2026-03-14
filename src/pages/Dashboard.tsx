@@ -91,6 +91,29 @@ export default function Dashboard() {
     appName,
   } = useApp();
 
+  // Today's sales breakdown
+  const todayStart = startOfDay(new Date()).toISOString();
+  const todaySalesAll = useLiveQuery(
+    () => db.sales.where('date').aboveOrEqual(todayStart).toArray(),
+    [todayStart],
+    [],
+  );
+
+  const salesBreakdown = useMemo(() => {
+    const newSales = todaySalesAll.filter(s => s.partId && s.partId.trim() !== '');
+    const quickSales = todaySalesAll.filter(s => !s.partId || s.partId.trim() === '');
+    const sum = (arr: typeof todaySalesAll, key: 'totalPrice' | 'profit') =>
+      arr.reduce((t, s) => t + (Number(s[key]) || 0), 0);
+    return {
+      newRevenue: sum(newSales, 'totalPrice'),
+      newProfit: sum(newSales, 'profit'),
+      newOrders: newSales.length,
+      quickRevenue: sum(quickSales, 'totalPrice'),
+      quickProfit: sum(quickSales, 'profit'),
+      quickOrders: quickSales.length,
+    };
+  }, [todaySalesAll]);
+
   if (!isInitialized) {
     return (
       <AppLayout>
