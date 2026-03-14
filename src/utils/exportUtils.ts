@@ -505,7 +505,7 @@ export async function exportReportToExcel(
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
   const filename = `ameer-autos-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.xlsx`;
-  saveAs(blob, filename);
+  await saveToDevice(blob, 'Reports', filename);
 }
 
 /**
