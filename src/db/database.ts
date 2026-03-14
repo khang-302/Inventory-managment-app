@@ -294,16 +294,6 @@ export async function importDatabase(data: {
       if (data.activityLogs?.length) await db.activityLogs.bulkAdd(data.activityLogs);
       if (data.settings?.length) await db.settings.bulkAdd(data.settings);
 
-      // Ensure demoDataCleared flag is set so cleanup never wipes restored data
-      const hasDemoFlag = (data.settings || []).some((s: any) => s.key === 'demoDataCleared');
-      if (!hasDemoFlag) {
-        await db.settings.add({
-          id: crypto.randomUUID(),
-          key: 'demoDataCleared',
-          value: true,
-          updatedAt: new Date(),
-        });
-      }
     });
 
     return { success: true, message: 'Database restored successfully' };
