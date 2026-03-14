@@ -135,31 +135,14 @@ export async function saveImageToGallery(
 }
 
 // ---------------------------------------------------------------------------
-// Save PDF to Documents/AIM Bills/
+// Save PDF to AIM/Bills/
 // ---------------------------------------------------------------------------
 
 export async function savePdfToDevice(
   pdfBlob: Blob,
   filename: string,
 ): Promise<SaveResult> {
-  if (isNativePlatform()) {
-    try {
-      const base64Data = await blobToBase64(pdfBlob);
-      const savePath = `AIM Bills/${filename}`;
-      await Filesystem.writeFile({
-        path: savePath,
-        data: base64Data,
-        directory: Directory.Documents,
-        recursive: true,
-      });
-      return { method: 'downloaded', path: `Documents → AIM Bills/${filename}` };
-    } catch (err) {
-      console.error('Native PDF save failed, trying fallback:', err);
-    }
-  }
-
-  webDownload(pdfBlob, filename);
-  return { method: 'downloaded' };
+  return saveToDevice(pdfBlob, 'Bills', filename);
 }
 
 // ---------------------------------------------------------------------------
