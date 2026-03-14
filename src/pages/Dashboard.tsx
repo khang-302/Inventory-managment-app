@@ -25,6 +25,7 @@ import {
   Pencil,
   Trash2,
   ChartColumnBig,
+  ShoppingBag,
   Download,
   Upload,
   RefreshCw,
