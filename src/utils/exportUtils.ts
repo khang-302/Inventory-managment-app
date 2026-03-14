@@ -584,7 +584,7 @@ export async function exportReportToCSV(
   ].join('\n');
 
   // Separate files (as required)
-  saveAs(new Blob([salesCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-sales.csv`);
-  saveAs(new Blob([inventoryCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-inventory.csv`);
-  saveAs(new Blob([lowStockCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-low-stock.csv`);
+  await saveToDevice(new Blob([salesCSV], { type: 'text/csv;charset=utf-8;' }), 'Reports', `${baseName}-sales.csv`);
+  await saveToDevice(new Blob([inventoryCSV], { type: 'text/csv;charset=utf-8;' }), 'Reports', `${baseName}-inventory.csv`);
+  await saveToDevice(new Blob([lowStockCSV], { type: 'text/csv;charset=utf-8;' }), 'Reports', `${baseName}-low-stock.csv`);
 }

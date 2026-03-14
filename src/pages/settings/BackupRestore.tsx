@@ -145,14 +145,14 @@ export default function BackupRestore() {
 
       const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      saveAs(blob, generateFilename('csv'));
+      const result = await saveToDevice(blob, 'Backups', generateFilename('csv'));
 
       await logActivity({
         action: 'backup',
         entityType: 'backup',
         description: 'Created CSV backup'
       });
-      toast.success('CSV backup created successfully');
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'CSV backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
