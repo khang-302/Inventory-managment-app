@@ -150,7 +150,7 @@ export function generateDemoSpareParts(count: number = 1000): Part[] {
       location: pick(LOCATIONS),
       notes: `Demo part for testing — ${template.category}`,
       images: [],
-      unit: 'piece' as const,
+      unitType: 'piece' as const,
       isDemo: true,
       createdAt: randomDate(6),
       updatedAt: new Date(),
