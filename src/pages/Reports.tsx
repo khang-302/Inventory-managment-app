@@ -331,7 +331,7 @@ export default function Reports() {
         lowStockItems.map(i => ({ name: i.name, quantity: i.quantity, minStock: i.minStock })),
         inventoryByCategory, inventoryByBrand, visuals, appName,
       );
-      toast.success('PDF exported');
+      toast.success('PDF exported', { description: '📂 Open your file manager → AIM/Reports' });
     } catch (error) {
       console.error('PDF export failed:', error);
       toast.error(error instanceof Error ? error.message : 'PDF export failed');
