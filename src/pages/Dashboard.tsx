@@ -94,7 +94,7 @@ export default function Dashboard() {
   // Today's sales breakdown
   const todayStart = startOfDay(new Date()).toISOString();
   const todaySalesAll = useLiveQuery(
-    () => db.sales.where('date').aboveOrEqual(todayStart).toArray(),
+    () => db.sales.toArray().then(all => all.filter(s => s.date >= todayStart)),
     [todayStart],
   ) ?? [];
 
