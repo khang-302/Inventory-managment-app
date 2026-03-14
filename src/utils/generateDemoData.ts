@@ -2,9 +2,17 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Part } from '@/types';
 import type { Bill, BillItem } from '@/types/bill';
 import { db } from '@/db/database';
+import { BRANDS_EXTENDED, ALL_EXTENDED_TEMPLATES } from './demoDataConstants';
 
-// ── Part name templates ──────────────────────────────────────────────
-const PART_CATEGORIES: Record<string, string[]> = {
+// ── Small brand/template sets for 1K mode ────────────────────────────
+const BRANDS_SMALL = [
+  'Toyota Genuine', 'Honda Atlas', 'Suzuki Parts', 'Denso', 'Bosch',
+  'NGK', 'Aisin', 'KYB', 'Monroe', 'Gates',
+  'Mahle', 'Mann Filter', 'Valeo', 'SKF', 'NTN',
+  'Koyo', 'Exedy', 'TRW', 'Brembo', 'Dayco',
+];
+
+const PART_CATEGORIES_SMALL: Record<string, string[]> = {
   'Engine Parts': [
     'Piston Ring', 'Cylinder Head', 'Crankshaft', 'Camshaft', 'Valve Spring',
     'Oil Pump', 'Timing Chain', 'Connecting Rod', 'Engine Mount', 'Rocker Arm',
@@ -63,13 +71,6 @@ const PART_CATEGORIES: Record<string, string[]> = {
     'Hood Latch', 'Trunk Lock', 'Wiper Motor', 'Wiper Blade', 'Headlight Assembly',
   ],
 };
-
-const BRANDS = [
-  'Toyota Genuine', 'Honda Atlas', 'Suzuki Parts', 'Denso', 'Bosch',
-  'NGK', 'Aisin', 'KYB', 'Monroe', 'Gates',
-  'Mahle', 'Mann Filter', 'Valeo', 'SKF', 'NTN',
-  'Koyo', 'Exedy', 'TRW', 'Brembo', 'Dayco',
-];
 
 const LOCATIONS = [
   'Shelf A1', 'Shelf A2', 'Shelf A3', 'Shelf B1', 'Shelf B2', 'Shelf B3',
