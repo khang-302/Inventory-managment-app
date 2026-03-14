@@ -65,7 +65,7 @@ export default function BillHistory() {
           const result = await saveImageToGallery(dataUrl, filename);
           toast({
             title: '✅ Image saved',
-            description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+            description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → AIM/Bills` : `File: ${filename}`,
           });
         } else if (action === 'share') {
           await saveFile(dataUrl, filename, 'image/png');
