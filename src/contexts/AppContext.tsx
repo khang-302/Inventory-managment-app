@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { db, initializeDatabase, getSetting, updateSetting } from '@/db/database';
-import { clearAllDemoData } from '@/services/demoSeedService';
+
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { DashboardStats, Part, Sale, ActivityLog, Brand, Category, WeeklySaleDay, StockDistribution } from '@/types';
 import { startOfDay, endOfDay, startOfMonth, subDays, format } from 'date-fns';
@@ -102,8 +102,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         await initializeDatabase();
         
-        // Clear any existing demo data
-        await clearAllDemoData();
         // Load settings
         const savedTheme = await getSetting<'dark' | 'light' | 'system'>('theme');
         const savedNotifications = await getSetting<boolean>('notifications');

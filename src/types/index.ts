@@ -40,7 +40,6 @@ export interface Part {
   location: string;
   notes: string;
   images: string[];
-  isDemo?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -73,7 +72,6 @@ export interface Sale {
   customerName?: string;
   customerPhone?: string;
   notes?: string;
-  isDemo?: boolean;
   createdAt: Date;
 }
 

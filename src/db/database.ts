@@ -160,6 +160,24 @@ export class AmeerAutosDB extends Dexie {
       notificationTemplates: 'id, createdAt',
       crashReports: 'id, errorCode, createdAt'
     });
+
+    // Version 10: Remove isDemo indexes (demo data feature removed)
+    this.version(10).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt',
+      billSettings: 'id',
+      bills: 'id, billNumber, createdAt',
+      billItems: 'id, billId',
+      autocompleteEntries: 'id, field, [field+value]',
+      notifications: 'id, type, isRead, createdAt, triggerType, isFired',
+      notificationTemplates: 'id, createdAt',
+      crashReports: 'id, errorCode, createdAt'
+    });
   }
 }
 
@@ -276,16 +294,6 @@ export async function importDatabase(data: {
       if (data.activityLogs?.length) await db.activityLogs.bulkAdd(data.activityLogs);
       if (data.settings?.length) await db.settings.bulkAdd(data.settings);
 
-      // Ensure demoDataCleared flag is set so cleanup never wipes restored data
-      const hasDemoFlag = (data.settings || []).some((s: any) => s.key === 'demoDataCleared');
-      if (!hasDemoFlag) {
-        await db.settings.add({
-          id: crypto.randomUUID(),
-          key: 'demoDataCleared',
-          value: true,
-          updatedAt: new Date(),
-        });
-      }
     });
 
     return { success: true, message: 'Database restored successfully' };
