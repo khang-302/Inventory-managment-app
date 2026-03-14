@@ -14,42 +14,25 @@ type NavHighlightStyle = 'icon-only' | 'icon-label' | 'background';
 type NavAnimation = 'none' | 'fade' | 'slide';
 
 interface AppContextType {
-  // Database initialization
   isInitialized: boolean;
-  
-  // Dashboard stats
   stats: DashboardStats;
   isLoadingStats: boolean;
   refreshStats: () => Promise<void>;
-  
-  // Low stock parts
   lowStockParts: Part[];
-  
-  // Recent activity
   recentActivity: ActivityLog[];
-  
-  // Quick counts
   totalParts: number;
   totalBrands: number;
   totalCategories: number;
-  
-  // Settings
   theme: 'dark' | 'light' | 'system';
   setTheme: (theme: 'dark' | 'light' | 'system') => Promise<void>;
   notifications: boolean;
   setNotifications: (enabled: boolean) => Promise<void>;
-
-  // Navigation settings
   navShowLabels: boolean;
   setNavShowLabels: (show: boolean) => Promise<void>;
   navCompactMode: boolean;
   setNavCompactMode: (compact: boolean) => Promise<void>;
-  
-  // Navigation layout
   navigationLayout: NavigationLayout;
   setNavigationLayout: (layout: NavigationLayout) => Promise<void>;
-
-  // New navigation customization
   navIconStyle: NavIconStyle;
   setNavIconStyle: (style: NavIconStyle) => Promise<void>;
   navIconSize: NavIconSize;
@@ -58,12 +41,8 @@ interface AppContextType {
   setNavHighlightStyle: (style: NavHighlightStyle) => Promise<void>;
   navAnimation: NavAnimation;
   setNavAnimation: (animation: NavAnimation) => Promise<void>;
-  
-  // Custom logo
   customLogo: string | null;
   setCustomLogo: (logo: string | null) => Promise<void>;
-  
-  // App name
   appName: string;
   setAppName: (name: string) => Promise<void>;
 }
@@ -102,7 +81,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         await initializeDatabase();
         
-        // Load settings
         const savedTheme = await getSetting<'dark' | 'light' | 'system'>('theme');
         const savedNotifications = await getSetting<boolean>('notifications');
         const savedShowLabels = await getSetting<boolean>('navShowLabels');
@@ -167,19 +145,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  // Live query for parts
+  // Live queries — only counts for triggering stats refresh
+  const partsCount = useLiveQuery(() => db.parts.count().catch(() => 0), []) ?? 0;
+  const salesCount = useLiveQuery(() => db.sales.count().catch(() => 0), []) ?? 0;
+
+  // Live query for parts (needed for lowStockParts)
   const parts = useLiveQuery(() => {
     try { return db.parts.toArray().catch(() => []); } catch { return Promise.resolve([]); }
   }, []) ?? [];
-  const sales = useLiveQuery(() => {
-    try { return db.sales.toArray().catch(() => []); } catch { return Promise.resolve([]); }
-  }, []) ?? [];
+
   const brands = useLiveQuery(() => {
-    try { return db.brands.toArray().catch(() => []); } catch { return Promise.resolve([]); }
-  }, []) ?? [];
+    try { return db.brands.count().catch(() => 0); } catch { return Promise.resolve(0); }
+  }, []) ?? 0;
   const categories = useLiveQuery(() => {
-    try { return db.categories.toArray().catch(() => []); } catch { return Promise.resolve([]); }
-  }, []) ?? [];
+    try { return db.categories.count().catch(() => 0); } catch { return Promise.resolve(0); }
+  }, []) ?? 0;
   const activityLogs = useLiveQuery(() => {
     try {
       return db.activityLogs.orderBy('createdAt').reverse().toArray()
@@ -190,7 +170,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const lowStockParts = parts.filter(p => p.quantity <= p.minStockLevel);
 
-  // Calculate dashboard stats
+  // Calculate dashboard stats using indexed queries
   const refreshStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
@@ -199,6 +179,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const todayEnd = endOfDay(today);
       const monthStart = startOfMonth(today);
 
+      // Use indexed queries instead of loading all records
       const allParts = await db.parts.toArray();
       const totalParts = allParts.length;
       
@@ -214,27 +195,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return qty <= minStock;
       }).length;
 
-      const allSales = await db.sales.toArray();
-      const todaySalesData = allSales.filter(s => {
-        const saleDate = new Date(s.createdAt);
-        return saleDate >= todayStart && saleDate <= todayEnd;
-      });
+      // Indexed query for today's sales
+      const todaySalesData = await db.sales
+        .where('createdAt')
+        .between(todayStart, todayEnd, true, true)
+        .toArray();
       
       const todaySales = todaySalesData.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.totalAmount, 0)), 0);
       const todayProfit = todaySalesData.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.profit, 0)), 0);
 
-      const monthlySalesData = allSales.filter(s => {
-        const saleDate = new Date(s.createdAt);
-        return saleDate >= monthStart && saleDate <= todayEnd;
-      });
+      // Indexed query for monthly sales
+      const monthlySalesData = await db.sales
+        .where('createdAt')
+        .between(monthStart, todayEnd, true, true)
+        .toArray();
       const monthlyProfit = monthlySalesData.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.profit, 0)), 0);
+
+      // Weekly sales — single indexed query for the whole week
+      const weekStart = startOfDay(subDays(today, 6));
+      const weekSalesData = await db.sales
+        .where('createdAt')
+        .between(weekStart, todayEnd, true, true)
+        .toArray();
 
       const weeklySales: WeeklySaleDay[] = [];
       for (let i = 6; i >= 0; i--) {
         const day = subDays(today, i);
         const dayStart = startOfDay(day);
         const dayEnd = endOfDay(day);
-        const daySales = allSales.filter(s => {
+        const daySales = weekSalesData.filter(s => {
           const d = new Date(s.createdAt);
           return d >= dayStart && d <= dayEnd;
         });
@@ -267,7 +256,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isInitialized) refreshStats();
-  }, [isInitialized, parts.length, sales.length, refreshStats]);
+  }, [isInitialized, partsCount, salesCount, refreshStats]);
 
   // Setters
   const setTheme = async (v: 'dark' | 'light' | 'system') => { setThemeState(v); await updateSetting('theme', v); };
@@ -284,7 +273,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value: AppContextType = {
     isInitialized, stats, isLoadingStats, refreshStats, lowStockParts,
-    recentActivity: activityLogs, totalParts: parts.length, totalBrands: brands.length, totalCategories: categories.length,
+    recentActivity: activityLogs, totalParts: partsCount, totalBrands: brands, totalCategories: categories,
     theme, setTheme, notifications, setNotifications,
     navShowLabels, setNavShowLabels, navCompactMode, setNavCompactMode,
     navigationLayout, setNavigationLayout,

@@ -91,14 +91,15 @@ export default function Dashboard() {
     appName,
   } = useApp();
 
-  // Today's sales breakdown
-  const todayStart = startOfDay(new Date()).toISOString();
+  // Today's sales breakdown — indexed query on createdAt
+  const todayStartDate = startOfDay(new Date());
   const todaySalesAll = useLiveQuery(
-    () => db.sales.toArray().then(all => all.filter(s => {
-      const d = s.createdAt instanceof Date ? s.createdAt.toISOString() : String(s.createdAt);
-      return d >= todayStart;
-    })),
-    [todayStart],
+    () => db.sales
+      .where('createdAt')
+      .aboveOrEqual(todayStartDate)
+      .toArray()
+      .catch(() => []),
+    [todayStartDate.getTime()],
   ) ?? [];
 
   const salesBreakdown = useMemo(() => {

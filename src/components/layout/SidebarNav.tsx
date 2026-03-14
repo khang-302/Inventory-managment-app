@@ -181,7 +181,7 @@ export function SidebarNav({ isOpen, onClose }: SidebarNavProps) {
         {/* Footer */}
         <div className="px-5 py-4">
           <p className="text-[11px] text-muted-foreground/60 text-center font-medium tracking-wide">
-            v1.0.0 • Ameer Autos
+            v1.0.0 • {appName}
           </p>
         </div>
       </aside>
