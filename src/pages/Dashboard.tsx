@@ -102,8 +102,8 @@ export default function Dashboard() {
   const salesBreakdown = useMemo(() => {
     const newSales = todaySalesAll.filter(s => s.partId && s.partId.trim() !== '');
     const quickSales = todaySalesAll.filter(s => !s.partId || s.partId.trim() === '');
-    const sum = (arr: typeof todaySalesAll, key: 'totalPrice' | 'profit') =>
-      arr.reduce((t, s) => t + (Number(s[key]) || 0), 0 as number);
+    const sum = (arr: typeof todaySalesAll, key: 'totalPrice' | 'profit'): number =>
+      arr.reduce<number>((t, s) => t + (Number(s[key]) || 0), 0);
     return {
       newRevenue: sum(newSales, 'totalPrice'),
       newProfit: sum(newSales, 'profit'),
