@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { 
   Search, 
   Languages, 
