@@ -107,10 +107,10 @@ export default function Dashboard() {
     const sum = (arr: typeof todaySalesAll, key: 'totalAmount' | 'profit') =>
       arr.reduce((t, s) => t + (Number(s[key]) || 0), 0);
     return {
-      newRevenue: sum(newSales, 'totalPrice'),
+      newRevenue: sum(newSales, 'totalAmount'),
       newProfit: sum(newSales, 'profit'),
       newOrders: newSales.length,
-      quickRevenue: sum(quickSales, 'totalPrice'),
+      quickRevenue: sum(quickSales, 'totalAmount'),
       quickProfit: sum(quickSales, 'profit'),
       quickOrders: quickSales.length,
     };
