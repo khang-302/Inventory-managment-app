@@ -225,6 +225,7 @@ export default function Dashboard() {
                         <ShoppingBag className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <span className="text-xs font-semibold text-foreground">New Sale</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
                     </div>
                     <div>
                       <p className="text-[10px] text-muted-foreground">Revenue</p>
