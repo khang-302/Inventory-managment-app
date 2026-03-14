@@ -438,64 +438,118 @@ export default function Settings() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        disabled={generating || clearing}
-                      >
-                        {generating ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Database className="h-4 w-4 mr-2" />
-                        )}
-                        Generate Demo Data
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Generate Demo Data?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will add <strong>1,000 spare parts</strong> and <strong>1,000 bills</strong> to your database for performance testing. All demo data will be tagged and can be cleared later.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={async () => {
-                            setGenerating(true);
-                            setProgress(0);
-                            try {
-                              const exists = await hasDemoData();
-                              if (exists) {
-                                toast({ title: 'Demo data already exists', description: 'Clear existing demo data first before generating new data.', variant: 'destructive' });
-                                return;
-                              }
-                              const result = await insertDemoData((pct) => setProgress(pct));
-                              await refreshStats();
-                              toast({ title: 'Demo data generated', description: `Created ${result.partsCount} parts and ${result.billsCount} bills.` });
-                            } catch (err) {
-                              console.error('Demo generation failed:', err);
-                              toast({ title: 'Generation failed', description: String(err), variant: 'destructive' });
-                            } finally {
-                              setGenerating(false);
-                              setProgress(0);
-                            }
-                          }}
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          disabled={generating || clearing}
                         >
-                          Generate
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          {generating ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Database className="h-4 w-4 mr-2" />
+                          )}
+                          1K Demo
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Generate Demo Data?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will add <strong>1,000 spare parts</strong> and <strong>1,000 bills</strong> to your database for performance testing. All demo data will be tagged and can be cleared later.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              setGenerating(true);
+                              setProgress(0);
+                              try {
+                                const exists = await hasDemoData();
+                                if (exists) {
+                                  toast({ title: 'Demo data already exists', description: 'Clear existing demo data first before generating new data.', variant: 'destructive' });
+                                  return;
+                                }
+                                const result = await insertDemoData((pct) => setProgress(pct));
+                                await refreshStats();
+                                toast({ title: 'Demo data generated', description: `Created ${result.partsCount} parts and ${result.billsCount} bills.` });
+                              } catch (err) {
+                                console.error('Demo generation failed:', err);
+                                toast({ title: 'Generation failed', description: String(err), variant: 'destructive' });
+                              } finally {
+                                setGenerating(false);
+                                setProgress(0);
+                              }
+                            }}
+                          >
+                            Generate
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          disabled={generating || clearing}
+                        >
+                          {generating ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Database className="h-4 w-4 mr-2" />
+                          )}
+                          3K Extended
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Generate Extended Demo Data?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will generate a large demo dataset simulating <strong>one year of shop activity</strong>. The system will create <strong>3,000 spare parts</strong> and <strong>3,000 bills</strong> with realistic profit margins, varied customers, and historical sales data. This data is for testing purposes only and can be removed using "Clear Demo Data".
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              setGenerating(true);
+                              setProgress(0);
+                              try {
+                                const exists = await hasDemoData();
+                                if (exists) {
+                                  toast({ title: 'Demo data already exists', description: 'Clear existing demo data first before generating new data.', variant: 'destructive' });
+                                  return;
+                                }
+                                const result = await insertExtendedDemoData((pct) => setProgress(pct));
+                                await refreshStats();
+                                toast({ title: 'Extended demo data generated', description: `Created ${result.partsCount} parts and ${result.billsCount} bills.` });
+                              } catch (err) {
+                                console.error('Extended demo generation failed:', err);
+                                toast({ title: 'Generation failed', description: String(err), variant: 'destructive' });
+                              } finally {
+                                setGenerating(false);
+                                setProgress(0);
+                              }
+                            }}
+                          >
+                            Generate
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="outline"
-                        className="flex-1 text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive w-full"
                         disabled={generating || clearing}
                       >
                         {clearing ? (
