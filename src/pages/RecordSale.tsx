@@ -55,6 +55,7 @@ export default function RecordSale() {
   const [addUnitPrice, setAddUnitPrice] = useState(0);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  const [partSearchOpen, setPartSearchOpen] = useState(false);
 
   const parts = useLiveQuery(() => db.parts.filter(p => p.quantity > 0).toArray(), []) ?? [];
 
