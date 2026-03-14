@@ -18,7 +18,7 @@ import {
   Check,
   Loader2
 } from 'lucide-react';
-import { saveAs } from 'file-saver';
+import { validateBackupFile, safeJsonParse } from '@/utils/backupValidation';
 import * as XLSX from 'xlsx';
 import { validateBackupFile, safeJsonParse } from '@/utils/backupValidation';
 
