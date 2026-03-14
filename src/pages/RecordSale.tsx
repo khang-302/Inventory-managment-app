@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 import { toast } from 'sonner';
-import { Loader2, Package, Plus, Pencil, Trash2, ShoppingBag, FileText } from 'lucide-react';
+import { Loader2, Package, Plus, Pencil, Trash2, ShoppingBag, FileText, ChevronsUpDown, Check } from 'lucide-react';
 import { persistFormValues } from '@/services/autocompleteService';
 import { cn } from '@/lib/utils';
 import { SaleSuccessDialog } from '@/components/sale/SaleSuccessDialog';
