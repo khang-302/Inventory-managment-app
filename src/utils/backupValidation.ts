@@ -45,7 +45,7 @@ const partSchema = z.object({
   images: z.array(z.string().max(MAX_STRING_LENGTH * 10)).max(10).optional().default([]),
   createdAt: dateSchema,
   updatedAt: dateSchema,
-}).passthrough(); // Allow additional fields for forward compatibility
+}).passthrough();
 
 // Brand schema
 const brandSchema = z.object({
@@ -97,6 +97,41 @@ const settingsSchema = z.object({
   updatedAt: dateSchema.optional(),
 }).passthrough();
 
+// Bill schema
+const billSchema = z.object({
+  id: z.string().max(MAX_SHORT_STRING),
+  billNumber: z.string().max(MAX_SHORT_STRING),
+  buyerName: z.string().max(MAX_STRING_LENGTH),
+  buyerPhone: z.string().max(MAX_SHORT_STRING).optional().default(''),
+  date: dateSchema,
+  subtotal: z.number().min(0).max(999999999),
+  discount: z.number().min(0).max(999999999).optional().default(0),
+  finalTotal: z.number().min(0).max(999999999),
+  notes: z.string().max(MAX_NOTES_LENGTH).optional().default(''),
+  createdAt: dateSchema,
+}).passthrough();
+
+// BillItem schema
+const billItemSchema = z.object({
+  id: z.string().max(MAX_SHORT_STRING),
+  billId: z.string().max(MAX_SHORT_STRING),
+  partName: z.string().max(MAX_STRING_LENGTH),
+  partCode: z.string().max(MAX_SHORT_STRING).optional().default(''),
+  brand: z.string().max(MAX_STRING_LENGTH).optional().default(''),
+  quantity: z.number().int().min(1).max(999999),
+  price: z.number().min(0).max(999999999),
+  total: z.number().min(0).max(999999999),
+}).passthrough();
+
+// AutocompleteEntry schema
+const autocompleteEntrySchema = z.object({
+  id: z.string().max(MAX_SHORT_STRING),
+  field: z.string().max(MAX_SHORT_STRING),
+  value: z.string().max(MAX_STRING_LENGTH),
+  linkedPhone: z.string().max(MAX_SHORT_STRING).optional(),
+  createdAt: dateSchema,
+}).passthrough();
+
 // Full backup file schema
 export const backupFileSchema = z.object({
   version: z.union([z.string(), z.number()]).transform(val => String(val)),
@@ -107,6 +142,9 @@ export const backupFileSchema = z.object({
   sales: z.array(saleSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
   activityLogs: z.array(activityLogSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
   settings: z.array(settingsSchema).max(1000).optional().default([]),
+  bills: z.array(billSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
+  billItems: z.array(billItemSchema).max(MAX_ARRAY_LENGTH).optional().default([]),
+  autocompleteEntries: z.array(autocompleteEntrySchema).max(MAX_ARRAY_LENGTH).optional().default([]),
 });
 
 export type BackupFile = z.infer<typeof backupFileSchema>;
@@ -132,7 +170,6 @@ export function validateBackupFile(data: unknown): BackupFile {
  * Safe JSON parse with size limit
  */
 export function safeJsonParse(text: string, maxSizeBytes: number = 100 * 1024 * 1024): unknown {
-  // Check file size (100MB max by default)
   const sizeInBytes = new Blob([text]).size;
   if (sizeInBytes > maxSizeBytes) {
     throw new Error(`Backup file too large. Maximum size is ${Math.round(maxSizeBytes / 1024 / 1024)}MB`);
@@ -150,6 +187,5 @@ export function safeJsonParse(text: string, maxSizeBytes: number = 100 * 1024 * 
  */
 export function sanitizeString(str: string): string {
   if (typeof str !== 'string') return '';
-  // Remove null bytes and control characters (except newlines and tabs)
   return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 }

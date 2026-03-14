@@ -11,6 +11,7 @@ import type {
 } from '@/types';
 import type { AppNotification, NotificationTemplate } from '@/types/notification';
 import type { CrashReport } from '@/types/crashReport';
+import type { Bill, BillItem, BillSettings } from '@/types/bill';
 
 // Ameer Autos Database - Dexie.js (IndexedDB) Setup
 export class AmeerAutosDB extends Dexie {
@@ -25,6 +26,9 @@ export class AmeerAutosDB extends Dexie {
   notifications!: Table<AppNotification>;
   notificationTemplates!: Table<NotificationTemplate>;
   crashReports!: Table<CrashReport>;
+  billSettings!: Table<BillSettings>;
+  bills!: Table<Bill>;
+  billItems!: Table<BillItem>;
 
   constructor() {
     super('AmeerAutosDB');
@@ -39,7 +43,6 @@ export class AmeerAutosDB extends Dexie {
       backupRecords: 'id, type, createdAt'
     });
 
-    // Version 2: Add isDeleted to activityLogs
     this.version(2).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
       brands: 'id, name, createdAt',
@@ -50,7 +53,6 @@ export class AmeerAutosDB extends Dexie {
       backupRecords: 'id, type, createdAt'
     });
 
-    // Version 3: Schema update
     this.version(3).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -61,7 +63,6 @@ export class AmeerAutosDB extends Dexie {
       backupRecords: 'id, type, createdAt'
     });
 
-    // Version 4: Add bill tables
     this.version(4).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -75,7 +76,6 @@ export class AmeerAutosDB extends Dexie {
       billItems: 'id, billId'
     });
 
-    // Version 5: Add autocomplete entries
     this.version(5).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -90,7 +90,6 @@ export class AmeerAutosDB extends Dexie {
       autocompleteEntries: 'id, field, [field+value]'
     });
 
-    // Version 6: Add notifications and templates
     this.version(6).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -107,7 +106,6 @@ export class AmeerAutosDB extends Dexie {
       notificationTemplates: 'id, createdAt'
     });
 
-    // Version 7: Add crash reports
     this.version(7).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -125,7 +123,6 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 8: Schema update
     this.version(8).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -143,7 +140,6 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 9: Schema update
     this.version(9).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -161,7 +157,6 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 10: Schema cleanup
     this.version(10).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
       brands: 'id, name, createdAt',
@@ -179,7 +174,6 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 11: Purge legacy demo records from IndexedDB
     this.version(11).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
       brands: 'id, name, createdAt',
@@ -196,7 +190,6 @@ export class AmeerAutosDB extends Dexie {
       notificationTemplates: 'id, createdAt',
       crashReports: 'id, errorCode, createdAt'
     }).upgrade(async (tx) => {
-      // Delete all parts with SKU starting with "DEMO-"
       const demoParts = await tx.table('parts').filter((p: any) => 
         p.sku && typeof p.sku === 'string' && p.sku.startsWith('DEMO-')
       ).toArray();
@@ -204,17 +197,13 @@ export class AmeerAutosDB extends Dexie {
       const demoPartIds = new Set(demoParts.map((p: any) => p.id));
       
       if (demoPartIds.size > 0) {
-        // Delete demo parts
         await tx.table('parts').bulkDelete([...demoPartIds]);
-        
-        // Delete sales referencing demo parts
         const demoSales = await tx.table('sales').filter((s: any) => demoPartIds.has(s.partId)).toArray();
         if (demoSales.length > 0) {
           await tx.table('sales').bulkDelete(demoSales.map((s: any) => s.id));
         }
       }
 
-      // Delete bills with demo-like patterns (customer "Walk-in Customer" with demo items)
       const allBills = await tx.table('bills').toArray();
       const billItems = await tx.table('billItems').toArray();
       
@@ -234,7 +223,6 @@ export class AmeerAutosDB extends Dexie {
       console.log(`[DB Migration v11] Purged ${demoPartIds.size} demo parts and associated records`);
     });
 
-    // Version 12: Comprehensive demo data purge – orphaned sales, remaining demo bills, activity logs
     this.version(12).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
       brands: 'id, name, createdAt',
@@ -251,7 +239,6 @@ export class AmeerAutosDB extends Dexie {
       notificationTemplates: 'id, createdAt',
       crashReports: 'id, errorCode, createdAt'
     }).upgrade(async (tx) => {
-      // 1. Delete orphaned sales (partId no longer in parts table)
       const allParts = await tx.table('parts').toArray();
       const validPartIds = new Set(allParts.map((p: any) => p.id));
       const allSales = await tx.table('sales').toArray();
@@ -260,7 +247,6 @@ export class AmeerAutosDB extends Dexie {
         await tx.table('sales').bulkDelete(orphanedSales.map((s: any) => s.id));
       }
 
-      // 2. Delete all bills containing demo items (partCode starts with DEMO-)
       const allBillItems = await tx.table('billItems').toArray();
       const demoBillIds = new Set<string>();
       for (const item of allBillItems) {
@@ -276,13 +262,11 @@ export class AmeerAutosDB extends Dexie {
         await tx.table('billItems').bulkDelete(itemsToDelete.map((i: any) => i.id));
       }
 
-      // 3. Reset bill counter
       const billSettings = await tx.table('billSettings').toArray();
       if (billSettings.length > 0) {
         await tx.table('billSettings').update(billSettings[0].id, { lastBillNumber: 0, updatedAt: new Date() });
       }
 
-      // 4. Clean activity logs referencing deleted entities
       const deletedEntityIds = new Set([
         ...orphanedSales.map((s: any) => s.id),
         ...demoBillIds,
@@ -296,6 +280,24 @@ export class AmeerAutosDB extends Dexie {
       }
 
       console.log(`[DB Migration v12] Purged ${orphanedSales.length} orphaned sales, ${demoBillIds.size} demo bills, and related activity logs`);
+    });
+
+    // Version 13: Performance optimization — compound indexes for sales/bills/parts search
+    this.version(13).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt, [partId+createdAt]',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt',
+      billSettings: 'id',
+      bills: 'id, billNumber, buyerName, createdAt',
+      billItems: 'id, billId',
+      autocompleteEntries: 'id, field, [field+value]',
+      notifications: 'id, type, isRead, createdAt, triggerType, isFired',
+      notificationTemplates: 'id, createdAt',
+      crashReports: 'id, errorCode, createdAt'
     });
   }
 }
@@ -329,6 +331,39 @@ export async function initializeDatabase(): Promise<void> {
       });
     }
   }
+
+  // Production integrity checks (non-blocking)
+  try {
+    await runIntegrityChecks();
+  } catch (e) {
+    console.warn('[DB] Integrity check failed:', e);
+  }
+}
+
+/**
+ * Startup integrity checks — remove orphaned/invalid records
+ */
+async function runIntegrityChecks(): Promise<void> {
+  // 1. Remove sales with NaN/invalid totalAmount or profit
+  const allSales = await db.sales.toArray();
+  const invalidSaleIds = allSales
+    .filter(s => !isFinite(Number(s.totalAmount)) || !isFinite(Number(s.profit)))
+    .map(s => s.id);
+  if (invalidSaleIds.length > 0) {
+    await db.sales.bulkDelete(invalidSaleIds);
+    console.log(`[DB Integrity] Removed ${invalidSaleIds.length} invalid sales`);
+  }
+
+  // 2. Remove orphaned billItems whose billId doesn't exist
+  const allBillIds = new Set((await db.bills.toArray()).map(b => b.id));
+  const allBillItems = await db.billItems.toArray();
+  const orphanedItemIds = allBillItems
+    .filter(bi => !allBillIds.has(bi.billId))
+    .map(bi => bi.id);
+  if (orphanedItemIds.length > 0) {
+    await db.billItems.bulkDelete(orphanedItemIds);
+    console.log(`[DB Integrity] Removed ${orphanedItemIds.length} orphaned bill items`);
+  }
 }
 
 // Get a setting value by key
@@ -352,7 +387,7 @@ export async function updateSetting(key: string, value: unknown): Promise<void> 
   }
 }
 
-// Export entire database for backup
+// Export entire database for backup (complete)
 export async function exportDatabase(): Promise<{
   parts: Part[];
   brands: Brand[];
@@ -360,16 +395,22 @@ export async function exportDatabase(): Promise<{
   sales: Sale[];
   activityLogs: ActivityLog[];
   settings: AppSettings[];
+  bills: Bill[];
+  billItems: BillItem[];
+  autocompleteEntries: AutocompleteEntry[];
   exportedAt: string;
   version: number;
 }> {
-  const [parts, brands, categories, sales, activityLogs, settings] = await Promise.all([
+  const [parts, brands, categories, sales, activityLogs, settings, bills, billItems, autocompleteEntries] = await Promise.all([
     db.parts.toArray(),
     db.brands.toArray(),
     db.categories.toArray(),
     db.sales.toArray(),
     db.activityLogs.toArray(),
     db.settings.toArray(),
+    db.bills.toArray(),
+    db.billItems.toArray(),
+    db.autocompleteEntries.toArray(),
   ]);
 
   return {
@@ -379,12 +420,15 @@ export async function exportDatabase(): Promise<{
     sales,
     activityLogs,
     settings,
+    bills,
+    billItems,
+    autocompleteEntries,
     exportedAt: new Date().toISOString(),
-    version: 1,
+    version: 2,
   };
 }
 
-// Import database from backup
+// Import database from backup (complete)
 export async function importDatabase(data: {
   parts?: Part[];
   brands?: Brand[];
@@ -392,9 +436,12 @@ export async function importDatabase(data: {
   sales?: Sale[];
   activityLogs?: ActivityLog[];
   settings?: AppSettings[];
+  bills?: Bill[];
+  billItems?: BillItem[];
+  autocompleteEntries?: AutocompleteEntry[];
 }): Promise<{ success: boolean; message: string }> {
   try {
-    await db.transaction('rw', [db.parts, db.brands, db.categories, db.sales, db.activityLogs, db.settings], async () => {
+    await db.transaction('rw', [db.parts, db.brands, db.categories, db.sales, db.activityLogs, db.settings, db.bills, db.billItems, db.autocompleteEntries], async () => {
       // Clear existing data
       await Promise.all([
         db.parts.clear(),
@@ -403,6 +450,9 @@ export async function importDatabase(data: {
         db.sales.clear(),
         db.activityLogs.clear(),
         db.settings.clear(),
+        db.bills.clear(),
+        db.billItems.clear(),
+        db.autocompleteEntries.clear(),
       ]);
 
       // Import new data
@@ -412,7 +462,9 @@ export async function importDatabase(data: {
       if (data.sales?.length) await db.sales.bulkAdd(data.sales);
       if (data.activityLogs?.length) await db.activityLogs.bulkAdd(data.activityLogs);
       if (data.settings?.length) await db.settings.bulkAdd(data.settings);
-
+      if (data.bills?.length) await db.bills.bulkAdd(data.bills);
+      if (data.billItems?.length) await db.billItems.bulkAdd(data.billItems);
+      if (data.autocompleteEntries?.length) await db.autocompleteEntries.bulkAdd(data.autocompleteEntries);
     });
 
     return { success: true, message: 'Database restored successfully' };
@@ -432,5 +484,10 @@ export async function clearDatabase(): Promise<void> {
     db.activityLogs.clear(),
     db.settings.clear(),
     db.backupRecords.clear(),
+    db.bills.clear(),
+    db.billItems.clear(),
+    db.autocompleteEntries.clear(),
+    db.notifications.clear(),
+    db.crashReports.clear(),
   ]);
 }

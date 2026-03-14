@@ -361,7 +361,7 @@ export async function exportReportToExcel(
   const avgSaleValue = sales.length > 0 ? totalSales / sales.length : 0;
 
   const summaryData = [
-    ['Ameer Autos - Report Summary'],
+    [`${range.label} - Report Summary`],
     [''],
     ['Report Period', range.label],
     ['Date Range', formatDateRange(range)],

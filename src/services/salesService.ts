@@ -16,10 +16,8 @@ interface MultiSaleInput {
  * Record a multi-item sale
  */
 export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sale[] } | { error: string }> {
-  // Validate cart not empty
   if (!data.items.length) return { error: 'Cart is empty' };
 
-  // Load all parts
   const partIds = data.items.map(i => i.partId);
   const partsArr = await Promise.all(partIds.map(id => db.parts.get(id)));
   const partsMap = new Map<string, Part>();
@@ -29,7 +27,6 @@ export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sa
     partsMap.set(part.id, part);
   }
 
-  // Aggregate quantities per part to check stock
   const qtyPerPart = new Map<string, number>();
   for (const item of data.items) {
     qtyPerPart.set(item.partId, (qtyPerPart.get(item.partId) || 0) + item.quantity);
@@ -73,7 +70,6 @@ export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sa
     grandProfit += profit;
   }
 
-  // Atomic transaction (skipLog on updateStock to avoid N+1 activity entries)
   await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
     for (const sale of sales) {
       await db.sales.add(sale);
@@ -94,7 +90,6 @@ export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sa
   import('@/services/notificationService').then(async (ns) => {
     for (const sale of sales) {
       await ns.notifyPartSold(sale.partName, sale.quantity, sale.totalAmount);
-      // Check low stock after sale
       const part = await db.parts.get(sale.partId);
       if (part && part.quantity <= part.minStockLevel) {
         await ns.notifyLowStock(part.name, part.quantity);
@@ -109,55 +104,38 @@ export async function recordMultiSale(data: MultiSaleInput): Promise<{ sales: Sa
  * Record a new sale
  */
 export async function recordSale(data: SaleFormData): Promise<Sale | { error: string }> {
-  // Get the part
   const part = await db.parts.get(data.partId);
-  if (!part) {
-    return { error: 'Part not found' };
-  }
+  if (!part) return { error: 'Part not found' };
   
-  // Safely convert quantities
   const requestedQuantity = toSafeQuantity(data.quantity, 0);
   const availableQuantity = toSafeQuantity(part.quantity, 0);
   const unitPrice = toSafeNumber(data.unitPrice, 0);
   const buyingPrice = toSafeNumber(part.buyingPrice, 0);
   
-  // Validate quantity
-  if (requestedQuantity <= 0) {
-    return { error: 'Quantity must be at least 1' };
-  }
+  if (requestedQuantity <= 0) return { error: 'Quantity must be at least 1' };
+  if (availableQuantity < requestedQuantity) return { error: `Insufficient stock. Available: ${availableQuantity}` };
   
-  // Check stock availability
-  if (availableQuantity < requestedQuantity) {
-    return { error: `Insufficient stock. Available: ${availableQuantity}` };
-  }
-  
-  // Calculate amounts with safe operations
   const totalAmount = calculateTotalSafe(requestedQuantity, unitPrice);
   const profit = calculateProfitSafe(buyingPrice, unitPrice, requestedQuantity);
   
-  // Create sale record
   const sale: Sale = {
     id: uuidv4(),
     partId: data.partId,
     partName: part.name,
     partSku: part.sku,
     quantity: requestedQuantity,
-    unitPrice: unitPrice,
-    totalAmount: totalAmount,
-    buyingPrice: buyingPrice,
-    profit: profit,
+    unitPrice,
+    totalAmount,
+    buyingPrice,
+    profit,
     customerName: data.customerName,
     customerPhone: data.customerPhone,
     notes: data.notes,
     createdAt: new Date(),
   };
   
-  // Use transaction to ensure atomicity
   await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
-    // Add sale record
     await db.sales.add(sale);
-    
-    // Deduct stock (negative change)
     await updateStock(part.id, -requestedQuantity, 'Sale');
   });
   
@@ -176,7 +154,6 @@ export async function recordSale(data: SaleFormData): Promise<Sale | { error: st
     },
   });
 
-  // Fire notifications (non-blocking)
   import('@/services/notificationService').then(async (ns) => {
     await ns.notifyPartSold(part.name, requestedQuantity, totalAmount);
     const updatedPart = await db.parts.get(part.id);
@@ -189,19 +166,17 @@ export async function recordSale(data: SaleFormData): Promise<Sale | { error: st
 }
 
 /**
- * Get all sales with optional date filtering
+ * Get all sales with optional date filtering — uses indexed query when possible
  */
 export async function getAllSales(dateRange?: DateRange): Promise<Sale[]> {
-  let sales = await db.sales.orderBy('createdAt').reverse().toArray();
-  
   if (dateRange) {
-    sales = sales.filter(s => {
-      const saleDate = new Date(s.createdAt);
-      return saleDate >= dateRange.startDate && saleDate <= dateRange.endDate;
-    });
+    return db.sales
+      .where('createdAt')
+      .between(dateRange.startDate, dateRange.endDate, true, true)
+      .reverse()
+      .toArray();
   }
-  
-  return sales;
+  return db.sales.orderBy('createdAt').reverse().toArray();
 }
 
 /**
@@ -212,25 +187,24 @@ export async function getSaleById(id: string): Promise<Sale | undefined> {
 }
 
 /**
- * Get sales for a specific part
+ * Get sales for a specific part — uses partId index
  */
 export async function getSalesByPart(partId: string): Promise<Sale[]> {
   return db.sales.where('partId').equals(partId).reverse().sortBy('createdAt');
 }
 
 /**
- * Get today's sales
+ * Get today's sales — uses indexed query on createdAt
  */
 export async function getTodaySales(): Promise<Sale[]> {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
   
-  const sales = await db.sales.toArray();
-  return sales.filter(s => {
-    const saleDate = new Date(s.createdAt);
-    return saleDate >= startOfDay && saleDate <= endOfDay;
-  });
+  return db.sales
+    .where('createdAt')
+    .between(startOfDay, endOfDay, true, true)
+    .toArray();
 }
 
 /**
@@ -246,7 +220,6 @@ export async function getSalesSummary(dateRange: DateRange): Promise<{
 }> {
   const sales = await getAllSales(dateRange);
   
-  // Calculate with safe number operations
   const totalSales = sales.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.totalAmount, 0)), 0);
   const totalProfit = sales.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.profit, 0)), 0);
   const salesCount = sales.length;
@@ -295,7 +268,6 @@ export async function getTopSellingParts(dateRange: DateRange, limit: number = 1
 }[]> {
   const sales = await getAllSales(dateRange);
   
-  // Group by part
   const partSales = new Map<string, {
     partName: string;
     sku: string;
@@ -321,7 +293,6 @@ export async function getTopSellingParts(dateRange: DateRange, limit: number = 1
     }
   }
   
-  // Convert to array and sort by quantity sold
   return Array.from(partSales.entries())
     .map(([partId, data]) => ({ partId, ...data }))
     .sort((a, b) => b.quantitySold - a.quantitySold)
@@ -335,10 +306,8 @@ export async function deleteSale(id: string): Promise<boolean> {
   const sale = await db.sales.get(id);
   if (!sale) return false;
   
-  // Restore stock and delete sale atomically
   await db.transaction('rw', [db.sales, db.parts, db.activityLogs], async () => {
     await db.sales.delete(id);
-    // Only restore stock for inventory-linked sales (QuickSell has partId='')
     if (sale.partId && sale.partId.trim() !== '') {
       const part = await db.parts.get(sale.partId);
       if (part) {
