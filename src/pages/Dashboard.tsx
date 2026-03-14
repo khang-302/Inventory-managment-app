@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
 import { formatCurrency } from '@/utils/currency';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
+import { db } from '@/db/database';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { startOfDay } from 'date-fns';
 import { getRelativeDate, formatTime } from '@/utils/dateUtils';
 import { getActivityIcon, getActivityColor } from '@/services/activityLogService';
 import { toSafeQuantity } from '@/utils/safeNumber';
