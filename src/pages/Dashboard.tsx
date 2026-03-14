@@ -219,7 +219,7 @@ export default function Dashboard() {
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Today's Sales Breakdown</p>
                 <div className="grid grid-cols-2 gap-0">
                   {/* New Sales Column */}
-                  <div className="pr-3 border-r border-border/40 space-y-2">
+                  <div className="pr-3 border-r border-border/40 space-y-2 cursor-pointer hover:bg-muted/40 rounded-lg p-2 -m-2 transition-colors" onClick={() => navigate('/reports?saleType=new')}>
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                         <ShoppingBag className="h-3.5 w-3.5 text-primary" />
