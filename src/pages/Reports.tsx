@@ -331,7 +331,7 @@ export default function Reports() {
         lowStockItems.map(i => ({ name: i.name, quantity: i.quantity, minStock: i.minStock })),
         inventoryByCategory, inventoryByBrand, visuals, appName,
       );
-      toast.success('PDF exported');
+      toast.success('PDF exported', { description: '📂 Open your file manager → AIM/Reports' });
     } catch (error) {
       console.error('PDF export failed:', error);
       toast.error(error instanceof Error ? error.message : 'PDF export failed');
@@ -344,7 +344,7 @@ export default function Reports() {
     setIsExporting('excel');
     try {
       await exportReportToExcel(selectedRange, filteredSales, parts, categories, brands);
-      toast.success('Excel exported');
+      toast.success('Excel exported', { description: '📂 Open your file manager → AIM/Reports' });
     } catch { toast.error('Excel export failed'); }
     finally { setIsExporting(null); }
   };
@@ -353,7 +353,7 @@ export default function Reports() {
     setIsExporting('csv');
     try {
       await exportReportToCSV(selectedRange, filteredSales, parts);
-      toast.success('CSV exported');
+      toast.success('CSV exported', { description: '📂 Open your file manager → AIM/Reports' });
     } catch { toast.error('CSV export failed'); }
     finally { setIsExporting(null); }
   };
