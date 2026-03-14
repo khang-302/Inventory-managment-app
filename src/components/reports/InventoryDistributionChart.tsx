@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { PieChart as PieIcon, BarChart3 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,33 +26,32 @@ interface InventoryDistributionChartProps {
   title?: string;
 }
 
-// Muted, professional color palette - works well in both light and dark modes
 const COLORS = [
-  'hsl(152, 45%, 42%)',  // Primary green (sales)
-  'hsl(210, 60%, 50%)',  // Blue (profit)
-  'hsl(175, 45%, 45%)',  // Teal (inventory)
-  'hsl(35, 70%, 52%)',   // Amber
-  'hsl(280, 45%, 55%)',  // Purple
-  'hsl(350, 55%, 55%)',  // Rose
-  'hsl(45, 65%, 52%)',   // Gold
-  'hsl(195, 55%, 48%)',  // Cyan
+  'hsl(152, 45%, 42%)',
+  'hsl(210, 60%, 50%)',
+  'hsl(175, 45%, 45%)',
+  'hsl(35, 70%, 52%)',
+  'hsl(280, 45%, 55%)',
+  'hsl(350, 55%, 55%)',
+  'hsl(45, 65%, 52%)',
+  'hsl(195, 55%, 48%)',
 ];
 
 const COLORS_DARK = [
-  'hsl(152, 40%, 48%)',  // Primary green (softer)
-  'hsl(210, 55%, 55%)',  // Blue (softer)
-  'hsl(175, 40%, 50%)',  // Teal (softer)
-  'hsl(35, 60%, 55%)',   // Amber (softer)
-  'hsl(280, 40%, 58%)',  // Purple (softer)
-  'hsl(350, 48%, 58%)',  // Rose (softer)
-  'hsl(45, 55%, 55%)',   // Gold (softer)
-  'hsl(195, 48%, 52%)',  // Cyan (softer)
+  'hsl(152, 40%, 48%)',
+  'hsl(210, 55%, 55%)',
+  'hsl(175, 40%, 50%)',
+  'hsl(35, 60%, 55%)',
+  'hsl(280, 40%, 58%)',
+  'hsl(350, 48%, 58%)',
+  'hsl(45, 55%, 55%)',
+  'hsl(195, 48%, 52%)',
 ];
 
-export function InventoryDistributionChart({ 
-  categoryData, 
+export function InventoryDistributionChart({
+  categoryData,
   brandData,
-  title = "Inventory Value Distribution" 
+  title = "Inventory Value Distribution"
 }: InventoryDistributionChartProps) {
   const { formatFull, formatValue } = useCurrencyFormat();
 
@@ -67,7 +66,7 @@ export function InventoryDistributionChart({
   const strokeColor = isDark ? 'hsl(220, 18%, 8%)' : 'hsl(0, 0%, 100%)';
 
   const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent < 0.05) return null; // Hide labels for small slices
+    if (percent < 0.05) return null;
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -80,7 +79,7 @@ export function InventoryDistributionChart({
         fill={isDark ? 'hsl(220, 15%, 90%)' : 'hsl(0, 0%, 100%)'}
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={10}
+        fontSize={9}
         fontWeight={500}
       >
         {`${(percent * 100).toFixed(0)}%`}
@@ -89,14 +88,16 @@ export function InventoryDistributionChart({
   };
 
   return (
-    <Card className="bg-card border-border/50 card-shadow animate-fade-in">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <PieIcon className="h-4 w-4 text-primary" />
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className="bg-card border-border/30 shadow-sm overflow-hidden rounded-2xl">
+      <CardContent className="p-4">
+        {/* Header — consistent icon+title pattern */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <PieIcon className="h-4 w-4 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold">{title}</h3>
+        </div>
+
         <Tabs defaultValue="category" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="category" className="text-xs">
@@ -108,56 +109,57 @@ export function InventoryDistributionChart({
               By Brand
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="category">
             {categoryData.length > 0 ? (
               <div>
                 <div style={{ width: '100%', height: 220 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={90}
-                      labelLine={false}
-                      label={CustomLabel}
-                      isAnimationActive={true}
-                      animationDuration={600}
-                      animationEasing="ease-out"
-                    >
-                      {categoryData.map((_, index) => (
-                        <Cell 
-                          key={index} 
-                          fill={colors[index % colors.length]}
-                          stroke={strokeColor}
-                          strokeWidth={2}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: tooltipBg,
-                        border: `1px solid ${tooltipBorder}`,
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                      }}
-                      formatter={(value: number) => [formatFull(value), 'Value']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={85}
+                        labelLine={false}
+                        label={CustomLabel}
+                        isAnimationActive={true}
+                        animationDuration={600}
+                        animationEasing="ease-out"
+                      >
+                        {categoryData.map((_, index) => (
+                          <Cell
+                            key={index}
+                            fill={colors[index % colors.length]}
+                            stroke={strokeColor}
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: tooltipBg,
+                          border: `1px solid ${tooltipBorder}`,
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                          padding: '8px 12px',
+                        }}
+                        formatter={(value: number) => [formatFull(value), 'Value']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-2 justify-center mt-3 px-2"
                   style={{ fontSize: `calc(0.75rem * var(--chart-legend-scale, 1) * var(--text-scale, 1))` }}
                 >
                   {categoryData.map((item, index) => (
                     <div key={item.name} className="flex items-start gap-1.5 max-w-[48%]">
-                      <div 
-                        className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5" 
+                      <div
+                        className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5"
                         style={{ backgroundColor: colors[index % colors.length] }}
                       />
                       <span className="text-muted-foreground break-words leading-tight line-clamp-2">{item.name}</span>
@@ -171,7 +173,7 @@ export function InventoryDistributionChart({
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="brand">
             {brandData.length > 0 ? (
               <div className="h-64">
@@ -195,15 +197,16 @@ export function InventoryDistributionChart({
                       contentStyle={{
                         backgroundColor: tooltipBg,
                         border: `1px solid ${tooltipBorder}`,
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        padding: '8px 12px',
                       }}
                       formatter={(value: number) => [formatFull(value), 'Value']}
                     />
-                    <Bar 
-                      dataKey="value" 
-                      fill={isDark ? 'hsl(175, 40%, 50%)' : 'hsl(175, 45%, 45%)'} 
+                    <Bar
+                      dataKey="value"
+                      fill={isDark ? 'hsl(175, 40%, 50%)' : 'hsl(175, 45%, 45%)'}
                       radius={[0, 4, 4, 0]}
                       isAnimationActive={true}
                       animationDuration={600}

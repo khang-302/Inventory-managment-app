@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { EmergencyIndicator } from '@/components/ui/emergency-indicator';
 import {
   ResponsiveContainer,
@@ -23,17 +23,16 @@ interface LowStockChartProps {
   title?: string;
 }
 
-// Muted, professional urgency colors
 const URGENCY_COLORS = {
   light: {
-    critical: 'hsl(0, 65%, 50%)',     // Red - critical
-    warning: 'hsl(35, 75%, 50%)',     // Amber - warning
-    near: 'hsl(45, 70%, 48%)',        // Yellow - near threshold
+    critical: 'hsl(0, 65%, 50%)',
+    warning: 'hsl(35, 75%, 50%)',
+    near: 'hsl(45, 70%, 48%)',
   },
   dark: {
-    critical: 'hsl(0, 55%, 55%)',     // Red - softer
-    warning: 'hsl(35, 60%, 52%)',     // Amber - softer
-    near: 'hsl(45, 55%, 50%)',        // Yellow - softer
+    critical: 'hsl(0, 55%, 55%)',
+    warning: 'hsl(35, 60%, 52%)',
+    near: 'hsl(45, 55%, 50%)',
   },
 };
 
@@ -49,58 +48,52 @@ export function LowStockChart({ data, title = "Low Stock Risk Analysis" }: LowSt
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case 'critical':
-        return colors.critical;
-      case 'warning':
-        return colors.warning;
-      case 'near':
-        return colors.near;
-      default:
-        return isDark ? 'hsl(220, 8%, 50%)' : 'hsl(220, 10%, 60%)';
+      case 'critical': return colors.critical;
+      case 'warning': return colors.warning;
+      case 'near': return colors.near;
+      default: return isDark ? 'hsl(220, 8%, 50%)' : 'hsl(220, 10%, 60%)';
     }
   };
 
   const getUrgencyLabel = (urgency: string) => {
     switch (urgency) {
-      case 'critical':
-        return 'Critical';
-      case 'warning':
-        return 'Warning';
-      case 'near':
-        return 'Near Threshold';
-      default:
-        return 'Unknown';
+      case 'critical': return 'Critical';
+      case 'warning': return 'Warning';
+      case 'near': return 'Near Threshold';
+      default: return 'Unknown';
     }
   };
 
-  // Sort by urgency (critical first)
   const sortedData = [...data].sort((a, b) => {
     const order = { critical: 0, warning: 1, near: 2 };
     return order[a.urgency] - order[b.urgency];
-  });
+  }).map(d => ({
+    ...d,
+    name: d.name.length > 15 ? d.name.substring(0, 15) + '…' : d.name,
+  }));
 
   return (
-    <Card className="bg-card border-border/50 card-shadow animate-fade-in">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
+    <Card className="bg-card border-border/30 shadow-sm overflow-hidden rounded-2xl">
+      <CardContent className="p-4">
+        {/* Header — consistent icon+title pattern */}
+        <div className="flex items-center gap-2 mb-3">
           <EmergencyIndicator size="md" />
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+          <h3 className="text-sm font-semibold">{title}</h3>
+        </div>
+
         {/* Legend */}
         <div className="flex flex-wrap gap-3 mb-4">
           <div className="flex items-center gap-1.5 text-xs">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors.critical }} />
-            <span className="text-muted-foreground">Critical (0 stock)</span>
+            <span className="text-muted-foreground">Critical</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors.warning }} />
-            <span className="text-muted-foreground">Warning (&lt;50% min)</span>
+            <span className="text-muted-foreground">Warning</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors.near }} />
-            <span className="text-muted-foreground">Near Threshold</span>
+            <span className="text-muted-foreground">Near</span>
           </div>
         </div>
 
@@ -119,15 +112,16 @@ export function LowStockChart({ data, title = "Low Stock Risk Analysis" }: LowSt
                 type="category"
                 tick={{ fontSize: 10, fill: textColor }}
                 axisLine={{ stroke: gridColor }}
-                width={100}
+                width={90}
               />
               <Tooltip
                 contentStyle={{
                   backgroundColor: tooltipBg,
                   border: `1px solid ${tooltipBorder}`,
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  padding: '8px 12px',
                 }}
                 formatter={(value: number, _, props) => {
                   const item = props.payload as LowStockItem;
@@ -137,8 +131,8 @@ export function LowStockChart({ data, title = "Low Stock Risk Analysis" }: LowSt
                   ];
                 }}
               />
-              <Bar 
-                dataKey="quantity" 
+              <Bar
+                dataKey="quantity"
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={true}
                 animationDuration={600}

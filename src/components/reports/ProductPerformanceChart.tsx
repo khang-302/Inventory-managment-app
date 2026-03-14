@@ -26,14 +26,14 @@ interface ProductPerformanceChartProps {
 }
 
 const BAR_COLORS = [
-  'hsl(37, 92%, 50%)',   // Primary amber
-  'hsl(152, 50%, 45%)',  // Green
-  'hsl(210, 60%, 50%)',  // Blue
-  'hsl(175, 45%, 45%)',  // Teal
-  'hsl(280, 45%, 55%)',  // Purple
-  'hsl(350, 55%, 55%)',  // Rose
-  'hsl(45, 65%, 52%)',   // Gold
-  'hsl(195, 55%, 48%)',  // Cyan
+  'hsl(37, 92%, 50%)',
+  'hsl(152, 50%, 45%)',
+  'hsl(210, 60%, 50%)',
+  'hsl(175, 45%, 45%)',
+  'hsl(280, 45%, 55%)',
+  'hsl(350, 55%, 55%)',
+  'hsl(45, 65%, 52%)',
+  'hsl(195, 55%, 48%)',
 ];
 
 export function ProductPerformanceChart({
@@ -50,13 +50,12 @@ export function ProductPerformanceChart({
   const tooltipBg = isDark ? 'hsl(220, 16%, 12%)' : 'hsl(0, 0%, 100%)';
   const tooltipBorder = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 90%)';
 
-  // Sort by quantity sold and take top 8 for mobile readability
   const chartData = [...data]
     .sort((a, b) => b.unitsSold - a.unitsSold)
     .slice(0, 8)
     .map(d => ({
       ...d,
-      shortName: d.name.length > 12 ? d.name.substring(0, 12) + '…' : d.name,
+      shortName: d.name.length > 10 ? d.name.substring(0, 10) + '…' : d.name,
     }));
 
   return (
@@ -69,7 +68,7 @@ export function ProductPerformanceChart({
           <h3 className="text-sm font-semibold">{title}</h3>
         </div>
 
-        <div className="h-56 -mx-2">
+        <div className="h-56 -mx-1">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />

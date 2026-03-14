@@ -40,48 +40,49 @@ export function KPICard({
     return `${value}${suffix}`;
   })();
 
-  const textSize = formatted.length > 8 ? 'text-lg' : 'text-xl';
+  const textSize = formatted.length > 10 ? 'text-base' : formatted.length > 8 ? 'text-lg' : 'text-xl';
 
   return (
     <div
       className={cn(
         'relative overflow-hidden rounded-2xl p-4',
         'bg-card border border-border/40',
-        'shadow-sm hover:shadow-md transition-shadow duration-300',
+        'shadow-sm hover:shadow-md transition-all duration-300',
         highlight && 'border-destructive/30',
         className,
       )}
     >
-      {/* Accent line at top */}
+      {/* Accent gradient line at top */}
       <div
         className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl"
         style={{
-          background: accentColor || 'hsl(var(--primary))',
-          opacity: 0.8,
+          background: accentColor
+            ? `linear-gradient(90deg, ${accentColor}, ${accentColor}99)`
+            : 'hsl(var(--primary))',
         }}
       />
 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
             {title}
           </p>
           {loading ? (
             <Skeleton className="h-7 w-20" />
           ) : (
-            <div className="flex items-baseline gap-1 whitespace-nowrap">
+            <div className="flex items-baseline gap-1 overflow-hidden">
               {isCurrency && (
-                <span className="text-xs font-medium text-muted-foreground">Rs</span>
+                <span className="text-xs font-medium text-muted-foreground shrink-0">Rs</span>
               )}
-              <p className={cn(textSize, 'font-bold tracking-tight')}>{formatted}</p>
+              <p className={cn(textSize, 'font-bold tracking-tight tabular-nums truncate')}>{formatted}</p>
             </div>
           )}
         </div>
         <div
           className={cn(
             'shrink-0 w-10 h-10 rounded-xl flex items-center justify-center',
-            'bg-primary/10',
-            highlight && 'bg-destructive/10',
+            'bg-primary/10 border border-primary/10',
+            highlight && 'bg-destructive/10 border-destructive/10',
           )}
         >
           {icon}

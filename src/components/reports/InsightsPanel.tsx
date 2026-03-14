@@ -1,9 +1,10 @@
-import { TrendingUp, TrendingDown, Award, AlertCircle, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Award, AlertCircle, BarChart3, Lightbulb } from 'lucide-react';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface InsightsPanelProps {
-  salesGrowth: number; // percentage
+  salesGrowth: number;
   topProduct: { name: string; qty: number } | null;
   lowestProduct: { name: string; qty: number } | null;
   avgDailySales: number;
@@ -51,32 +52,37 @@ export function InsightsPanel({
   ];
 
   return (
-    <div className="space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 px-1">
-        Quick Insights
-      </h3>
-      <div className="grid grid-cols-2 gap-2">
-        {insights.map((insight, i) => {
-          const Icon = insight.icon;
-          return (
-            <div
-              key={i}
-              className="flex items-center gap-2.5 p-3 rounded-xl bg-card border border-border/30 shadow-sm"
-            >
-              <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', insight.bgColor)}>
-                <Icon className={cn('h-4 w-4', insight.color)} />
+    <Card className="bg-card border-border/30 shadow-sm overflow-hidden rounded-2xl">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Lightbulb className="h-4 w-4 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold">Quick Insights</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {insights.map((insight, i) => {
+            const Icon = insight.icon;
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/20 border border-border/20 overflow-hidden"
+              >
+                <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', insight.bgColor)}>
+                  <Icon className={cn('h-4 w-4', insight.color)} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider whitespace-nowrap">{insight.label}</p>
+                  <p className={cn('text-sm font-bold truncate', insight.color)}>{insight.value}</p>
+                  {insight.subValue && (
+                    <p className="text-[10px] text-muted-foreground/50">{insight.subValue}</p>
+                  )}
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">{insight.label}</p>
-                <p className={cn('text-sm font-bold truncate', insight.color)}>{insight.value}</p>
-                {insight.subValue && (
-                  <p className="text-[10px] text-muted-foreground/50">{insight.subValue}</p>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
