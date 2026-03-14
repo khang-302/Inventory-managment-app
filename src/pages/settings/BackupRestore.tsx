@@ -151,7 +151,7 @@ export default function BackupRestore() {
         entityType: 'backup',
         description: 'Created CSV backup'
       });
-      toast.success(result.path ? `Backup saved to ${result.path}` : 'CSV backup created successfully');
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'CSV backup created successfully', { description: '📂 Open your file manager → AIM/Backups' });
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {

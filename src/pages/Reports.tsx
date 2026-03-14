@@ -353,7 +353,7 @@ export default function Reports() {
     setIsExporting('csv');
     try {
       await exportReportToCSV(selectedRange, filteredSales, parts);
-      toast.success('CSV exported');
+      toast.success('CSV exported', { description: '📂 Open your file manager → AIM/Reports' });
     } catch { toast.error('CSV export failed'); }
     finally { setIsExporting(null); }
   };

@@ -49,7 +49,7 @@ export function SaleSuccessDialog({ open, billId, billNumber, onClose }: SaleSuc
           const dataUrl = await captureBillAsImage(previewRef.current);
           const filename = `Bill-${billNumber}.png`;
           const result = await saveImageToGallery(dataUrl, filename);
-          toast.success(result.path ? `Bill saved to: ${result.path}` : 'Bill image saved!');
+          toast.success(result.path ? `Bill saved to: ${result.path}` : 'Bill image saved!', { description: '📂 Open your file manager → AIM/Bills' });
         } catch {
           toast.error('Failed to share bill');
         } finally {
