@@ -163,33 +163,36 @@ function createPopularityPicker(partsCount: number): () => number {
 
 // ── Generators ───────────────────────────────────────────────────────
 
-// Flatten all templates once
-const ALL_TEMPLATES: { category: string; name: string }[] = [];
-for (const [cat, names] of Object.entries(PART_CATEGORIES)) {
+// Flatten small templates once
+const ALL_TEMPLATES_SMALL: { category: string; name: string }[] = [];
+for (const [cat, names] of Object.entries(PART_CATEGORIES_SMALL)) {
   for (const name of names) {
-    ALL_TEMPLATES.push({ category: cat, name });
+    ALL_TEMPLATES_SMALL.push({ category: cat, name });
   }
 }
 
-export function generateDemoSpareParts(count: number = 1000, opts?: { maxQty?: number; minStockMax?: number; monthsBack?: number }): Part[] {
+export function generateDemoSpareParts(count: number = 1000, opts?: { maxQty?: number; minStockMax?: number; monthsBack?: number; useExtended?: boolean }): Part[] {
   const maxQty = opts?.maxQty ?? 200;
   const minStockMax = opts?.minStockMax ?? 20;
   const monthsBack = opts?.monthsBack ?? 6;
+  const useExtended = opts?.useExtended ?? (count > 1000);
+  const templates = useExtended ? ALL_EXTENDED_TEMPLATES : ALL_TEMPLATES_SMALL;
+  const brands = useExtended ? BRANDS_EXTENDED : BRANDS_SMALL;
   const parts: Part[] = [];
 
   for (let i = 0; i < count; i++) {
-    const template = ALL_TEMPLATES[i % ALL_TEMPLATES.length];
-    const variant = Math.floor(i / ALL_TEMPLATES.length) + 1;
-    const suffix = ALL_TEMPLATES.length <= count ? ` Model ${String(variant).padStart(2, '0')}` : '';
+    const template = templates[i % templates.length];
+    const variant = Math.floor(i / templates.length) + 1;
+    const suffix = templates.length <= count ? ` V${String(variant).padStart(2, '0')}` : '';
     const partName = `${template.name}${suffix}`;
     const buyingPrice = rand(500, 150000);
-    const markup = count > 1000 ? getWeightedMargin() : (1 + rand(20, 40) / 100);
+    const markup = useExtended ? getWeightedMargin() : (1 + rand(20, 40) / 100);
 
     parts.push({
       id: uuidv4(),
       name: partName,
       sku: `DEMO-${String(i + 1).padStart(4, '0')}`,
-      brandId: pick(BRANDS),
+      brandId: pick(brands),
       categoryId: template.category,
       buyingPrice,
       sellingPrice: Math.round(buyingPrice * markup),
