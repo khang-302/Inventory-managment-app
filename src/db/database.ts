@@ -50,7 +50,7 @@ export class AmeerAutosDB extends Dexie {
       backupRecords: 'id, type, createdAt'
     });
 
-    // Version 3: Add isDemo index to parts
+    // Version 3: Schema update
     this.version(3).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
