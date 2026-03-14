@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
@@ -72,7 +73,9 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [saleType, setSaleType] = useState<SaleType>('all');
+  const [searchParams] = useSearchParams();
+  const initialSaleType = (searchParams.get('saleType') as SaleType) || 'all';
+  const [saleType, setSaleType] = useState<SaleType>(initialSaleType);
 
   // Pull-to-refresh
   const [pullDistance, setPullDistance] = useState(0);
