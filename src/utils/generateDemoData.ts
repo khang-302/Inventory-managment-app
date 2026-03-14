@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Part } from '@/types';
+import type { Part, Sale } from '@/types';
 import type { Bill, BillItem } from '@/types/bill';
 import { db } from '@/db/database';
 import { BRANDS_EXTENDED, ALL_EXTENDED_TEMPLATES } from './demoDataConstants';
@@ -120,16 +120,9 @@ function randomDate(monthsBack: number): Date {
 /** Returns a weighted margin multiplier */
 function getWeightedMargin(): number {
   const roll = Math.random();
-  if (roll < 0.2) {
-    // Low margin: 5–10%
-    return 1 + (rand(5, 10) / 100);
-  } else if (roll < 0.8) {
-    // Normal margin: 15–30%
-    return 1 + (rand(15, 30) / 100);
-  } else {
-    // High margin: 30–45%
-    return 1 + (rand(30, 45) / 100);
-  }
+  if (roll < 0.2) return 1 + (rand(5, 10) / 100);
+  if (roll < 0.8) return 1 + (rand(15, 30) / 100);
+  return 1 + (rand(30, 45) / 100);
 }
 
 /** Returns weighted item count for a bill */
@@ -142,7 +135,6 @@ function getWeightedItemCount(): number {
 
 /** Creates a popularity-weighted index picker for parts */
 function createPopularityPicker(partsCount: number): () => number {
-  // Assign weights: first 10% are "popular" (weight 10), next 30% "normal" (weight 3), rest "rare" (weight 1)
   const weights: number[] = [];
   let totalWeight = 0;
   for (let i = 0; i < partsCount; i++) {
@@ -214,17 +206,20 @@ export function generateDemoBills(
   count: number = 1000,
   parts: Part[],
   opts?: { monthsBack?: number; useWeightedItems?: boolean },
-): { bills: Bill[]; billItems: BillItem[] } {
+): { bills: Bill[]; billItems: BillItem[]; sales: Sale[] } {
   const monthsBack = opts?.monthsBack ?? 6;
   const useWeighted = opts?.useWeightedItems ?? false;
   const bills: Bill[] = [];
   const billItems: BillItem[] = [];
+  const sales: Sale[] = [];
   const popularityPick = useWeighted ? createPopularityPicker(parts.length) : null;
 
   for (let i = 0; i < count; i++) {
     const billId = uuidv4();
     const itemCount = useWeighted ? getWeightedItemCount() : rand(1, 5);
     const date = randomDate(monthsBack);
+    const customerName = `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`;
+    const customerPhone = randomPhone();
     let subtotal = 0;
     const usedParts = new Set<number>();
 
@@ -259,6 +254,23 @@ export function generateDemoBills(
         price,
         total,
       });
+
+      // Create corresponding Sale record for reports/dashboard
+      sales.push({
+        id: uuidv4(),
+        partId: part.id,
+        partName: part.name,
+        partSku: part.sku,
+        quantity: qty,
+        unitPrice: price,
+        totalAmount: total,
+        buyingPrice: part.buyingPrice,
+        profit: total - (qty * part.buyingPrice),
+        customerName,
+        customerPhone,
+        isDemo: true,
+        createdAt: date,
+      });
     }
 
     const discountPct = rand(0, 10);
@@ -267,8 +279,8 @@ export function generateDemoBills(
     bills.push({
       id: billId,
       billNumber: `DEMO-${String(i + 1).padStart(4, '0')}`,
-      buyerName: `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`,
-      buyerPhone: randomPhone(),
+      buyerName: customerName,
+      buyerPhone: customerPhone,
       date,
       subtotal,
       discount,
@@ -279,7 +291,7 @@ export function generateDemoBills(
     });
   }
 
-  return { bills, billItems };
+  return { bills, billItems, sales };
 }
 
 // ── Database operations ──────────────────────────────────────────────
@@ -296,10 +308,10 @@ export async function insertDemoData(
   const parts = generateDemoSpareParts(1000);
   onProgress?.(5);
 
-  const { bills, billItems } = generateDemoBills(1000, parts);
+  const { bills, billItems, sales } = generateDemoBills(1000, parts);
   onProgress?.(10);
 
-  await batchInsertAll(parts, bills, billItems, onProgress, 10);
+  await batchInsertAll(parts, bills, billItems, sales, onProgress, 10);
   onProgress?.(100);
   return { partsCount: parts.length, billsCount: bills.length };
 }
@@ -310,10 +322,10 @@ export async function insertExtendedDemoData(
   const parts = generateDemoSpareParts(3000, { maxQty: 300, minStockMax: 25, monthsBack: 12, useExtended: true });
   onProgress?.(5);
 
-  const { bills, billItems } = generateDemoBills(3000, parts, { monthsBack: 12, useWeightedItems: true });
+  const { bills, billItems, sales } = generateDemoBills(3000, parts, { monthsBack: 12, useWeightedItems: true });
   onProgress?.(10);
 
-  await batchInsertAll(parts, bills, billItems, onProgress, 10);
+  await batchInsertAll(parts, bills, billItems, sales, onProgress, 10);
   onProgress?.(100);
   return { partsCount: parts.length, billsCount: bills.length };
 }
@@ -322,12 +334,14 @@ async function batchInsertAll(
   parts: Part[],
   bills: Bill[],
   billItems: BillItem[],
+  sales: Sale[],
   onProgress?: (pct: number) => void,
   startPct: number = 10,
 ) {
   const totalSteps = Math.ceil(parts.length / BATCH_SIZE)
     + Math.ceil(bills.length / BATCH_SIZE)
-    + Math.ceil(billItems.length / BATCH_SIZE);
+    + Math.ceil(billItems.length / BATCH_SIZE)
+    + Math.ceil(sales.length / BATCH_SIZE);
   let step = 0;
 
   for (let i = 0; i < parts.length; i += BATCH_SIZE) {
@@ -347,6 +361,12 @@ async function batchInsertAll(
     step++;
     onProgress?.(startPct + Math.round((step / totalSteps) * (95 - startPct)));
   }
+
+  for (let i = 0; i < sales.length; i += BATCH_SIZE) {
+    await db.sales.bulkAdd(sales.slice(i, i + BATCH_SIZE));
+    step++;
+    onProgress?.(startPct + Math.round((step / totalSteps) * (95 - startPct)));
+  }
 }
 
 export async function clearDemoData(): Promise<{ partsCleared: number; billsCleared: number }> {
@@ -360,10 +380,14 @@ export async function clearDemoData(): Promise<{ partsCleared: number; billsClea
     .filter((bi: any) => demoBillIds.includes(bi.billId))
     .toArray();
 
-  await db.transaction('rw', [db.parts, (db as any).bills, (db as any).billItems], async () => {
+  const demoSales = await db.sales.filter((s: any) => s.isDemo === true).toArray();
+  const demoSaleIds = demoSales.map(s => s.id);
+
+  await db.transaction('rw', [db.parts, db.sales, (db as any).bills, (db as any).billItems], async () => {
     if (demoPartIds.length) await db.parts.bulkDelete(demoPartIds);
     if (demoBillIds.length) await (db as any).bills.bulkDelete(demoBillIds);
     if (demoBillItems.length) await (db as any).billItems.bulkDelete(demoBillItems.map((bi: any) => bi.id));
+    if (demoSaleIds.length) await db.sales.bulkDelete(demoSaleIds);
   });
 
   return { partsCleared: demoParts.length, billsCleared: demoBills.length };
