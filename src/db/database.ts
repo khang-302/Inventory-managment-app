@@ -233,6 +233,70 @@ export class AmeerAutosDB extends Dexie {
       
       console.log(`[DB Migration v11] Purged ${demoPartIds.size} demo parts and associated records`);
     });
+
+    // Version 12: Comprehensive demo data purge – orphaned sales, remaining demo bills, activity logs
+    this.version(12).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt',
+      billSettings: 'id',
+      bills: 'id, billNumber, createdAt',
+      billItems: 'id, billId',
+      autocompleteEntries: 'id, field, [field+value]',
+      notifications: 'id, type, isRead, createdAt, triggerType, isFired',
+      notificationTemplates: 'id, createdAt',
+      crashReports: 'id, errorCode, createdAt'
+    }).upgrade(async (tx) => {
+      // 1. Delete orphaned sales (partId no longer in parts table)
+      const allParts = await tx.table('parts').toArray();
+      const validPartIds = new Set(allParts.map((p: any) => p.id));
+      const allSales = await tx.table('sales').toArray();
+      const orphanedSales = allSales.filter((s: any) => !validPartIds.has(s.partId));
+      if (orphanedSales.length > 0) {
+        await tx.table('sales').bulkDelete(orphanedSales.map((s: any) => s.id));
+      }
+
+      // 2. Delete all bills containing demo items (partCode starts with DEMO-)
+      const allBillItems = await tx.table('billItems').toArray();
+      const demoBillIds = new Set<string>();
+      for (const item of allBillItems) {
+        const code = (item as any).partCode || '';
+        if (typeof code === 'string' && code.startsWith('DEMO-')) {
+          demoBillIds.add((item as any).billId);
+        }
+      }
+
+      if (demoBillIds.size > 0) {
+        await tx.table('bills').bulkDelete([...demoBillIds]);
+        const itemsToDelete = allBillItems.filter((i: any) => demoBillIds.has(i.billId));
+        await tx.table('billItems').bulkDelete(itemsToDelete.map((i: any) => i.id));
+      }
+
+      // 3. Reset bill counter
+      const billSettings = await tx.table('billSettings').toArray();
+      if (billSettings.length > 0) {
+        await tx.table('billSettings').update(billSettings[0].id, { lastBillNumber: 0, updatedAt: new Date() });
+      }
+
+      // 4. Clean activity logs referencing deleted entities
+      const deletedEntityIds = new Set([
+        ...orphanedSales.map((s: any) => s.id),
+        ...demoBillIds,
+      ]);
+      if (deletedEntityIds.size > 0) {
+        const logs = await tx.table('activityLogs').toArray();
+        const logsToDelete = logs.filter((l: any) => l.entityId && deletedEntityIds.has(l.entityId));
+        if (logsToDelete.length > 0) {
+          await tx.table('activityLogs').bulkDelete(logsToDelete.map((l: any) => l.id));
+        }
+      }
+
+      console.log(`[DB Migration v12] Purged ${orphanedSales.length} orphaned sales, ${demoBillIds.size} demo bills, and related activity logs`);
+    });
   }
 }
 
