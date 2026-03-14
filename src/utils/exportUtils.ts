@@ -1,10 +1,10 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { formatCurrency } from './currency';
 import { formatDateRange } from './dateUtils';
 import { toSafeNumber, toSafeQuantity } from './safeNumber';
+import { saveToDevice } from './nativeShare';
 import type { DateRange, ReportSummary, Part, Sale, Brand, Category } from '@/types';
 
 // Extend jsPDF with autotable
@@ -333,7 +333,8 @@ export async function exportReportToPDF(
   }
 
   const filename = `${shopName.toLowerCase().replace(/\s+/g, '-')}-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(filename);
+  const pdfBlob = doc.output('blob');
+  await saveToDevice(pdfBlob, 'Reports', filename);
 }
 
 /**
@@ -504,7 +505,7 @@ export async function exportReportToExcel(
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
   const filename = `ameer-autos-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.xlsx`;
-  saveAs(blob, filename);
+  await saveToDevice(blob, 'Reports', filename);
 }
 
 /**
@@ -583,7 +584,7 @@ export async function exportReportToCSV(
   ].join('\n');
 
   // Separate files (as required)
-  saveAs(new Blob([salesCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-sales.csv`);
-  saveAs(new Blob([inventoryCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-inventory.csv`);
-  saveAs(new Blob([lowStockCSV], { type: 'text/csv;charset=utf-8;' }), `${baseName}-low-stock.csv`);
+  await saveToDevice(new Blob([salesCSV], { type: 'text/csv;charset=utf-8;' }), 'Reports', `${baseName}-sales.csv`);
+  await saveToDevice(new Blob([inventoryCSV], { type: 'text/csv;charset=utf-8;' }), 'Reports', `${baseName}-inventory.csv`);
+  await saveToDevice(new Blob([lowStockCSV], { type: 'text/csv;charset=utf-8;' }), 'Reports', `${baseName}-low-stock.csv`);
 }

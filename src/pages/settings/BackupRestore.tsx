@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { exportDatabase, importDatabase, db } from '@/db/database';
 import { logActivity } from '@/services/activityLogService';
 import { toast } from 'sonner';
+import { saveToDevice } from '@/utils/nativeShare';
 import { 
   Download, 
   Upload, 
@@ -17,7 +18,6 @@ import {
   Check,
   Loader2
 } from 'lucide-react';
-import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import { validateBackupFile, safeJsonParse } from '@/utils/backupValidation';
 
@@ -36,14 +36,14 @@ export default function BackupRestore() {
     try {
       const data = await exportDatabase();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      saveAs(blob, generateFilename('json'));
+      const result = await saveToDevice(blob, 'Backups', generateFilename('json'));
       
       await logActivity({
         action: 'backup',
         entityType: 'backup',
         description: 'Created JSON backup'
       });
-      toast.success('JSON backup created successfully');
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'JSON backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
@@ -109,14 +109,14 @@ export default function BackupRestore() {
 
       const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(blob, generateFilename('xlsx'));
+      const result = await saveToDevice(blob, 'Backups', generateFilename('xlsx'));
 
       await logActivity({
         action: 'backup',
         entityType: 'backup',
         description: 'Created Excel backup'
       });
-      toast.success('Excel backup created successfully');
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'Excel backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
@@ -144,14 +144,14 @@ export default function BackupRestore() {
 
       const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      saveAs(blob, generateFilename('csv'));
+      const result = await saveToDevice(blob, 'Backups', generateFilename('csv'));
 
       await logActivity({
         action: 'backup',
         entityType: 'backup',
         description: 'Created CSV backup'
       });
-      toast.success('CSV backup created successfully');
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'CSV backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
