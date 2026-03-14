@@ -94,20 +94,23 @@ export default function Dashboard() {
   // Today's sales breakdown
   const todayStart = startOfDay(new Date()).toISOString();
   const todaySalesAll = useLiveQuery(
-    () => db.sales.where('date').aboveOrEqual(todayStart).toArray(),
+    () => db.sales.toArray().then(all => all.filter(s => {
+      const d = s.createdAt instanceof Date ? s.createdAt.toISOString() : String(s.createdAt);
+      return d >= todayStart;
+    })),
     [todayStart],
   ) ?? [];
 
   const salesBreakdown = useMemo(() => {
     const newSales = todaySalesAll.filter(s => s.partId && s.partId.trim() !== '');
     const quickSales = todaySalesAll.filter(s => !s.partId || s.partId.trim() === '');
-    const sum = (arr: typeof todaySalesAll, key: 'totalPrice' | 'profit') =>
+    const sum = (arr: typeof todaySalesAll, key: 'totalAmount' | 'profit') =>
       arr.reduce((t, s) => t + (Number(s[key]) || 0), 0);
     return {
-      newRevenue: sum(newSales, 'totalPrice'),
+      newRevenue: sum(newSales, 'totalAmount'),
       newProfit: sum(newSales, 'profit'),
       newOrders: newSales.length,
-      quickRevenue: sum(quickSales, 'totalPrice'),
+      quickRevenue: sum(quickSales, 'totalAmount'),
       quickProfit: sum(quickSales, 'profit'),
       quickOrders: quickSales.length,
     };
