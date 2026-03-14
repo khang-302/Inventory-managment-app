@@ -125,7 +125,7 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 8: Add isDemo index on bills for demo data cleanup
+    // Version 8: Schema update
     this.version(8).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
