@@ -42,7 +42,6 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
   return (
     <Card className="bg-card border-border/30 shadow-sm overflow-hidden rounded-2xl">
       <CardContent className="p-4">
-        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -53,7 +52,7 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
           <div className="flex gap-1">
             <button
               onClick={() => setShowSales(!showSales)}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors active:scale-95"
               style={{
                 backgroundColor: showSales ? `${salesColor}20` : 'transparent',
                 color: showSales ? salesColor : textColor,
@@ -64,7 +63,7 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
             </button>
             <button
               onClick={() => setShowProfit(!showProfit)}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-colors active:scale-95"
               style={{
                 backgroundColor: showProfit ? `${profitColor}20` : 'transparent',
                 color: showProfit ? profitColor : textColor,
@@ -76,8 +75,7 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
           </div>
         </div>
 
-        {/* Chart */}
-        <div className="h-56 -mx-2">
+        <div className="h-60 -mx-1">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <defs>

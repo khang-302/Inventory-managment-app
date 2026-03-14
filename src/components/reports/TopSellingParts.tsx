@@ -54,14 +54,12 @@ export function TopSellingParts({ data, title = "Top Sellers" }: TopSellingParts
                 key={part.partId}
                 className="relative rounded-xl p-3 bg-muted/20 border border-border/20 overflow-hidden"
               >
-                {/* Progress bar background */}
                 <div
                   className="absolute inset-y-0 left-0 bg-primary/[0.04] rounded-xl transition-all duration-700"
                   style={{ width: `${barWidth}%` }}
                 />
 
                 <div className="relative flex items-center gap-3">
-                  {/* Rank badge */}
                   <div
                     className={cn(
                       'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold',
@@ -71,18 +69,16 @@ export function TopSellingParts({ data, title = "Top Sellers" }: TopSellingParts
                     {style.icon ? <style.icon className="h-3.5 w-3.5" /> : rank}
                   </div>
 
-                  {/* Product info */}
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold truncate">{part.partName}</p>
-                    <p className="text-[10px] text-muted-foreground/60">
+                    <p className="text-[10px] text-muted-foreground/60 truncate">
                       {part.quantitySold} units · SKU: {part.sku}
                     </p>
                   </div>
 
-                  {/* Revenue */}
-                  <div className="text-right shrink-0">
-                    <p className="text-xs font-bold whitespace-nowrap">{formatFull(part.totalRevenue)}</p>
-                    <p className="text-[10px] text-emerald-500 flex items-center justify-end gap-0.5 whitespace-nowrap">
+                  <div className="text-right shrink-0 overflow-hidden">
+                    <p className="text-xs font-bold whitespace-nowrap tabular-nums">{formatFull(part.totalRevenue)}</p>
+                    <p className="text-[10px] text-emerald-500 flex items-center justify-end gap-0.5 whitespace-nowrap tabular-nums">
                       <TrendingUp className="h-2.5 w-2.5" />
                       {formatFull(part.totalProfit)}
                     </p>

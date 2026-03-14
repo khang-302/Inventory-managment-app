@@ -44,7 +44,7 @@ function ChangeIndicator({ current, previous }: { current: number; previous: num
 
   return (
     <span className={cn(
-      'inline-flex items-center gap-0.5 text-[10px] font-bold',
+      'inline-flex items-center gap-0.5 text-[10px] font-bold tabular-nums',
       isUp ? 'text-emerald-500' : 'text-red-500'
     )}>
       {isUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
@@ -60,9 +60,9 @@ function MetricRow({ label, current, previous, isCurrency }: {
   const fmt = (v: number) => isCurrency ? formatFull(v) : v.toLocaleString();
   return (
     <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-2 py-2 border-b border-border/20 last:border-0">
-      <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
-      <span className="text-[12px] font-semibold text-right">{fmt(current)}</span>
-      <span className="text-[12px] font-medium text-muted-foreground/70 text-right">{fmt(previous)}</span>
+      <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">{label}</span>
+      <span className="text-[12px] font-semibold text-right tabular-nums truncate">{fmt(current)}</span>
+      <span className="text-[12px] font-medium text-muted-foreground/70 text-right tabular-nums truncate">{fmt(previous)}</span>
       <div className="w-10 flex justify-end">
         <ChangeIndicator current={current} previous={previous} />
       </div>
@@ -89,7 +89,6 @@ export function MonthComparison({ sales }: MonthComparisonProps) {
   return (
     <Card className="bg-card border-border/30 shadow-sm overflow-hidden rounded-2xl">
       <CardContent className="p-4">
-        {/* Header */}
         <div className="flex items-center gap-2 mb-3">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <CalendarRange className="h-4 w-4 text-primary" />
@@ -100,7 +99,6 @@ export function MonthComparison({ sales }: MonthComparisonProps) {
           </div>
         </div>
 
-        {/* Column headers */}
         <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-2 pb-1.5 mb-1 border-b border-border/40">
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-semibold">Metric</span>
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">Current</span>
@@ -108,7 +106,6 @@ export function MonthComparison({ sales }: MonthComparisonProps) {
           <span className="w-10 text-[9px] uppercase tracking-wider text-muted-foreground/50 font-semibold text-right">Chg</span>
         </div>
 
-        {/* Metric rows */}
         <MetricRow label="Revenue" current={current.revenue} previous={previous.revenue} isCurrency />
         <MetricRow label="Profit" current={current.profit} previous={previous.profit} isCurrency />
         <MetricRow label="Orders" current={current.orders} previous={previous.orders} />
