@@ -110,14 +110,14 @@ export default function BackupRestore() {
 
       const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(blob, generateFilename('xlsx'));
+      const result = await saveToDevice(blob, 'Backups', generateFilename('xlsx'));
 
       await logActivity({
         action: 'backup',
         entityType: 'backup',
         description: 'Created Excel backup'
       });
-      toast.success('Excel backup created successfully');
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'Excel backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
