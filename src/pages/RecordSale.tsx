@@ -237,21 +237,47 @@ export default function RecordSale() {
           <CardContent className="p-4 pt-2 space-y-3">
             <div>
               <Label className="text-xs">Select Part *</Label>
-              <Select onValueChange={handlePartSelect} value={selectedPartId}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Choose a part" />
-                </SelectTrigger>
-                <SelectContent>
-                  {parts.map(part => (
-                    <SelectItem key={part.id} value={part.id}>
-                      <span>{part.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">
-                        ({getAvailableStock(part.id, editingItemId || undefined)} avail)
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={partSearchOpen} onOpenChange={setPartSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={partSearchOpen}
+                    className="w-full justify-between mt-1 font-normal"
+                  >
+                    {selectedPart ? selectedPart.name : "Search or choose a part..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command filter={(value, search) => {
+                    const part = parts.find(p => p.id === value);
+                    if (!part) return 0;
+                    const hay = `${part.name} ${part.sku}`.toLowerCase();
+                    return hay.includes(search.toLowerCase()) ? 1 : 0;
+                  }}>
+                    <CommandInput placeholder="Type name or SKU..." />
+                    <CommandList>
+                      <CommandEmpty>No parts found.</CommandEmpty>
+                      <CommandGroup>
+                        {parts.map(part => (
+                          <CommandItem
+                            key={part.id}
+                            value={part.id}
+                            onSelect={(val) => { handlePartSelect(val); setPartSearchOpen(false); }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", selectedPartId === part.id ? "opacity-100" : "opacity-0")} />
+                            <span className="truncate">{part.name}</span>
+                            <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">
+                              {getAvailableStock(part.id, editingItemId || undefined)} avail
+                            </span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {selectedPart && (
