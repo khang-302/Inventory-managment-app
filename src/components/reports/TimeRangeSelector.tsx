@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ChevronDown, X } from 'lucide-react';
+import { CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { DateRange } from '@/types';
@@ -17,6 +17,21 @@ interface TimeRangeSelectorProps {
   onCustomEndChange?: (date: Date | undefined) => void;
 }
 
+// Shortened labels for the pill bar
+const SHORT_LABELS: Record<string, string> = {
+  'Today': 'Day',
+  'Last 3 Days': '3D',
+  'This Week': 'Week',
+  'Last 2 Weeks': '2W',
+  'Last 3 Weeks': '3W',
+  'This Month': 'Month',
+  'Previous Month': 'Prev Mo',
+  'Last 2 Months': '2M',
+  'Last 3 Months': '3M',
+  'Last 6 Months': '6M',
+  'Last 1 Year': 'Year',
+};
+
 export function TimeRangeSelector({
   dateRanges,
   selectedRangeIndex,
@@ -27,96 +42,82 @@ export function TimeRangeSelector({
   onCustomEndChange,
 }: TimeRangeSelectorProps) {
   const [isCustom, setIsCustom] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  // Scroll active pill into view
+  useEffect(() => {
+    if (activeRef.current && scrollRef.current) {
+      const container = scrollRef.current;
+      const el = activeRef.current;
+      const left = el.offsetLeft - container.offsetWidth / 2 + el.offsetWidth / 2;
+      container.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
+  }, [selectedRangeIndex, isCustom]);
 
   const isCustomActive = isCustom && customStartDate && customEndDate;
 
-  const currentLabel = isCustom
-    ? 'Custom Range'
-    : dateRanges[selectedRangeIndex]?.label ?? 'Select';
-
   const displayRange = isCustomActive
-    ? `${format(customStartDate, 'dd MMM yyyy')} — ${format(customEndDate, 'dd MMM yyyy')}`
+    ? `${format(customStartDate, 'dd MMM')} — ${format(customEndDate, 'dd MMM')}`
     : dateRanges[selectedRangeIndex]
-      ? `${format(dateRanges[selectedRangeIndex].startDate, 'dd MMM yyyy')} — ${format(dateRanges[selectedRangeIndex].endDate, 'dd MMM yyyy')}`
+      ? `${format(dateRanges[selectedRangeIndex].startDate, 'dd MMM')} — ${format(dateRanges[selectedRangeIndex].endDate, 'dd MMM')}`
       : '';
 
   const handleSelect = (index: number) => {
     setIsCustom(false);
-    setIsOpen(false);
     onCustomStartChange?.(undefined);
     onCustomEndChange?.(undefined);
     onRangeChange(index);
   };
 
-  const handleCustomSelect = () => {
-    setIsCustom(true);
-    setIsOpen(false);
-  };
-
   return (
-    <div className="space-y-3">
-      {/* Dropdown trigger */}
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <button
-            className={cn(
-              'flex items-center justify-between w-full h-12 rounded-xl border border-border/50 bg-card px-4',
-              'text-sm font-semibold shadow-sm transition-colors',
-              'hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/60',
-            )}
-          >
-            <div className="flex items-center gap-2.5">
-              <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
-              <span className="text-foreground">{currentLabel}</span>
-            </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] p-1.5 rounded-xl"
-          align="start"
-          sideOffset={6}
-        >
-          <div className="flex flex-col gap-0.5 max-h-[320px] overflow-y-auto">
-            {dateRanges.map((range, index) => (
-              <button
-                key={index}
-                onClick={() => handleSelect(index)}
-                className={cn(
-                  'flex items-center w-full px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
-                  !isCustom && selectedRangeIndex === index
-                    ? 'bg-primary text-primary-foreground font-semibold'
-                    : 'text-foreground hover:bg-accent',
-                )}
-              >
-                {range.label}
-              </button>
-            ))}
-            <div className="h-px bg-border/50 my-1" />
+    <div className="space-y-2.5">
+      {/* Horizontal scrollable pill bar */}
+      <div
+        ref={scrollRef}
+        className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {dateRanges.map((range, index) => {
+          const isActive = !isCustom && selectedRangeIndex === index;
+          const shortLabel = SHORT_LABELS[range.label] || range.label;
+          return (
             <button
-              onClick={handleCustomSelect}
+              key={index}
+              ref={isActive ? activeRef : undefined}
+              onClick={() => handleSelect(index)}
               className={cn(
-                'flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
-                isCustom
-                  ? 'bg-primary text-primary-foreground font-semibold'
-                  : 'text-foreground hover:bg-accent',
+                'shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200 whitespace-nowrap',
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/30',
               )}
             >
-              <CalendarIcon className="h-3.5 w-3.5" />
-              Custom Range
+              {shortLabel}
             </button>
-          </div>
-        </PopoverContent>
-      </Popover>
+          );
+        })}
+        {/* Custom pill */}
+        <button
+          ref={isCustom ? activeRef : undefined}
+          onClick={() => setIsCustom(true)}
+          className={cn(
+            'shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-200 whitespace-nowrap',
+            isCustom
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/30',
+          )}
+        >
+          <CalendarIcon className="h-3 w-3" />
+          Custom
+        </button>
+      </div>
 
       {/* Custom date pickers */}
       {isCustom && onCustomStartChange && onCustomEndChange && (
         <div className="flex gap-2 items-end p-3 rounded-xl bg-muted/30 border border-border/30 animate-fade-in">
           <div className="flex-1 space-y-1">
-            <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              From
-            </label>
+            <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">From</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -145,9 +146,7 @@ export function TimeRangeSelector({
           </div>
           <span className="text-xs text-muted-foreground pb-2">→</span>
           <div className="flex-1 space-y-1">
-            <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              To
-            </label>
+            <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">To</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button

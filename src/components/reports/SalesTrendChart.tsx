@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 import { TrendingUp, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -21,12 +21,15 @@ interface SalesTrendData {
 interface SalesTrendChartProps {
   data: SalesTrendData[];
   title?: string;
+  salesColor?: string;
+  profitColor?: string;
 }
 
-export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrendChartProps) {
+export function SalesTrendChart({ data, title = "Revenue & Profit", salesColor: salesColorProp, profitColor: profitColorProp }: SalesTrendChartProps) {
   const [showSales, setShowSales] = useState(true);
   const [showProfit, setShowProfit] = useState(true);
   const { formatValue, formatFull } = useCurrencyFormat();
+  const uid = useId().replace(/:/g, '');
 
   if (data.length === 0) return null;
 
@@ -36,8 +39,8 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
   const tooltipBg = isDark ? 'hsl(220, 16%, 12%)' : 'hsl(0, 0%, 100%)';
   const tooltipBorder = isDark ? 'hsl(220, 12%, 22%)' : 'hsl(220, 14%, 90%)';
 
-  const salesColor = isDark ? 'hsl(152, 50%, 48%)' : 'hsl(152, 55%, 42%)';
-  const profitColor = isDark ? 'hsl(210, 60%, 55%)' : 'hsl(210, 65%, 50%)';
+  const salesColor = salesColorProp || (isDark ? 'hsl(152, 50%, 48%)' : 'hsl(152, 55%, 42%)');
+  const profitColor = profitColorProp || (isDark ? 'hsl(210, 60%, 55%)' : 'hsl(210, 65%, 50%)');
 
   return (
     <Card className="bg-card border-border/30 shadow-sm overflow-hidden rounded-2xl">
@@ -79,11 +82,11 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
               <defs>
-                <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`sg-${uid}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={salesColor} stopOpacity={0.25} />
                   <stop offset="100%" stopColor={salesColor} stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`pg-${uid}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={profitColor} stopOpacity={0.25} />
                   <stop offset="100%" stopColor={profitColor} stopOpacity={0} />
                 </linearGradient>
@@ -122,7 +125,7 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
                   dataKey="sales"
                   stroke={salesColor}
                   strokeWidth={2.5}
-                  fill="url(#salesGrad)"
+                  fill={`url(#sg-${uid})`}
                   dot={false}
                   activeDot={{ r: 4, strokeWidth: 2, stroke: salesColor, fill: tooltipBg }}
                 />
@@ -134,7 +137,7 @@ export function SalesTrendChart({ data, title = "Revenue & Profit" }: SalesTrend
                   dataKey="profit"
                   stroke={profitColor}
                   strokeWidth={2.5}
-                  fill="url(#profitGrad)"
+                  fill={`url(#pg-${uid})`}
                   dot={false}
                   activeDot={{ r: 4, strokeWidth: 2, stroke: profitColor, fill: tooltipBg }}
                 />

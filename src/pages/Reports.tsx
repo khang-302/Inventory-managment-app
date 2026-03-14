@@ -3,7 +3,6 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { db, getSetting, updateSetting } from '@/db/database';
-import { getSalesSummary, getTopSellingParts } from '@/services/salesService';
 import { getInventoryValue } from '@/services/inventoryService';
 import { formatCurrency } from '@/utils/currency';
 import { getDateRanges, formatDateRange } from '@/utils/dateUtils';
@@ -19,8 +18,12 @@ import {
   TimeRangeSelector,
   TopSellingParts,
   InsightsPanel,
-  MonthComparison,
+  SaleTypeToggle,
+  PeriodComparisonBar,
+  OrdersTrendChart,
+  ItemsSoldChart,
 } from '@/components/reports';
+import type { SaleType } from '@/components/reports';
 import {
   ShoppingCart,
   TrendingUp,
@@ -34,7 +37,7 @@ import {
   Boxes,
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
-import type { DateRange, ReportSummary } from '@/types';
+import type { DateRange, ReportSummary, Sale } from '@/types';
 import {
   exportReportToPDF,
   exportReportToExcel,
@@ -42,7 +45,11 @@ import {
 } from '@/utils/exportUtils';
 import { captureElementAsPng, type CapturedSection } from '@/utils/reportCapture';
 import { toast } from 'sonner';
-import { startOfDay, endOfDay, subMonths } from 'date-fns';
+import { startOfDay, endOfDay } from 'date-fns';
+
+// Sale type filter helpers
+const isNewSale = (s: Sale) => Boolean(s.partId && s.partId.trim() !== '');
+const isQuickSale = (s: Sale) => !s.partId || s.partId.trim() === '';
 
 export default function Reports() {
   const { appName } = useApp();
@@ -50,7 +57,6 @@ export default function Reports() {
   const [selectedRangeIndex, setSelectedRangeIndex] = useState(() => Math.min(5, getDateRanges().length - 1));
   const [rangeLoaded, setRangeLoaded] = useState(false);
 
-  // Load persisted time range on mount
   useEffect(() => {
     getSetting<number>('reportsTimeRangeIndex').then(saved => {
       if (saved !== undefined && saved >= 0 && saved < dateRanges.length) {
@@ -59,19 +65,16 @@ export default function Reports() {
       setRangeLoaded(true);
     }).catch(() => setRangeLoaded(true));
   }, [dateRanges.length]);
+
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
-  const [summary, setSummary] = useState<ReportSummary | null>(null);
-  const [topParts, setTopParts] = useState<{
-    partId: string; partName: string; sku: string;
-    quantitySold: number; totalRevenue: number; totalProfit: number;
-  }[]>([]);
   const [inventoryValue, setInventoryValue] = useState<{ cost: number; retail: number }>({ cost: 0, retail: 0 });
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [saleType, setSaleType] = useState<SaleType>('all');
 
-  // Pull-to-refresh state
+  // Pull-to-refresh
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const touchStartY = useRef(0);
@@ -89,7 +92,6 @@ export default function Reports() {
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchStartY.current || isRefreshing) return;
     const distance = Math.max(0, e.touches[0].clientY - touchStartY.current);
-    // Apply dampening
     setPullDistance(Math.min(distance * 0.5, 120));
   }, [isRefreshing]);
 
@@ -129,18 +131,12 @@ export default function Reports() {
   const categories = useLiveQuery(() => db.categories.toArray(), []) ?? [];
   const brands = useLiveQuery(() => db.brands.toArray(), []) ?? [];
 
-  // Fetch summary
+  // Fetch inventory value
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [summaryData, topPartsData, invValue] = await Promise.all([
-          getSalesSummary(selectedRange),
-          getTopSellingParts(selectedRange, 5),
-          getInventoryValue(),
-        ]);
-        setSummary(summaryData);
-        setTopParts(topPartsData);
+        const invValue = await getInventoryValue();
         setInventoryValue(invValue);
       } catch (error) {
         console.error('Failed to fetch report data:', error);
@@ -149,7 +145,7 @@ export default function Reports() {
       }
     };
     fetchData();
-  }, [selectedRange.startDate.getTime(), selectedRange.endDate.getTime(), selectedRange.label, refreshKey]);
+  }, [selectedRange.startDate.getTime(), selectedRange.endDate.getTime(), refreshKey]);
 
   const captureVisibleSections = useCallback(async (): Promise<CapturedSection[]> => {
     const candidates = [
@@ -170,28 +166,89 @@ export default function Reports() {
     return results.filter(Boolean) as CapturedSection[];
   }, []);
 
-  // Filtered sales
+  // Sale type filter function for PeriodComparisonBar
+  const saleTypeFilter = useMemo(() => {
+    if (saleType === 'new') return isNewSale;
+    if (saleType === 'quick') return isQuickSale;
+    return undefined;
+  }, [saleType]);
+
+  // Filtered sales by date range AND sale type
   const filteredSales = useMemo(() => {
-    return sales.filter(s => {
+    let result = sales.filter(s => {
       const saleDate = new Date(s.createdAt);
       return saleDate >= selectedRange.startDate && saleDate <= selectedRange.endDate;
     });
+    if (saleType === 'new') result = result.filter(isNewSale);
+    if (saleType === 'quick') result = result.filter(isQuickSale);
+    return result;
+  }, [sales, selectedRange, saleType]);
+
+  // Sale type counts for badges
+  const saleTypeCounts = useMemo(() => {
+    const inRange = sales.filter(s => {
+      const d = new Date(s.createdAt);
+      return d >= selectedRange.startDate && d <= selectedRange.endDate;
+    });
+    return {
+      all: inRange.length,
+      new: inRange.filter(isNewSale).length,
+      quick: inRange.filter(isQuickSale).length,
+    };
   }, [sales, selectedRange]);
+
+  // Local summary computed from filtered sales
+  const summary = useMemo((): ReportSummary | null => {
+    if (filteredSales.length === 0 && !loading) return { totalSales: 0, totalProfit: 0, profitMargin: 0, itemsSold: 0, averageSaleValue: 0, salesCount: 0 };
+    let totalSales = 0, totalProfit = 0, itemsSold = 0;
+    for (const s of filteredSales) {
+      totalSales = safeAdd(totalSales, toSafeNumber(s.totalAmount, 0));
+      totalProfit = safeAdd(totalProfit, toSafeNumber(s.profit, 0));
+      itemsSold += toSafeNumber(s.quantity, 0);
+    }
+    const salesCount = filteredSales.length;
+    const averageSaleValue = safeDivide(totalSales, salesCount, 0);
+    const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
+    return { totalSales, totalProfit, profitMargin, itemsSold, averageSaleValue, salesCount };
+  }, [filteredSales, loading]);
+
+  // Top parts from filtered sales
+  const topParts = useMemo(() => {
+    const map = new Map<string, { partId: string; partName: string; sku: string; quantitySold: number; totalRevenue: number; totalProfit: number }>();
+    for (const s of filteredSales) {
+      const key = s.partId || s.partName;
+      const ex = map.get(key);
+      if (ex) {
+        ex.quantitySold += toSafeNumber(s.quantity, 0);
+        ex.totalRevenue = safeAdd(ex.totalRevenue, toSafeNumber(s.totalAmount, 0));
+        ex.totalProfit = safeAdd(ex.totalProfit, toSafeNumber(s.profit, 0));
+      } else {
+        map.set(key, {
+          partId: s.partId, partName: s.partName, sku: s.partSku || '',
+          quantitySold: toSafeNumber(s.quantity, 0),
+          totalRevenue: toSafeNumber(s.totalAmount, 0),
+          totalProfit: toSafeNumber(s.profit, 0),
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.quantitySold - a.quantitySold).slice(0, 5);
+  }, [filteredSales]);
 
   // Sales by date for charts
   const salesByDate = useMemo(() => {
-    const grouped = new Map<string, { sales: number; profit: number; quantity: number }>();
+    const grouped = new Map<string, { sales: number; profit: number; quantity: number; orders: number }>();
     for (const sale of filteredSales) {
       const dateKey = new Date(sale.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-      const existing = grouped.get(dateKey) || { sales: 0, profit: 0, quantity: 0 };
+      const existing = grouped.get(dateKey) || { sales: 0, profit: 0, quantity: 0, orders: 0 };
       grouped.set(dateKey, {
         sales: safeAdd(existing.sales, toSafeNumber(sale.totalAmount, 0)),
         profit: safeAdd(existing.profit, toSafeNumber(sale.profit, 0)),
         quantity: safeAdd(existing.quantity, toSafeQuantity(sale.quantity, 0)),
+        orders: existing.orders + 1,
       });
     }
     return Array.from(grouped.entries()).map(([date, data]) => ({
-      date, sales: data.sales, profit: data.profit, quantity: data.quantity,
+      date, sales: data.sales, profit: data.profit, quantity: data.quantity, orders: data.orders,
     }));
   }, [filteredSales]);
 
@@ -202,7 +259,7 @@ export default function Reports() {
     return safeDivide(total, salesByDate.length, 0);
   }, [salesByDate]);
 
-  // Sales growth (compare current period to equivalent prior period)
+  // Sales growth
   const salesGrowth = useMemo(() => {
     const currentTotal = summary?.totalSales || 0;
     const rangeDays = Math.max(1, Math.ceil(
@@ -210,16 +267,17 @@ export default function Reports() {
     ));
     const priorStart = new Date(selectedRange.startDate.getTime() - rangeDays * 24 * 60 * 60 * 1000);
     const priorEnd = new Date(selectedRange.startDate.getTime() - 1);
-    const priorSales = sales.filter(s => {
+    let priorSalesArr = sales.filter(s => {
       const d = new Date(s.createdAt);
       return d >= priorStart && d <= priorEnd;
     });
-    const priorTotal = priorSales.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.totalAmount, 0)), 0);
+    if (saleType === 'new') priorSalesArr = priorSalesArr.filter(isNewSale);
+    if (saleType === 'quick') priorSalesArr = priorSalesArr.filter(isQuickSale);
+    const priorTotal = priorSalesArr.reduce((sum, s) => safeAdd(sum, toSafeNumber(s.totalAmount, 0)), 0);
     if (priorTotal === 0) return currentTotal > 0 ? 100 : 0;
     return ((currentTotal - priorTotal) / priorTotal) * 100;
-  }, [summary, selectedRange, sales]);
+  }, [summary, selectedRange, sales, saleType]);
 
-  // Top & lowest product
   const topProduct = useMemo(() => {
     if (topParts.length === 0) return null;
     return { name: topParts[0].partName, qty: topParts[0].quantitySold };
@@ -232,10 +290,6 @@ export default function Reports() {
   }, [topParts]);
 
   // Low stock
-  const lowStockCount = useMemo(() => {
-    return parts.filter(p => toSafeQuantity(p.quantity, 0) <= toSafeQuantity(p.minStockLevel, 0)).length;
-  }, [parts]);
-
   const lowStockItems = useMemo(() => {
     return parts
       .filter(p => toSafeQuantity(p.quantity, 0) <= toSafeQuantity(p.minStockLevel, 0))
@@ -282,13 +336,13 @@ export default function Reports() {
     for (const sale of filteredSales) {
       const part = parts.find(p => p.id === sale.partId);
       const category = part ? categories.find(c => c.id === part.categoryId)?.name || 'Other' : 'Other';
-      const ex = map.get(sale.partId);
+      const ex = map.get(sale.partId || sale.partName);
       if (ex) {
         ex.unitsSold += toSafeQuantity(sale.quantity, 0);
         ex.revenue += toSafeNumber(sale.totalAmount, 0);
         ex.profit += toSafeNumber(sale.profit, 0);
       } else {
-        map.set(sale.partId, {
+        map.set(sale.partId || sale.partName, {
           name: sale.partName, unitsSold: toSafeQuantity(sale.quantity, 0),
           revenue: toSafeNumber(sale.totalAmount, 0), profit: toSafeNumber(sale.profit, 0), category,
         });
@@ -308,6 +362,17 @@ export default function Reports() {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [filteredSales]);
 
+  // Chart data for new components
+  const ordersTrendData = useMemo(() => salesByDate.map(d => ({ date: d.date, orders: d.orders })), [salesByDate]);
+  const itemsSoldData = useMemo(() => salesByDate.map(d => ({ date: d.date, items: d.quantity })), [salesByDate]);
+
+  // Sale-type-specific accent colors
+  const chartAccents = useMemo(() => {
+    if (saleType === 'new') return { sales: 'hsl(210, 65%, 50%)', profit: 'hsl(210, 45%, 65%)', orders: 'hsl(210, 60%, 55%)', items: 'hsl(210, 50%, 60%)' };
+    if (saleType === 'quick') return { sales: 'hsl(38, 92%, 50%)', profit: 'hsl(38, 70%, 60%)', orders: 'hsl(38, 85%, 50%)', items: 'hsl(38, 75%, 55%)' };
+    return { sales: undefined, profit: undefined, orders: undefined, items: undefined };
+  }, [saleType]);
+
   // Handlers
   const handleCustomStartChange = useCallback((date: Date | undefined) => {
     setCustomStartDate(date);
@@ -326,10 +391,11 @@ export default function Reports() {
     setIsExporting('pdf');
     try {
       const visuals = await captureVisibleSections();
+      const saleLabel = saleType === 'all' ? '' : saleType === 'new' ? ' (New Sales)' : ' (Quick Sales)';
       await exportReportToPDF(
         selectedRange, summary, topParts, salesByDate, parts,
         lowStockItems.map(i => ({ name: i.name, quantity: i.quantity, minStock: i.minStock })),
-        inventoryByCategory, inventoryByBrand, visuals, appName,
+        inventoryByCategory, inventoryByBrand, visuals, (appName || '') + saleLabel,
       );
       toast.success('PDF exported', { description: '📂 Open your file manager → AIM/Reports' });
     } catch (error) {
@@ -388,8 +454,8 @@ export default function Reports() {
           </div>
         </div>
 
-      <div className="p-4 space-y-6 pb-24 max-w-lg mx-auto">
-        {/* Time Range Filter */}
+      <div className="p-4 space-y-4 pb-24 max-w-lg mx-auto">
+        {/* Time Range Pills */}
         <div className="animate-fade-in-up">
           <TimeRangeSelector
             dateRanges={dateRanges}
@@ -399,6 +465,15 @@ export default function Reports() {
             customEndDate={customEndDate}
             onCustomStartChange={handleCustomStartChange}
             onCustomEndChange={handleCustomEndChange}
+          />
+        </div>
+
+        {/* Sale Type Toggle */}
+        <div className="animate-fade-in-up animate-fade-in-up-1">
+          <SaleTypeToggle
+            saleType={saleType}
+            onChange={setSaleType}
+            counts={saleTypeCounts}
           />
         </div>
 
@@ -423,7 +498,7 @@ export default function Reports() {
                 icon={<ShoppingCart className="h-5 w-5 text-primary" />}
                 isCurrency
                 loading={loading}
-                accentColor="hsl(37, 92%, 50%)"
+                accentColor={saleType === 'new' ? 'hsl(210, 65%, 50%)' : saleType === 'quick' ? 'hsl(38, 92%, 50%)' : 'hsl(37, 92%, 50%)'}
               />
               <KPICard
                 title="Total Profit"
@@ -431,7 +506,7 @@ export default function Reports() {
                 icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
                 isCurrency
                 loading={loading}
-                accentColor="hsl(152, 50%, 45%)"
+                accentColor={saleType === 'new' ? 'hsl(210, 45%, 55%)' : saleType === 'quick' ? 'hsl(38, 70%, 55%)' : 'hsl(152, 50%, 45%)'}
               />
               <KPICard
                 title="Orders / Bills"
@@ -449,10 +524,14 @@ export default function Reports() {
               />
             </div>
 
-            {/* Month-over-Month Comparison */}
+            {/* Period Comparison */}
             {sales.length > 0 && (
               <div className="animate-fade-in-up animate-fade-in-up-2">
-                <MonthComparison sales={sales} />
+                <PeriodComparisonBar
+                  sales={sales}
+                  currentRange={selectedRange}
+                  saleTypeFilter={saleTypeFilter}
+                />
               </div>
             )}
 
@@ -477,7 +556,7 @@ export default function Reports() {
                 </h3>
                 {salesByDate.length > 0 && (
                   <div ref={salesTrendRef}>
-                    <SalesTrendChart data={salesByDate} />
+                    <SalesTrendChart data={salesByDate} salesColor={chartAccents.sales} profitColor={chartAccents.profit} />
                   </div>
                 )}
                 {productPerformance.length > 0 && (
@@ -486,6 +565,12 @@ export default function Reports() {
                   </div>
                 )}
                 {topParts.length > 0 && <TopSellingParts data={topParts} />}
+                {ordersTrendData.length > 0 && (
+                  <OrdersTrendChart data={ordersTrendData} accentColor={chartAccents.orders} />
+                )}
+                {itemsSoldData.length > 0 && (
+                  <ItemsSoldChart data={itemsSoldData} accentColor={chartAccents.items} />
+                )}
               </div>
             )}
 
