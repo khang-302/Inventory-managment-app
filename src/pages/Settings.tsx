@@ -5,8 +5,6 @@ import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Progress } from '@/components/ui/progress';
 import { 
   Search, 
   Languages, 
@@ -30,10 +28,6 @@ import {
   Store,
   Bug,
   MessageSquareWarning,
-  FlaskConical,
-  Database,
-  Trash2,
-  Loader2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
