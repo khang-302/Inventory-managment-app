@@ -307,7 +307,7 @@ export async function insertDemoData(
 export async function insertExtendedDemoData(
   onProgress?: (pct: number) => void,
 ): Promise<{ partsCount: number; billsCount: number }> {
-  const parts = generateDemoSpareParts(3000, { maxQty: 300, minStockMax: 25, monthsBack: 12 });
+  const parts = generateDemoSpareParts(3000, { maxQty: 300, minStockMax: 25, monthsBack: 12, useExtended: true });
   onProgress?.(5);
 
   const { bills, billItems } = generateDemoBills(3000, parts, { monthsBack: 12, useWeightedItems: true });
