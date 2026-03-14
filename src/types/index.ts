@@ -40,7 +40,6 @@ export interface Part {
   location: string;
   notes: string;
   images: string[];
-  isDemo?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
