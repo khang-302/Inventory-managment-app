@@ -101,9 +101,6 @@ export default function Settings() {
   const navigate = useNavigate();
   const { notifications, setNotifications, appName, totalParts, totalBrands, stats, customLogo, refreshStats } = useApp();
   const [search, setSearch] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [clearing, setClearing] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   const brandingItems = [
     {
