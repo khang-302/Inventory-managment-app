@@ -54,6 +54,7 @@ export interface Bill {
   paymentInfo?: PaymentInfo;
   showTerms?: boolean;
   termsConditions?: string[];
+  isDemo?: boolean;
   createdAt: Date;
 }
 

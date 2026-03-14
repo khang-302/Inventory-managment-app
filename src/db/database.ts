@@ -124,6 +124,24 @@ export class AmeerAutosDB extends Dexie {
       notificationTemplates: 'id, createdAt',
       crashReports: 'id, errorCode, createdAt'
     });
+
+    // Version 8: Add isDemo index on bills for demo data cleanup
+    this.version(8).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt',
+      billSettings: 'id',
+      bills: 'id, billNumber, createdAt, isDemo',
+      billItems: 'id, billId',
+      autocompleteEntries: 'id, field, [field+value]',
+      notifications: 'id, type, isRead, createdAt, triggerType, isFired',
+      notificationTemplates: 'id, createdAt',
+      crashReports: 'id, errorCode, createdAt'
+    });
   }
 }
 
