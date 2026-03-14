@@ -50,7 +50,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { insertDemoData, clearDemoData, hasDemoData } from '@/utils/generateDemoData';
+import { insertDemoData, insertExtendedDemoData, clearDemoData, hasDemoData } from '@/utils/generateDemoData';
 
 interface SettingItemProps {
   icon: React.ElementType;

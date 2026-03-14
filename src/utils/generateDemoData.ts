@@ -71,8 +71,6 @@ const BRANDS = [
   'Koyo', 'Exedy', 'TRW', 'Brembo', 'Dayco',
 ];
 
-const CATEGORY_NAMES = Object.keys(PART_CATEGORIES);
-
 const LOCATIONS = [
   'Shelf A1', 'Shelf A2', 'Shelf A3', 'Shelf B1', 'Shelf B2', 'Shelf B3',
   'Shelf C1', 'Shelf C2', 'Shelf C3', 'Shelf D1', 'Shelf D2',
@@ -118,24 +116,73 @@ function randomDate(monthsBack: number): Date {
   return new Date(past + Math.random() * (now - past));
 }
 
-// ── Generators ───────────────────────────────────────────────────────
-export function generateDemoSpareParts(count: number = 1000): Part[] {
-  const parts: Part[] = [];
-  // Flatten all templates
-  const allTemplates: { category: string; name: string }[] = [];
-  for (const [cat, names] of Object.entries(PART_CATEGORIES)) {
-    for (const name of names) {
-      allTemplates.push({ category: cat, name });
-    }
+/** Returns a weighted margin multiplier */
+function getWeightedMargin(): number {
+  const roll = Math.random();
+  if (roll < 0.2) {
+    // Low margin: 5–10%
+    return 1 + (rand(5, 10) / 100);
+  } else if (roll < 0.8) {
+    // Normal margin: 15–30%
+    return 1 + (rand(15, 30) / 100);
+  } else {
+    // High margin: 30–45%
+    return 1 + (rand(30, 45) / 100);
   }
+}
+
+/** Returns weighted item count for a bill */
+function getWeightedItemCount(): number {
+  const roll = Math.random();
+  if (roll < 0.25) return 1;
+  if (roll < 0.70) return rand(2, 3);
+  return rand(4, 6);
+}
+
+/** Creates a popularity-weighted index picker for parts */
+function createPopularityPicker(partsCount: number): () => number {
+  // Assign weights: first 10% are "popular" (weight 10), next 30% "normal" (weight 3), rest "rare" (weight 1)
+  const weights: number[] = [];
+  let totalWeight = 0;
+  for (let i = 0; i < partsCount; i++) {
+    const pct = i / partsCount;
+    const w = pct < 0.1 ? 10 : pct < 0.4 ? 3 : 1;
+    weights.push(w);
+    totalWeight += w;
+  }
+  return () => {
+    let r = Math.random() * totalWeight;
+    for (let i = 0; i < weights.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return i;
+    }
+    return partsCount - 1;
+  };
+}
+
+// ── Generators ───────────────────────────────────────────────────────
+
+// Flatten all templates once
+const ALL_TEMPLATES: { category: string; name: string }[] = [];
+for (const [cat, names] of Object.entries(PART_CATEGORIES)) {
+  for (const name of names) {
+    ALL_TEMPLATES.push({ category: cat, name });
+  }
+}
+
+export function generateDemoSpareParts(count: number = 1000, opts?: { maxQty?: number; minStockMax?: number; monthsBack?: number }): Part[] {
+  const maxQty = opts?.maxQty ?? 200;
+  const minStockMax = opts?.minStockMax ?? 20;
+  const monthsBack = opts?.monthsBack ?? 6;
+  const parts: Part[] = [];
 
   for (let i = 0; i < count; i++) {
-    const template = allTemplates[i % allTemplates.length];
-    const variant = Math.floor(i / allTemplates.length) + 1;
-    const suffix = allTemplates.length <= count ? ` Model ${String(variant).padStart(2, '0')}` : '';
+    const template = ALL_TEMPLATES[i % ALL_TEMPLATES.length];
+    const variant = Math.floor(i / ALL_TEMPLATES.length) + 1;
+    const suffix = ALL_TEMPLATES.length <= count ? ` Model ${String(variant).padStart(2, '0')}` : '';
     const partName = `${template.name}${suffix}`;
     const buyingPrice = rand(500, 150000);
-    const markup = 1 + rand(20, 40) / 100;
+    const markup = count > 1000 ? getWeightedMargin() : (1 + rand(20, 40) / 100);
 
     parts.push({
       id: uuidv4(),
@@ -145,14 +192,14 @@ export function generateDemoSpareParts(count: number = 1000): Part[] {
       categoryId: template.category,
       buyingPrice,
       sellingPrice: Math.round(buyingPrice * markup),
-      quantity: rand(0, 200),
-      minStockLevel: rand(2, 20),
+      quantity: rand(0, maxQty),
+      minStockLevel: rand(2, minStockMax),
       location: pick(LOCATIONS),
       notes: `Demo part for testing — ${template.category}`,
       images: [],
       unitType: 'piece' as const,
       isDemo: true,
-      createdAt: randomDate(6),
+      createdAt: randomDate(monthsBack),
       updatedAt: new Date(),
     });
   }
@@ -162,26 +209,41 @@ export function generateDemoSpareParts(count: number = 1000): Part[] {
 export function generateDemoBills(
   count: number = 1000,
   parts: Part[],
+  opts?: { monthsBack?: number; useWeightedItems?: boolean },
 ): { bills: Bill[]; billItems: BillItem[] } {
+  const monthsBack = opts?.monthsBack ?? 6;
+  const useWeighted = opts?.useWeightedItems ?? false;
   const bills: Bill[] = [];
   const billItems: BillItem[] = [];
+  const popularityPick = useWeighted ? createPopularityPicker(parts.length) : null;
 
   for (let i = 0; i < count; i++) {
     const billId = uuidv4();
-    const itemCount = rand(1, 5);
-    const date = randomDate(6);
+    const itemCount = useWeighted ? getWeightedItemCount() : rand(1, 5);
+    const date = randomDate(monthsBack);
     let subtotal = 0;
     const usedParts = new Set<number>();
 
     for (let j = 0; j < itemCount; j++) {
       let partIdx: number;
-      do { partIdx = rand(0, parts.length - 1); } while (usedParts.has(partIdx) && usedParts.size < parts.length);
+      let attempts = 0;
+      do {
+        partIdx = popularityPick ? popularityPick() : rand(0, parts.length - 1);
+        attempts++;
+      } while (usedParts.has(partIdx) && attempts < 20);
+      if (usedParts.has(partIdx)) continue;
       usedParts.add(partIdx);
+
       const part = parts[partIdx];
       const qty = rand(1, 5);
       const price = part.sellingPrice;
       const total = qty * price;
       subtotal += total;
+
+      // Reduce stock to simulate historical sales
+      if (useWeighted) {
+        part.quantity = Math.max(part.quantity - qty, 0);
+      }
 
       billItems.push({
         id: uuidv4(),
@@ -219,13 +281,6 @@ export function generateDemoBills(
 // ── Database operations ──────────────────────────────────────────────
 const BATCH_SIZE = 100;
 
-async function bulkAddInBatches<T>(table: any, items: T[]): Promise<void> {
-  for (let i = 0; i < items.length; i += BATCH_SIZE) {
-    const batch = items.slice(i, i + BATCH_SIZE);
-    await table.bulkAdd(batch);
-  }
-}
-
 export async function hasDemoData(): Promise<boolean> {
   const count = await db.parts.where('isDemo').equals(1).count();
   return count > 0;
@@ -240,7 +295,32 @@ export async function insertDemoData(
   const { bills, billItems } = generateDemoBills(1000, parts);
   onProgress?.(10);
 
-  // Insert parts in batches
+  await batchInsertAll(parts, bills, billItems, onProgress, 10);
+  onProgress?.(100);
+  return { partsCount: parts.length, billsCount: bills.length };
+}
+
+export async function insertExtendedDemoData(
+  onProgress?: (pct: number) => void,
+): Promise<{ partsCount: number; billsCount: number }> {
+  const parts = generateDemoSpareParts(3000, { maxQty: 300, minStockMax: 25, monthsBack: 12 });
+  onProgress?.(5);
+
+  const { bills, billItems } = generateDemoBills(3000, parts, { monthsBack: 12, useWeightedItems: true });
+  onProgress?.(10);
+
+  await batchInsertAll(parts, bills, billItems, onProgress, 10);
+  onProgress?.(100);
+  return { partsCount: parts.length, billsCount: bills.length };
+}
+
+async function batchInsertAll(
+  parts: Part[],
+  bills: Bill[],
+  billItems: BillItem[],
+  onProgress?: (pct: number) => void,
+  startPct: number = 10,
+) {
   const totalSteps = Math.ceil(parts.length / BATCH_SIZE)
     + Math.ceil(bills.length / BATCH_SIZE)
     + Math.ceil(billItems.length / BATCH_SIZE);
@@ -249,35 +329,29 @@ export async function insertDemoData(
   for (let i = 0; i < parts.length; i += BATCH_SIZE) {
     await db.parts.bulkAdd(parts.slice(i, i + BATCH_SIZE));
     step++;
-    onProgress?.(10 + Math.round((step / totalSteps) * 85));
+    onProgress?.(startPct + Math.round((step / totalSteps) * (95 - startPct)));
   }
 
   for (let i = 0; i < bills.length; i += BATCH_SIZE) {
     await (db as any).bills.bulkAdd(bills.slice(i, i + BATCH_SIZE));
     step++;
-    onProgress?.(10 + Math.round((step / totalSteps) * 85));
+    onProgress?.(startPct + Math.round((step / totalSteps) * (95 - startPct)));
   }
 
   for (let i = 0; i < billItems.length; i += BATCH_SIZE) {
     await (db as any).billItems.bulkAdd(billItems.slice(i, i + BATCH_SIZE));
     step++;
-    onProgress?.(10 + Math.round((step / totalSteps) * 85));
+    onProgress?.(startPct + Math.round((step / totalSteps) * (95 - startPct)));
   }
-
-  onProgress?.(100);
-  return { partsCount: parts.length, billsCount: bills.length };
 }
 
 export async function clearDemoData(): Promise<{ partsCleared: number; billsCleared: number }> {
-  // Find demo parts
   const demoParts = await db.parts.filter(p => p.isDemo === true).toArray();
   const demoPartIds = demoParts.map(p => p.id);
 
-  // Find demo bills
   const demoBills = await (db as any).bills.filter((b: any) => b.isDemo === true).toArray();
   const demoBillIds = demoBills.map((b: any) => b.id);
 
-  // Find bill items for demo bills
   const demoBillItems = await (db as any).billItems
     .filter((bi: any) => demoBillIds.includes(bi.billId))
     .toArray();
