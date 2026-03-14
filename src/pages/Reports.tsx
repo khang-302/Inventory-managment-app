@@ -369,7 +369,7 @@ export default function Reports() {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative overflow-auto"
+        className="relative overflow-x-hidden overflow-y-auto"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* Pull-to-refresh indicator */}
@@ -388,21 +388,23 @@ export default function Reports() {
           </div>
         </div>
 
-      <div className="p-4 space-y-5 pb-24">
+      <div className="p-4 space-y-6 pb-24 max-w-lg mx-auto">
         {/* Time Range Filter */}
-        <TimeRangeSelector
-          dateRanges={dateRanges}
-          selectedRangeIndex={selectedRangeIndex}
-          onRangeChange={handleRangeChange}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
-          onCustomStartChange={handleCustomStartChange}
-          onCustomEndChange={handleCustomEndChange}
-        />
+        <div className="animate-fade-in-up">
+          <TimeRangeSelector
+            dateRanges={dateRanges}
+            selectedRangeIndex={selectedRangeIndex}
+            onRangeChange={handleRangeChange}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
+            onCustomStartChange={handleCustomStartChange}
+            onCustomEndChange={handleCustomEndChange}
+          />
+        </div>
 
-        {/* Empty State — show when no parts AND no sales */}
+        {/* Empty State */}
         {!loading && parts.length === 0 && sales.length === 0 ? (
-          <div className="text-center py-20">
+          <div className="text-center py-20 animate-fade-in">
             <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="h-10 w-10 text-muted-foreground/40" />
             </div>
@@ -414,7 +416,7 @@ export default function Reports() {
         ) : (
           <>
             {/* KPI Summary Cards */}
-            <div ref={kpiGridRef} className="grid grid-cols-2 gap-3">
+            <div ref={kpiGridRef} className="grid grid-cols-2 gap-3 auto-rows-fr animate-fade-in-up animate-fade-in-up-1">
               <KPICard
                 title="Total Revenue"
                 value={summary?.totalSales || 0}
@@ -447,61 +449,80 @@ export default function Reports() {
               />
             </div>
 
-            {/* Month-over-Month Comparison — only when there are sales */}
-            {sales.length > 0 && <MonthComparison sales={sales} />}
+            {/* Month-over-Month Comparison */}
+            {sales.length > 0 && (
+              <div className="animate-fade-in-up animate-fade-in-up-2">
+                <MonthComparison sales={sales} />
+              </div>
+            )}
 
-            {/* Quick Insights — only when there are actual sales */}
+            {/* Quick Insights */}
             {summary && filteredSales.length > 0 && (
-              <InsightsPanel
-                salesGrowth={salesGrowth}
-                topProduct={topProduct}
-                lowestProduct={lowestProduct}
-                avgDailySales={avgDailySales}
-                profitMargin={summary.profitMargin}
-              />
-            )}
-
-            {/* Sales & Profit Trend Chart */}
-            {salesByDate.length > 0 && (
-              <div ref={salesTrendRef}>
-                <SalesTrendChart data={salesByDate} />
+              <div className="animate-fade-in-up animate-fade-in-up-3">
+                <InsightsPanel
+                  salesGrowth={salesGrowth}
+                  topProduct={topProduct}
+                  lowestProduct={lowestProduct}
+                  avgDailySales={avgDailySales}
+                  profitMargin={summary.profitMargin}
+                />
               </div>
             )}
 
-            {/* Product Performance Bar Chart */}
-            {productPerformance.length > 0 && (
-              <div ref={productPerfRef}>
-                <ProductPerformanceChart data={productPerformance} />
+            {/* Section: Performance */}
+            {(salesByDate.length > 0 || productPerformance.length > 0 || topParts.length > 0) && (
+              <div className="space-y-4 animate-fade-in-up animate-fade-in-up-4">
+                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-1">
+                  Performance
+                </h3>
+                {salesByDate.length > 0 && (
+                  <div ref={salesTrendRef}>
+                    <SalesTrendChart data={salesByDate} />
+                  </div>
+                )}
+                {productPerformance.length > 0 && (
+                  <div ref={productPerfRef}>
+                    <ProductPerformanceChart data={productPerformance} />
+                  </div>
+                )}
+                {topParts.length > 0 && <TopSellingParts data={topParts} />}
               </div>
             )}
 
-            {/* Top Sellers */}
-            {topParts.length > 0 && <TopSellingParts data={topParts} />}
-
-            {/* Inventory Distribution */}
-            {(inventoryByCategory.length > 0 || inventoryByBrand.length > 0) && (
-              <div ref={inventoryDistRef}>
-                <InventoryDistributionChart categoryData={inventoryByCategory} brandData={inventoryByBrand} />
+            {/* Section: Inventory */}
+            {(inventoryByCategory.length > 0 || inventoryByBrand.length > 0 || lowStockItems.length > 0) && (
+              <div className="space-y-4 animate-fade-in-up animate-fade-in-up-5">
+                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-1">
+                  Inventory
+                </h3>
+                {(inventoryByCategory.length > 0 || inventoryByBrand.length > 0) && (
+                  <div ref={inventoryDistRef}>
+                    <InventoryDistributionChart categoryData={inventoryByCategory} brandData={inventoryByBrand} />
+                  </div>
+                )}
+                {lowStockItems.length > 0 && (
+                  <div ref={lowStockChartRef}>
+                    <LowStockChart data={lowStockItems} />
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Low Stock Risk */}
-            {lowStockItems.length > 0 && (
-              <div ref={lowStockChartRef}>
-                <LowStockChart data={lowStockItems} />
-              </div>
-            )}
-
-            {/* Sales Heatmap */}
+            {/* Section: Activity */}
             {salesHeatmapData.length > 0 && (
-              <div ref={heatmapRef}>
-                <SalesHeatmap data={salesHeatmapData} />
+              <div className="space-y-4 animate-fade-in-up animate-fade-in-up-6">
+                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-1">
+                  Activity
+                </h3>
+                <div ref={heatmapRef}>
+                  <SalesHeatmap data={salesHeatmapData} />
+                </div>
               </div>
             )}
 
-            {/* No sales hint when parts exist but no sales */}
+            {/* No sales hint */}
             {parts.length > 0 && sales.length === 0 && !loading && (
-              <div className="text-center py-10">
+              <div className="text-center py-10 animate-fade-in">
                 <p className="text-xs text-muted-foreground/60">
                   You have {parts.length} parts in inventory. Record a sale to unlock full analytics.
                 </p>
@@ -509,14 +530,14 @@ export default function Reports() {
             )}
 
             {/* Export Buttons */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 px-1">
+            <div className="space-y-2 animate-fade-in-up animate-fade-in-up-7">
+              <h3 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-1">
                 Export Reports
               </h3>
               <div className="grid grid-cols-3 gap-2">
                 <Button
                   variant="outline"
-                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
+                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40 active:scale-95 transition-all"
                   onClick={handleExportPDF}
                   disabled={isExporting !== null || loading}
                 >
@@ -525,7 +546,7 @@ export default function Reports() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
+                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40 active:scale-95 transition-all"
                   onClick={handleExportExcel}
                   disabled={isExporting !== null || loading}
                 >
@@ -534,7 +555,7 @@ export default function Reports() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40"
+                  className="flex-col h-auto py-3 rounded-xl border-border/30 hover:border-primary/40 active:scale-95 transition-all"
                   onClick={handleExportCSV}
                   disabled={isExporting !== null || loading}
                 >
