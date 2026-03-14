@@ -2,9 +2,17 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Part } from '@/types';
 import type { Bill, BillItem } from '@/types/bill';
 import { db } from '@/db/database';
+import { BRANDS_EXTENDED, ALL_EXTENDED_TEMPLATES } from './demoDataConstants';
 
-// ── Part name templates ──────────────────────────────────────────────
-const PART_CATEGORIES: Record<string, string[]> = {
+// ── Small brand/template sets for 1K mode ────────────────────────────
+const BRANDS_SMALL = [
+  'Toyota Genuine', 'Honda Atlas', 'Suzuki Parts', 'Denso', 'Bosch',
+  'NGK', 'Aisin', 'KYB', 'Monroe', 'Gates',
+  'Mahle', 'Mann Filter', 'Valeo', 'SKF', 'NTN',
+  'Koyo', 'Exedy', 'TRW', 'Brembo', 'Dayco',
+];
+
+const PART_CATEGORIES_SMALL: Record<string, string[]> = {
   'Engine Parts': [
     'Piston Ring', 'Cylinder Head', 'Crankshaft', 'Camshaft', 'Valve Spring',
     'Oil Pump', 'Timing Chain', 'Connecting Rod', 'Engine Mount', 'Rocker Arm',
@@ -63,13 +71,6 @@ const PART_CATEGORIES: Record<string, string[]> = {
     'Hood Latch', 'Trunk Lock', 'Wiper Motor', 'Wiper Blade', 'Headlight Assembly',
   ],
 };
-
-const BRANDS = [
-  'Toyota Genuine', 'Honda Atlas', 'Suzuki Parts', 'Denso', 'Bosch',
-  'NGK', 'Aisin', 'KYB', 'Monroe', 'Gates',
-  'Mahle', 'Mann Filter', 'Valeo', 'SKF', 'NTN',
-  'Koyo', 'Exedy', 'TRW', 'Brembo', 'Dayco',
-];
 
 const LOCATIONS = [
   'Shelf A1', 'Shelf A2', 'Shelf A3', 'Shelf B1', 'Shelf B2', 'Shelf B3',
@@ -162,33 +163,36 @@ function createPopularityPicker(partsCount: number): () => number {
 
 // ── Generators ───────────────────────────────────────────────────────
 
-// Flatten all templates once
-const ALL_TEMPLATES: { category: string; name: string }[] = [];
-for (const [cat, names] of Object.entries(PART_CATEGORIES)) {
+// Flatten small templates once
+const ALL_TEMPLATES_SMALL: { category: string; name: string }[] = [];
+for (const [cat, names] of Object.entries(PART_CATEGORIES_SMALL)) {
   for (const name of names) {
-    ALL_TEMPLATES.push({ category: cat, name });
+    ALL_TEMPLATES_SMALL.push({ category: cat, name });
   }
 }
 
-export function generateDemoSpareParts(count: number = 1000, opts?: { maxQty?: number; minStockMax?: number; monthsBack?: number }): Part[] {
+export function generateDemoSpareParts(count: number = 1000, opts?: { maxQty?: number; minStockMax?: number; monthsBack?: number; useExtended?: boolean }): Part[] {
   const maxQty = opts?.maxQty ?? 200;
   const minStockMax = opts?.minStockMax ?? 20;
   const monthsBack = opts?.monthsBack ?? 6;
+  const useExtended = opts?.useExtended ?? (count > 1000);
+  const templates = useExtended ? ALL_EXTENDED_TEMPLATES : ALL_TEMPLATES_SMALL;
+  const brands = useExtended ? BRANDS_EXTENDED : BRANDS_SMALL;
   const parts: Part[] = [];
 
   for (let i = 0; i < count; i++) {
-    const template = ALL_TEMPLATES[i % ALL_TEMPLATES.length];
-    const variant = Math.floor(i / ALL_TEMPLATES.length) + 1;
-    const suffix = ALL_TEMPLATES.length <= count ? ` Model ${String(variant).padStart(2, '0')}` : '';
+    const template = templates[i % templates.length];
+    const variant = Math.floor(i / templates.length) + 1;
+    const suffix = templates.length <= count ? ` V${String(variant).padStart(2, '0')}` : '';
     const partName = `${template.name}${suffix}`;
     const buyingPrice = rand(500, 150000);
-    const markup = count > 1000 ? getWeightedMargin() : (1 + rand(20, 40) / 100);
+    const markup = useExtended ? getWeightedMargin() : (1 + rand(20, 40) / 100);
 
     parts.push({
       id: uuidv4(),
       name: partName,
       sku: `DEMO-${String(i + 1).padStart(4, '0')}`,
-      brandId: pick(BRANDS),
+      brandId: pick(brands),
       categoryId: template.category,
       buyingPrice,
       sellingPrice: Math.round(buyingPrice * markup),
@@ -303,7 +307,7 @@ export async function insertDemoData(
 export async function insertExtendedDemoData(
   onProgress?: (pct: number) => void,
 ): Promise<{ partsCount: number; billsCount: number }> {
-  const parts = generateDemoSpareParts(3000, { maxQty: 300, minStockMax: 25, monthsBack: 12 });
+  const parts = generateDemoSpareParts(3000, { maxQty: 300, minStockMax: 25, monthsBack: 12, useExtended: true });
   onProgress?.(5);
 
   const { bills, billItems } = generateDemoBills(3000, parts, { monthsBack: 12, useWeightedItems: true });

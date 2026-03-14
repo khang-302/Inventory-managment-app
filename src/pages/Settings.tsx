@@ -511,7 +511,7 @@ export default function Settings() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Generate Extended Demo Data?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will generate a large demo dataset simulating <strong>one year of shop activity</strong>. The system will create <strong>3,000 spare parts</strong> and <strong>3,000 bills</strong> with realistic profit margins, varied customers, and historical sales data. This data is for testing purposes only and can be removed using "Clear Demo Data".
+                            This will generate a large demo dataset simulating <strong>one year of shop activity</strong>. The system will create <strong>3,000 spare parts</strong> and <strong>3,000 bills</strong> using <strong>300+ brands</strong> and <strong>300+ categories</strong> with realistic profit margins, varied customers, and historical sales data. This data is for testing purposes only and can be removed using "Clear Demo Data".
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
