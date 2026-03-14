@@ -138,7 +138,7 @@ export async function deletePart(id: string): Promise<boolean> {
     entityType: 'part',
     entityId: id,
     description: `Deleted part: ${part.name} (SKU: ${part.sku})`,
-    metadata: { isDemo: !!part.isDemo },
+    metadata: {},
   });
   
   return true;
