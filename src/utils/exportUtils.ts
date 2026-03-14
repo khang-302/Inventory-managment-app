@@ -333,7 +333,8 @@ export async function exportReportToPDF(
   }
 
   const filename = `${shopName.toLowerCase().replace(/\s+/g, '-')}-report-${range.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(filename);
+  const pdfBlob = doc.output('blob');
+  await saveToDevice(pdfBlob, 'Reports', filename);
 }
 
 /**
