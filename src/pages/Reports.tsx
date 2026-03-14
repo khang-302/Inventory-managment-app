@@ -344,7 +344,7 @@ export default function Reports() {
     setIsExporting('excel');
     try {
       await exportReportToExcel(selectedRange, filteredSales, parts, categories, brands);
-      toast.success('Excel exported');
+      toast.success('Excel exported', { description: '📂 Open your file manager → AIM/Reports' });
     } catch { toast.error('Excel export failed'); }
     finally { setIsExporting(null); }
   };
