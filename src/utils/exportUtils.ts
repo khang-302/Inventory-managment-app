@@ -1,10 +1,10 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { formatCurrency } from './currency';
 import { formatDateRange } from './dateUtils';
 import { toSafeNumber, toSafeQuantity } from './safeNumber';
+import { saveToDevice } from './nativeShare';
 import type { DateRange, ReportSummary, Part, Sale, Brand, Category } from '@/types';
 
 // Extend jsPDF with autotable
