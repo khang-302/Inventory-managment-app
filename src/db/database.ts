@@ -50,7 +50,7 @@ export class AmeerAutosDB extends Dexie {
       backupRecords: 'id, type, createdAt'
     });
 
-    // Version 3: Add isDemo index to parts
+    // Version 3: Schema update
     this.version(3).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -125,7 +125,7 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 8: Add isDemo index on bills for demo data cleanup
+    // Version 8: Schema update
     this.version(8).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -143,7 +143,7 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 9: Add isDemo index on sales for demo data cleanup
+    // Version 9: Schema update
     this.version(9).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt, isDemo',
       brands: 'id, name, createdAt',
@@ -161,7 +161,7 @@ export class AmeerAutosDB extends Dexie {
       crashReports: 'id, errorCode, createdAt'
     });
 
-    // Version 10: Remove isDemo indexes (demo data feature removed)
+    // Version 10: Schema cleanup
     this.version(10).stores({
       parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
       brands: 'id, name, createdAt',
@@ -177,6 +177,61 @@ export class AmeerAutosDB extends Dexie {
       notifications: 'id, type, isRead, createdAt, triggerType, isFired',
       notificationTemplates: 'id, createdAt',
       crashReports: 'id, errorCode, createdAt'
+    });
+
+    // Version 11: Purge legacy demo records from IndexedDB
+    this.version(11).stores({
+      parts: 'id, name, sku, brandId, categoryId, quantity, createdAt, updatedAt',
+      brands: 'id, name, createdAt',
+      categories: 'id, name, createdAt',
+      sales: 'id, partId, createdAt',
+      activityLogs: 'id, action, entityType, createdAt, isDeleted',
+      settings: 'id, key',
+      backupRecords: 'id, type, createdAt',
+      billSettings: 'id',
+      bills: 'id, billNumber, createdAt',
+      billItems: 'id, billId',
+      autocompleteEntries: 'id, field, [field+value]',
+      notifications: 'id, type, isRead, createdAt, triggerType, isFired',
+      notificationTemplates: 'id, createdAt',
+      crashReports: 'id, errorCode, createdAt'
+    }).upgrade(async (tx) => {
+      // Delete all parts with SKU starting with "DEMO-"
+      const demoParts = await tx.table('parts').filter((p: any) => 
+        p.sku && typeof p.sku === 'string' && p.sku.startsWith('DEMO-')
+      ).toArray();
+      
+      const demoPartIds = new Set(demoParts.map((p: any) => p.id));
+      
+      if (demoPartIds.size > 0) {
+        // Delete demo parts
+        await tx.table('parts').bulkDelete([...demoPartIds]);
+        
+        // Delete sales referencing demo parts
+        const demoSales = await tx.table('sales').filter((s: any) => demoPartIds.has(s.partId)).toArray();
+        if (demoSales.length > 0) {
+          await tx.table('sales').bulkDelete(demoSales.map((s: any) => s.id));
+        }
+      }
+
+      // Delete bills with demo-like patterns (customer "Walk-in Customer" with demo items)
+      const allBills = await tx.table('bills').toArray();
+      const billItems = await tx.table('billItems').toArray();
+      
+      for (const bill of allBills) {
+        const items = billItems.filter((bi: any) => bi.billId === bill.id);
+        const allItemsDemo = items.length > 0 && items.every((bi: any) => {
+          const partName = bi.partName || bi.name || '';
+          return demoPartIds.has(bi.partId) || partName.match(/^(Pitman Arm|Tie Rod|Ball Joint|Brake Pad|Oil Filter|Air Filter|Spark Plug|Clutch Plate|Shock Absorber|Radiator Hose)/);
+        });
+        
+        if (allItemsDemo && items.length > 0) {
+          await tx.table('bills').delete(bill.id);
+          await tx.table('billItems').bulkDelete(items.map((i: any) => i.id));
+        }
+      }
+      
+      console.log(`[DB Migration v11] Purged ${demoPartIds.size} demo parts and associated records`);
     });
   }
 }
