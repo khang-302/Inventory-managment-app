@@ -237,7 +237,7 @@ export default function Dashboard() {
                     <p className="text-[10px] text-muted-foreground">{salesBreakdown.newOrders} order{salesBreakdown.newOrders !== 1 ? 's' : ''}</p>
                   </div>
                   {/* Quick Sales Column */}
-                  <div className="pl-3 space-y-2">
+                  <div className="pl-3 space-y-2 cursor-pointer hover:bg-muted/40 rounded-lg p-2 -m-2 transition-colors" onClick={() => navigate('/reports?saleType=quick')}>
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-lg bg-accent flex items-center justify-center">
                         <Zap className="h-3.5 w-3.5 text-accent-foreground" />
