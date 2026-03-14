@@ -37,14 +37,14 @@ export default function BackupRestore() {
     try {
       const data = await exportDatabase();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      saveAs(blob, generateFilename('json'));
+      const result = await saveToDevice(blob, 'Backups', generateFilename('json'));
       
       await logActivity({
         action: 'backup',
         entityType: 'backup',
         description: 'Created JSON backup'
       });
-      toast.success('JSON backup created successfully');
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'JSON backup created successfully');
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
