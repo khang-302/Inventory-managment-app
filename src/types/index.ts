@@ -72,7 +72,6 @@ export interface Sale {
   customerName?: string;
   customerPhone?: string;
   notes?: string;
-  isDemo?: boolean;
   createdAt: Date;
 }
 
