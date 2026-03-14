@@ -6,6 +6,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
 import { 
   Search, 
   Languages, 
@@ -28,11 +29,28 @@ import {
   AlertTriangle,
   Store,
   Bug,
-  MessageSquareWarning
+  MessageSquareWarning,
+  FlaskConical,
+  Database,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { toast } from '@/hooks/use-toast';
+import { insertDemoData, clearDemoData, hasDemoData } from '@/utils/generateDemoData';
 
 interface SettingItemProps {
   icon: React.ElementType;
