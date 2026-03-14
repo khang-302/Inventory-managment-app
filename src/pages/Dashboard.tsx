@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
 import { formatCurrency } from '@/utils/currency';
 import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
+import { db } from '@/db/database';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { startOfDay } from 'date-fns';
 import { getRelativeDate, formatTime } from '@/utils/dateUtils';
 import { getActivityIcon, getActivityColor } from '@/services/activityLogService';
 import { toSafeQuantity } from '@/utils/safeNumber';
@@ -22,6 +25,7 @@ import {
   Pencil,
   Trash2,
   ChartColumnBig,
+  ShoppingBag,
   Download,
   Upload,
   RefreshCw,
@@ -86,6 +90,28 @@ export default function Dashboard() {
     isInitialized,
     appName,
   } = useApp();
+
+  // Today's sales breakdown
+  const todayStart = startOfDay(new Date()).toISOString();
+  const todaySalesAll = useLiveQuery(
+    () => db.sales.where('date').aboveOrEqual(todayStart).toArray(),
+    [todayStart],
+  ) ?? [];
+
+  const salesBreakdown = useMemo(() => {
+    const newSales = todaySalesAll.filter(s => s.partId && s.partId.trim() !== '');
+    const quickSales = todaySalesAll.filter(s => !s.partId || s.partId.trim() === '');
+    const sum = (arr: typeof todaySalesAll, key: 'totalPrice' | 'profit') =>
+      arr.reduce((t, s) => t + (Number(s[key]) || 0), 0);
+    return {
+      newRevenue: sum(newSales, 'totalPrice'),
+      newProfit: sum(newSales, 'profit'),
+      newOrders: newSales.length,
+      quickRevenue: sum(quickSales, 'totalPrice'),
+      quickProfit: sum(quickSales, 'profit'),
+      quickOrders: quickSales.length,
+    };
+  }, [todaySalesAll]);
 
   if (!isInitialized) {
     return (
@@ -181,6 +207,55 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </section>
+
+        {/* Today's Sales Breakdown */}
+        {(salesBreakdown.newOrders > 0 || salesBreakdown.quickOrders > 0) && (
+          <section className="animate-fade-in" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
+            <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
+              <CardContent className="p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Today's Sales Breakdown</p>
+                <div className="grid grid-cols-2 gap-0">
+                  {/* New Sales Column */}
+                  <div className="pr-3 border-r border-border/40 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <ShoppingBag className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">New Sale</span>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Revenue</p>
+                      <p className="text-sm font-bold text-foreground">{formatFull(salesBreakdown.newRevenue)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Profit</p>
+                      <p className="text-sm font-bold text-primary">{formatFull(salesBreakdown.newProfit)}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{salesBreakdown.newOrders} order{salesBreakdown.newOrders !== 1 ? 's' : ''}</p>
+                  </div>
+                  {/* Quick Sales Column */}
+                  <div className="pl-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-accent flex items-center justify-center">
+                        <Zap className="h-3.5 w-3.5 text-accent-foreground" />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">Quick Sale</span>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Revenue</p>
+                      <p className="text-sm font-bold text-foreground">{formatFull(salesBreakdown.quickRevenue)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Profit</p>
+                      <p className="text-sm font-bold text-primary">{formatFull(salesBreakdown.quickProfit)}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{salesBreakdown.quickOrders} order{salesBreakdown.quickOrders !== 1 ? 's' : ''}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {/* Inventory Status Bar */}
         {stats.totalParts > 0 && (
