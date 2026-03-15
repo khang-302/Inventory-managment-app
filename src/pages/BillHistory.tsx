@@ -67,7 +67,8 @@ export default function BillHistory() {
           const result = await saveImageToGallery(dataUrl, filename);
           toast({
             title: '✅ Image saved',
-            description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → Documents/AmeerAutos/` : `File: ${filename}`,
+            description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+            action: <ToastAction altText="Open File Manager" onClick={() => openFileManager()}><FolderOpen className="h-3 w-3 mr-1" />Open Folder</ToastAction>,
           });
         } else if (action === 'share') {
           await saveFile(dataUrl, filename, 'image/png');
