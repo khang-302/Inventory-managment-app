@@ -628,7 +628,8 @@ export default function Inventory() {
 
       {/* Floating Action Button */}
       <Button
-        className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40"
+        className="fixed right-4 h-14 w-14 rounded-full shadow-lg z-40"
+        style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
         onClick={() => navigate('/inventory/add')}
       >
         <Plus className="h-6 w-6" />
