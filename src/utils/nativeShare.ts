@@ -166,7 +166,7 @@ export async function saveImageToGallery(
 }
 
 // ---------------------------------------------------------------------------
-// Save PDF to AIM/Bills/
+// Save PDF to Documents/AmeerAutos/Images/
 // ---------------------------------------------------------------------------
 
 export async function savePdfToDevice(
