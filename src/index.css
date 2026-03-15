@@ -387,6 +387,18 @@
   /* Safe-area bottom padding for fixed bottom bars */
   .fixed-bottom-safe {
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    animation: slide-up-bar 0.3s ease-out;
+  }
+
+  @keyframes slide-up-bar {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 }
 
