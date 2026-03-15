@@ -154,7 +154,7 @@ export async function saveToDevice(
 }
 
 // ---------------------------------------------------------------------------
-// Save image to AIM/Bills/
+// Save image to Documents/AmeerAutos/Images/
 // ---------------------------------------------------------------------------
 
 export async function saveImageToGallery(
