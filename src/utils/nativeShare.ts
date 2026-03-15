@@ -94,7 +94,7 @@ export type SaveResult = {
 };
 
 /**
- * Save any blob to AIM/{subfolder}/{filename} on native,
+ * Save any blob to Documents/AmeerAutos/{subfolder}/{filename} on native,
  * or trigger a browser download on web.
  */
 /**
