@@ -97,24 +97,55 @@ export type SaveResult = {
  * Save any blob to AIM/{subfolder}/{filename} on native,
  * or trigger a browser download on web.
  */
+/**
+ * Map caller-provided subfolder names to the AmeerAutos directory structure.
+ */
+function mapSubfolder(subfolder: string): string {
+  const map: Record<string, string> = {
+    Bills: 'Images',
+    Backups: 'Backups',
+    Reports: 'Reports',
+    Images: 'Images',
+    Exports: 'Exports',
+  };
+  return map[subfolder] || 'Exports';
+}
+
 export async function saveToDevice(
   blob: Blob,
   subfolder: string,
   filename: string,
 ): Promise<SaveResult> {
   if (isNativePlatform()) {
+    const mappedFolder = mapSubfolder(subfolder);
+    const savePath = `AmeerAutos/${mappedFolder}/${filename}`;
+
+    // Try Directory.Documents first (visible in file managers on Android 11+)
     try {
       const base64Data = await blobToBase64(blob);
-      const savePath = `AIM/${subfolder}/${filename}`;
+      await Filesystem.writeFile({
+        path: savePath,
+        data: base64Data,
+        directory: Directory.Documents,
+        recursive: true,
+      });
+      return { method: 'downloaded', path: `Documents/AmeerAutos/${mappedFolder}/${filename}` };
+    } catch (err) {
+      console.warn(`Documents write failed, trying ExternalStorage:`, err);
+    }
+
+    // Fallback to ExternalStorage
+    try {
+      const base64Data = await blobToBase64(blob);
       await Filesystem.writeFile({
         path: savePath,
         data: base64Data,
         directory: Directory.ExternalStorage,
         recursive: true,
       });
-      return { method: 'downloaded', path: `AIM/${subfolder}/${filename}` };
+      return { method: 'downloaded', path: `AmeerAutos/${mappedFolder}/${filename}` };
     } catch (err) {
-      console.error(`Native save to AIM/${subfolder} failed, using fallback:`, err);
+      console.error(`Native save failed, using web fallback:`, err);
     }
   }
 
