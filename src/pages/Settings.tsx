@@ -12,7 +12,8 @@ import {
   Paintbrush, 
   PanelLeftClose, 
   CloudUpload, 
-  HardDrive, 
+  HardDrive,
+  FolderOpen,
   BellRing, 
   Activity,
   ChevronRight,
@@ -155,6 +156,14 @@ export default function Settings() {
       path: '/settings/backup',
       iconBg: 'bg-emerald-500/10',
       iconColor: 'text-emerald-500',
+    },
+    {
+      icon: FolderOpen,
+      title: 'Exported Files',
+      description: 'View and manage saved exports',
+      path: '/settings/exports',
+      iconBg: 'bg-violet-500/10',
+      iconColor: 'text-violet-500',
     },
   ];
 

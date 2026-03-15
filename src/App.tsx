@@ -40,6 +40,7 @@ import TermsConditions from "./pages/settings/TermsConditions";
 import AutocompleteSettings from "./pages/settings/AutocompleteSettings";
 import CrashLogs from "./pages/settings/CrashLogs";
 import ReportProblem from "./pages/settings/ReportProblem";
+import ExportedFiles from "./pages/settings/ExportedFiles";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/settings/autocomplete" element={<AutocompleteSettings />} />
               <Route path="/settings/crash-logs" element={<CrashLogs />} />
               <Route path="/settings/report-problem" element={<ReportProblem />} />
+              <Route path="/settings/exports" element={<ExportedFiles />} />
               <Route path="/bills" element={<BillHistory />} />
               <Route path="/bills/create" element={<BillCreate />} />
               <Route path="/bills/edit/:id" element={<BillCreate />} />
