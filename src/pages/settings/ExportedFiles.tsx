@@ -126,6 +126,20 @@ export default function ExportedFiles() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    setDeletingAll(true);
+    try {
+      const count = await deleteAllExportedFiles();
+      setFiles([]);
+      toast.success(`Deleted ${count} file${count !== 1 ? 's' : ''}`);
+    } catch {
+      toast.error('Failed to delete files');
+    } finally {
+      setDeletingAll(false);
+      setShowDeleteAll(false);
+    }
+  };
+
   const grouped = SUBFOLDERS.reduce(
     (acc, sub) => {
       acc[sub] = files.filter((f) => f.subfolder === sub);
