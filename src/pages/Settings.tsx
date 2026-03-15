@@ -87,6 +87,11 @@ export default function Settings() {
   const navigate = useNavigate();
   const { notifications, setNotifications, appName, totalParts, totalBrands, stats, customLogo, refreshStats } = useApp();
   const [search, setSearch] = useState('');
+  const [exportFileCount, setExportFileCount] = useState(0);
+
+  useEffect(() => {
+    getExportedFileCount().then(setExportFileCount).catch(() => {});
+  }, []);
 
   const brandingItems = [
     {
