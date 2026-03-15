@@ -62,31 +62,34 @@ export function KPICard({
         }}
       />
 
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
-            {title}
-          </p>
-          {loading ? (
-            <Skeleton className="h-7 w-20" />
-          ) : (
-            <div className="flex items-baseline gap-1">
-              {isCurrency && (
-                <span className="text-xs font-medium text-muted-foreground shrink-0">Rs</span>
-              )}
-              <p className={cn(textSize, 'font-bold tracking-tight tabular-nums break-all')}>{formatted}</p>
-            </div>
-          )}
-        </div>
+      {/* Row 1: Title + Icon */}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap">
+          {title}
+        </p>
         <div
           className={cn(
-            'shrink-0 w-10 h-10 rounded-xl flex items-center justify-center',
+            'shrink-0 w-9 h-9 rounded-xl flex items-center justify-center',
             'bg-primary/10 border border-primary/10',
             highlight && 'bg-destructive/10 border-destructive/10',
           )}
         >
           {icon}
         </div>
+      </div>
+
+      {/* Row 2: Value */}
+      <div className="mt-3">
+        {loading ? (
+          <Skeleton className="h-7 w-24" />
+        ) : (
+          <div className="flex items-baseline gap-1">
+            {isCurrency && (
+              <span className="text-xs font-medium text-muted-foreground shrink-0">Rs</span>
+            )}
+            <p className={cn(textSize, 'font-bold tracking-tight tabular-nums break-all')}>{formatted}</p>
+          </div>
+        )}
       </div>
     </div>
   );
