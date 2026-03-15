@@ -74,6 +74,8 @@ export default function ExportedFiles() {
   const [loading, setLoading] = useState(true);
   const [isNative, setIsNative] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ExportedFile | null>(null);
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     Backups: true,
     Reports: true,
