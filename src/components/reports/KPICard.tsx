@@ -40,12 +40,12 @@ export function KPICard({
     return `${value}${suffix}`;
   })();
 
-  const textSize = formatted.length > 10 ? 'text-base' : formatted.length > 8 ? 'text-lg' : 'text-xl';
+  const textSize = formatted.length > 14 ? 'text-xs' : formatted.length > 12 ? 'text-sm' : formatted.length > 10 ? 'text-base' : formatted.length > 8 ? 'text-lg' : 'text-xl';
 
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl p-4',
+        'relative overflow-hidden rounded-2xl p-4 pb-5',
         'bg-card border border-border/40',
         'shadow-sm hover:shadow-md transition-all duration-300',
         highlight && 'border-destructive/30',
@@ -70,11 +70,11 @@ export function KPICard({
           {loading ? (
             <Skeleton className="h-7 w-20" />
           ) : (
-            <div className="flex items-baseline gap-1 overflow-hidden">
+            <div className="flex items-baseline gap-1">
               {isCurrency && (
                 <span className="text-xs font-medium text-muted-foreground shrink-0">Rs</span>
               )}
-              <p className={cn(textSize, 'font-bold tracking-tight tabular-nums truncate')}>{formatted}</p>
+              <p className={cn(textSize, 'font-bold tracking-tight tabular-nums break-all')}>{formatted}</p>
             </div>
           )}
         </div>
