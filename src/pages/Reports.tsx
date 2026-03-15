@@ -46,6 +46,7 @@ import {
 } from '@/utils/exportUtils';
 import { captureElementAsPng, type CapturedSection } from '@/utils/reportCapture';
 import { toast } from 'sonner';
+import { openFileManager } from '@/utils/fileManagerLauncher';
 import { startOfDay, endOfDay } from 'date-fns';
 
 // Sale type filter helpers
