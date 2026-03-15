@@ -7,6 +7,7 @@ import { exportDatabase, importDatabase, db } from '@/db/database';
 import { logActivity } from '@/services/activityLogService';
 import { toast } from 'sonner';
 import { saveToDevice } from '@/utils/nativeShare';
+import { openFileManager } from '@/utils/fileManagerLauncher';
 import { 
   Download, 
   Upload, 
