@@ -65,7 +65,7 @@ export default function BillHistory() {
           const result = await saveImageToGallery(dataUrl, filename);
           toast({
             title: '✅ Image saved',
-            description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → AIM/Bills` : `File: ${filename}`,
+            description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → Documents/AmeerAutos/` : `File: ${filename}`,
           });
         } else if (action === 'share') {
           await saveFile(dataUrl, filename, 'image/png');
@@ -107,7 +107,7 @@ export default function BillHistory() {
     const result = await savePdfToDevice(pdfBlob, filename);
     toast({
       title: '✅ PDF saved',
-      description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → AIM/Bills` : `File: ${filename}`,
+      description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → Documents/AmeerAutos/` : `File: ${filename}`,
     });
   };
 
