@@ -252,7 +252,7 @@ export default function PartDetails() {
         </Card>
 
         {/* Action Buttons */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border flex gap-3">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border flex gap-3 fixed-bottom-safe">
           <Button 
             variant="outline" 
             className="flex-1 h-12"

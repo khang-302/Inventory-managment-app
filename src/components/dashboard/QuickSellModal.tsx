@@ -297,7 +297,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
             <DrawerHeader>
               <DrawerTitle>⚡ Quick Sell</DrawerTitle>
             </DrawerHeader>
-            <div className="overflow-y-auto px-4 pb-6">
+            <div className="overflow-y-auto px-4" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
               {formContent}
             </div>
           </DrawerContent>

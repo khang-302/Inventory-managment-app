@@ -383,6 +383,11 @@
   .space-8 {
     @apply gap-2;
   }
+
+  /* Safe-area bottom padding for fixed bottom bars */
+  .fixed-bottom-safe {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* Smooth transitions for theme switching - 200-300ms */
