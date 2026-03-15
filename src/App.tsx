@@ -40,6 +40,7 @@ import TermsConditions from "./pages/settings/TermsConditions";
 import AutocompleteSettings from "./pages/settings/AutocompleteSettings";
 import CrashLogs from "./pages/settings/CrashLogs";
 import ReportProblem from "./pages/settings/ReportProblem";
+import ExportedFiles from "./pages/settings/ExportedFiles";
 
 const queryClient = new QueryClient();
 
