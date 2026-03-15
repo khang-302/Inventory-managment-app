@@ -413,7 +413,7 @@ export default function Reports() {
     setIsExporting('excel');
     try {
       await exportReportToExcel(selectedRange, filteredSales, parts, categories, brands);
-      toast.success('Excel exported', { description: '📂 Open your file manager → Documents/AmeerAutos/' });
+      toast.success('Excel exported', { description: '📂 Documents/AmeerAutos/', action: { label: '📂 Open Folder', onClick: () => openFileManager() } });
     } catch { toast.error('Excel export failed'); }
     finally { setIsExporting(null); }
   };
