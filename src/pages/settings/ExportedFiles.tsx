@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import {
   listExportedFiles,
   deleteExportedFile,
+  deleteAllExportedFiles,
   shareExportedFile,
   formatFileSize,
   SUBFOLDERS,
