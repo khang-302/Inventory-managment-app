@@ -422,7 +422,7 @@ export default function Reports() {
     setIsExporting('csv');
     try {
       await exportReportToCSV(selectedRange, filteredSales, parts);
-      toast.success('CSV exported', { description: '📂 Open your file manager → Documents/AmeerAutos/' });
+      toast.success('CSV exported', { description: '📂 Documents/AmeerAutos/', action: { label: '📂 Open Folder', onClick: () => openFileManager() } });
     } catch { toast.error('CSV export failed'); }
     finally { setIsExporting(null); }
   };

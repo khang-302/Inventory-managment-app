@@ -110,7 +110,8 @@ export default function BillHistory() {
     const result = await savePdfToDevice(pdfBlob, filename);
     toast({
       title: '✅ PDF saved',
-      description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → Documents/AmeerAutos/` : `File: ${filename}`,
+      description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+      action: <ToastAction altText="Open File Manager" onClick={() => openFileManager()}><FolderOpen className="h-3 w-3 mr-1" />Open Folder</ToastAction>,
     });
   };
 
