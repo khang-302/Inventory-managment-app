@@ -1,49 +1,32 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 /**
- * Handles Android hardware back button and gesture back navigation.
- * 
- * In Capacitor WebView, the hardware back button triggers `popstate`.
- * This hook ensures proper page-by-page navigation instead of closing the app.
- * 
- * On the home screen ("/"), it allows the default behavior (exit app).
- * On all other screens, it navigates back through the history stack.
+ * Handles Android hardware back button navigation using Capacitor's App plugin.
+ *
+ * - On sub-pages: navigates back through router history
+ * - On home screen ("/"): exits the app
+ * - On web: no-op (browser handles it natively)
  */
 export function useBackNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Push an extra history entry on non-home pages to prevent
-    // the WebView from closing when back is pressed
-    const isHome = location.pathname === '/';
+    if (!Capacitor.isNativePlatform()) return;
 
-    if (isHome) return; // On home, let the default back behavior exit the app
-
-    // Listen for the Capacitor/Android back button event
-    const handleBackButton = (e: PopStateEvent) => {
-      // Prevent default WebView close behavior
-      e.preventDefault();
-      
-      // Navigate back using React Router
-      navigate(-1);
-    };
-
-    // For Capacitor, we can also listen to the `backbutton` document event
-    const handleCapacitorBack = (e: Event) => {
-      e.preventDefault();
+    const listener = App.addListener('backButton', ({ canGoBack }) => {
       if (location.pathname === '/') {
-        // On home, let app exit — don't prevent
-        return;
+        App.exitApp();
+      } else {
+        navigate(-1);
       }
-      navigate(-1);
-    };
-
-    document.addEventListener('backbutton', handleCapacitorBack);
+    });
 
     return () => {
-      document.removeEventListener('backbutton', handleCapacitorBack);
+      listener.then(h => h.remove());
     };
   }, [navigate, location.pathname]);
 }
