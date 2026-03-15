@@ -333,6 +333,13 @@ export default function Settings() {
                     onClick={() => navigate(item.path)}
                     iconBg={item.iconBg}
                     iconColor={item.iconColor}
+                    rightElement={
+                      item.path === '/settings/exports' && exportFileCount > 0 ? (
+                        <Badge variant="secondary" className="text-xs">
+                          {exportFileCount}
+                        </Badge>
+                      ) : undefined
+                    }
                   />
                 ))}
                 {(!search || 'notifications'.includes(search.toLowerCase()) || 'low stock'.includes(search.toLowerCase()) || 'alerts'.includes(search.toLowerCase())) && (
