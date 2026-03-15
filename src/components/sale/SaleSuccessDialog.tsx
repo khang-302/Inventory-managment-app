@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { getBillSettings, getBillItems, getBillById } from '@/services/billService';
 import { captureBillAsImage } from '@/utils/billImageExport';
 import { saveImageToGallery, shareViaWhatsAppNative } from '@/utils/nativeShare';
+import { openFileManager } from '@/utils/fileManagerLauncher';
 import { useState, useRef } from 'react';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import type { BillSettings as BillSettingsType } from '@/types/bill';
