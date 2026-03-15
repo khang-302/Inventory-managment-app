@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
@@ -34,6 +34,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { getExportedFileCount } from '@/utils/exportedFilesService';
 
 interface SettingItemProps {
   icon: React.ElementType;
@@ -85,6 +87,11 @@ export default function Settings() {
   const navigate = useNavigate();
   const { notifications, setNotifications, appName, totalParts, totalBrands, stats, customLogo, refreshStats } = useApp();
   const [search, setSearch] = useState('');
+  const [exportFileCount, setExportFileCount] = useState(0);
+
+  useEffect(() => {
+    getExportedFileCount().then(setExportFileCount).catch(() => {});
+  }, []);
 
   const brandingItems = [
     {
@@ -326,6 +333,13 @@ export default function Settings() {
                     onClick={() => navigate(item.path)}
                     iconBg={item.iconBg}
                     iconColor={item.iconColor}
+                    rightElement={
+                      item.path === '/settings/exports' && exportFileCount > 0 ? (
+                        <Badge variant="secondary" className="text-xs">
+                          {exportFileCount}
+                        </Badge>
+                      ) : undefined
+                    }
                   />
                 ))}
                 {(!search || 'notifications'.includes(search.toLowerCase()) || 'low stock'.includes(search.toLowerCase()) || 'alerts'.includes(search.toLowerCase())) && (

@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import {
   listExportedFiles,
   deleteExportedFile,
+  deleteAllExportedFiles,
   shareExportedFile,
   formatFileSize,
   SUBFOLDERS,
@@ -73,6 +74,8 @@ export default function ExportedFiles() {
   const [loading, setLoading] = useState(true);
   const [isNative, setIsNative] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ExportedFile | null>(null);
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     Backups: true,
     Reports: true,
@@ -123,6 +126,20 @@ export default function ExportedFiles() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    setDeletingAll(true);
+    try {
+      const count = await deleteAllExportedFiles();
+      setFiles([]);
+      toast.success(`Deleted ${count} file${count !== 1 ? 's' : ''}`);
+    } catch {
+      toast.error('Failed to delete files');
+    } finally {
+      setDeletingAll(false);
+      setShowDeleteAll(false);
+    }
+  };
+
   const grouped = SUBFOLDERS.reduce(
     (acc, sub) => {
       acc[sub] = files.filter((f) => f.subfolder === sub);
@@ -140,9 +157,16 @@ export default function ExportedFiles() {
         showBack
         rightAction={
           isNative ? (
-            <Button variant="ghost" size="icon" onClick={loadFiles}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              {totalFiles > 0 && (
+                <Button variant="ghost" size="icon" onClick={() => setShowDeleteAll(true)} className="text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={loadFiles}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -277,6 +301,28 @@ export default function ExportedFiles() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All confirmation */}
+      <AlertDialog open={showDeleteAll} onOpenChange={setShowDeleteAll}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Files</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all {totalFiles} exported file{totalFiles !== 1 ? 's' : ''} from Documents/AmeerAutos/. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingAll}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAll}
+              disabled={deletingAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingAll ? 'Deleting...' : 'Delete All'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
