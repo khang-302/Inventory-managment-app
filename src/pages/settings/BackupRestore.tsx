@@ -7,6 +7,7 @@ import { exportDatabase, importDatabase, db } from '@/db/database';
 import { logActivity } from '@/services/activityLogService';
 import { toast } from 'sonner';
 import { saveToDevice } from '@/utils/nativeShare';
+import { openFileManager } from '@/utils/fileManagerLauncher';
 import { 
   Download, 
   Upload, 
@@ -43,7 +44,7 @@ export default function BackupRestore() {
         entityType: 'backup',
         description: 'Created JSON backup'
       });
-      toast.success(result.path ? `Backup saved to ${result.path}` : 'JSON backup created successfully', { description: '📂 Open your file manager → Documents/AmeerAutos/' });
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'JSON backup created successfully', { description: '📂 Documents/AmeerAutos/', action: { label: '📂 Open Folder', onClick: () => openFileManager() } });
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
@@ -116,7 +117,7 @@ export default function BackupRestore() {
         entityType: 'backup',
         description: 'Created Excel backup'
       });
-      toast.success(result.path ? `Backup saved to ${result.path}` : 'Excel backup created successfully', { description: '📂 Open your file manager → Documents/AmeerAutos/' });
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'Excel backup created successfully', { description: '📂 Documents/AmeerAutos/', action: { label: '📂 Open Folder', onClick: () => openFileManager() } });
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {
@@ -151,7 +152,7 @@ export default function BackupRestore() {
         entityType: 'backup',
         description: 'Created CSV backup'
       });
-      toast.success(result.path ? `Backup saved to ${result.path}` : 'CSV backup created successfully', { description: '📂 Open your file manager → Documents/AmeerAutos/' });
+      toast.success(result.path ? `Backup saved to ${result.path}` : 'CSV backup created successfully', { description: '📂 Documents/AmeerAutos/', action: { label: '📂 Open Folder', onClick: () => openFileManager() } });
     } catch (error) {
       toast.error('Failed to create backup');
     } finally {

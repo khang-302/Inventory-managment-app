@@ -5,12 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { FilePlus2, SwatchBook, MoreVertical, Camera, FileText, Share2, Trash2, MessageCircleMore, Pencil } from 'lucide-react';
+import { FilePlus2, SwatchBook, MoreVertical, Camera, FileText, Share2, Trash2, MessageCircleMore, Pencil, FolderOpen } from 'lucide-react';
 import { getAllBills, deleteBill, getBillSettings, getBillItems } from '@/services/billService';
 import { formatCurrency } from '@/utils/currency';
 import { generateBillPdf } from '@/utils/billPdf';
 import { captureBillAsImage } from '@/utils/billImageExport';
 import { saveImageToGallery, savePdfToDevice, shareViaWhatsAppNative, saveFile, type SaveResult } from '@/utils/nativeShare';
+import { openFileManager } from '@/utils/fileManagerLauncher';
+import { ToastAction } from '@/components/ui/toast';
 import BillPreviewTemplate from '@/components/bill/BillPreviewTemplate';
 import BillSearchFilter from '@/components/bill/BillSearchFilter';
 import type { Bill, BillSettings as BillSettingsType, BillItem } from '@/types/bill';
@@ -65,7 +67,8 @@ export default function BillHistory() {
           const result = await saveImageToGallery(dataUrl, filename);
           toast({
             title: '✅ Image saved',
-            description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → Documents/AmeerAutos/` : `File: ${filename}`,
+            description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+            action: <ToastAction altText="Open File Manager" onClick={() => openFileManager()}><FolderOpen className="h-3 w-3 mr-1" />Open Folder</ToastAction>,
           });
         } else if (action === 'share') {
           await saveFile(dataUrl, filename, 'image/png');
@@ -107,7 +110,8 @@ export default function BillHistory() {
     const result = await savePdfToDevice(pdfBlob, filename);
     toast({
       title: '✅ PDF saved',
-      description: result.path ? `Saved to: ${result.path}\n📂 Open your file manager → Documents/AmeerAutos/` : `File: ${filename}`,
+      description: result.path ? `Saved to: ${result.path}` : `File: ${filename}`,
+      action: <ToastAction altText="Open File Manager" onClick={() => openFileManager()}><FolderOpen className="h-3 w-3 mr-1" />Open Folder</ToastAction>,
     });
   };
 
