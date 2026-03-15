@@ -34,6 +34,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { getExportedFileCount } from '@/utils/exportedFilesService';
 
 interface SettingItemProps {
   icon: React.ElementType;
