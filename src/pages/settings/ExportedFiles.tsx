@@ -157,9 +157,16 @@ export default function ExportedFiles() {
         showBack
         rightAction={
           isNative ? (
-            <Button variant="ghost" size="icon" onClick={loadFiles}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              {totalFiles > 0 && (
+                <Button variant="ghost" size="icon" onClick={() => setShowDeleteAll(true)} className="text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={loadFiles}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           ) : undefined
         }
       />

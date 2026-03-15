@@ -83,6 +83,25 @@ export async function deleteExportedFile(subfolder: ExportSubfolder, filename: s
   });
 }
 
+export async function deleteAllExportedFiles(): Promise<number> {
+  const files = await listExportedFiles();
+  let deleted = 0;
+  for (const file of files) {
+    try {
+      await deleteExportedFile(file.subfolder, file.name);
+      deleted++;
+    } catch {
+      // skip individual failures
+    }
+  }
+  return deleted;
+}
+
+export async function getExportedFileCount(): Promise<number> {
+  const files = await listExportedFiles();
+  return files.length;
+}
+
 export async function shareExportedFile(subfolder: ExportSubfolder, filename: string): Promise<void> {
   const Filesystem = getFilesystem();
   const Share = getShare();
