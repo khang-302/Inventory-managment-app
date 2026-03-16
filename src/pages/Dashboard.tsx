@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
