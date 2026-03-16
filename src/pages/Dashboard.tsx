@@ -120,9 +120,7 @@ export default function Dashboard() {
   if (!isInitialized) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
+        <LoadingScreen />
       </AppLayout>
     );
   }
