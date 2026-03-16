@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -127,7 +128,7 @@ export default function Branding() {
     return (
       <AppLayout>
         <Header title="Branding" showBack />
-        <div className="p-4"><div className="animate-pulse space-y-4"><div className="h-48 bg-muted rounded-lg" /><div className="h-32 bg-muted rounded-lg" /></div></div>
+        <LoadingScreen />
       </AppLayout>
     );
   }

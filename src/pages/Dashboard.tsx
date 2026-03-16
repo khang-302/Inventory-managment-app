@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
@@ -120,9 +121,7 @@ export default function Dashboard() {
   if (!isInitialized) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
+        <LoadingScreen />
       </AppLayout>
     );
   }
