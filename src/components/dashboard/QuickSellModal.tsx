@@ -397,7 +397,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
             <DrawerHeader>
               <DrawerTitle>⚡ Quick Sell</DrawerTitle>
             </DrawerHeader>
-            <div className="flex-1 overflow-y-auto px-4">
+            <div className="flex-1 overflow-y-auto min-h-0 px-4">
               {scrollContent}
             </div>
             {actionBar}
