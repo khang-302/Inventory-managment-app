@@ -393,7 +393,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
     return (
       <>
         <Drawer open={open} onOpenChange={onOpenChange}>
-          <DrawerContent className="max-h-[90vh] flex flex-col">
+          <DrawerContent className="h-[100dvh] max-h-[100dvh] flex flex-col">
             <DrawerHeader>
               <DrawerTitle>⚡ Quick Sell</DrawerTitle>
             </DrawerHeader>
