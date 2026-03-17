@@ -411,7 +411,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+        <DialogContent className="sm:max-w-lg h-[100dvh] max-h-[100dvh] flex flex-col">
           <DialogHeader>
             <DialogTitle>⚡ Quick Sell</DialogTitle>
           </DialogHeader>
