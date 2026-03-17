@@ -357,7 +357,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
 
   // ---------- Scrollable content ----------
   const scrollContent = (
-    <div className="space-y-3 p-1">
+    <div className="space-y-3 p-1 pb-[100px]">
       {itemsList}
       {itemFields}
       {calculationCard}
@@ -368,7 +368,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
   // ---------- Fixed bottom action bar ----------
   const actionBar = (
     <div
-      className="flex gap-3 border-t border-border bg-background px-4 pt-3"
+      className="sticky bottom-0 flex gap-3 border-t border-border bg-background px-4 pt-3"
       style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
     >
       <Button variant="outline" className="flex-1" onClick={() => { resetForm(); onOpenChange(false); }} disabled={isSubmitting}>
@@ -397,7 +397,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
             <DrawerHeader>
               <DrawerTitle>⚡ Quick Sell</DrawerTitle>
             </DrawerHeader>
-            <div className="flex-1 overflow-y-auto px-4">
+            <div className="flex-1 overflow-y-auto min-h-0 px-4">
               {scrollContent}
             </div>
             {actionBar}
@@ -415,7 +415,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
           <DialogHeader>
             <DialogTitle>⚡ Quick Sell</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {scrollContent}
           </div>
           {actionBar}
