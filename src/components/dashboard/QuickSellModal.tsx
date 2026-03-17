@@ -232,7 +232,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
 
   // ---------- Added items list ----------
   const itemsList = items.length > 0 && (
-    <div className="space-y-2 mb-3">
+    <div className="space-y-2 mb-3 max-h-[200px] overflow-y-auto pr-1">
       <Label className="text-xs text-muted-foreground">Added Items ({items.length})</Label>
       {items.map((item, idx) => {
         const c = calcItem(item);
