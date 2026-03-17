@@ -357,7 +357,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
 
   // ---------- Scrollable content ----------
   const scrollContent = (
-    <div className="space-y-3 p-1">
+    <div className="space-y-3 p-1 pb-[100px]">
       {itemsList}
       {itemFields}
       {calculationCard}
