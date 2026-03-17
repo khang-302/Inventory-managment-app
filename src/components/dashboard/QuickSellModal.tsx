@@ -232,7 +232,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
 
   // ---------- Added items list ----------
   const itemsList = items.length > 0 && (
-    <div className="space-y-2 mb-3">
+    <div className="space-y-2 mb-3 max-h-[200px] overflow-y-auto pr-1">
       <Label className="text-xs text-muted-foreground">Added Items ({items.length})</Label>
       {items.map((item, idx) => {
         const c = calcItem(item);
@@ -357,7 +357,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
 
   // ---------- Scrollable content ----------
   const scrollContent = (
-    <div className="flex flex-col gap-4 p-1 pb-[calc(120px+env(safe-area-inset-bottom))]">
+    <div className="flex flex-col gap-4 p-1 pb-4">
       {itemsList}
       {itemFields}
       {calculationCard}
