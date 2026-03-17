@@ -368,7 +368,7 @@ export function QuickSellModal({ open, onOpenChange }: QuickSellModalProps) {
   // ---------- Fixed bottom action bar ----------
   const actionBar = (
     <div
-      className="flex gap-3 border-t border-border bg-background px-4 pt-3"
+      className="sticky bottom-0 flex gap-3 border-t border-border bg-background px-4 pt-3"
       style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
     >
       <Button variant="outline" className="flex-1" onClick={() => { resetForm(); onOpenChange(false); }} disabled={isSubmitting}>
